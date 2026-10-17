@@ -353,13 +353,14 @@ h1.display {
 
 .view {
   padding-top: 0.4rem;
-  animation: view-in var(--dur-2) var(--ease) both;
+  animation: view-in 160ms var(--ease) both;
 }
 
 @keyframes view-in {
+  /* starts translucent, not blank: from 0 every navigation read as a flash on iOS */
   from {
-    opacity: 0;
-    transform: translateY(6px);
+    opacity: 0.62;
+    transform: translateY(4px);
   }
 }
 
@@ -465,6 +466,28 @@ h1.display {
   color: var(--cream);
 }
 
+.searchbar {
+  position: relative;
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  color: var(--glass-text);
+}
+
+.search-clear:hover {
+  background: rgba(244, 234, 217, 0.08);
+  color: var(--cream);
+}
+
 .searchbar input {
   width: 100%;
   /* the glass belongs to the field, not to a band behind it: covers scroll past
@@ -482,8 +505,8 @@ h1.display {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
-  /* clears the glyph */
-  padding: 0.72rem 0.9rem 0.72rem 2.7rem;
+  /* clears the glyph on the left and the clear button on the right */
+  padding: 0.72rem 2.7rem 0.72rem 2.7rem;
   font-size: 0.94rem;
   box-shadow: var(--glass-sheen), 0 16px 34px -26px #000;
 }

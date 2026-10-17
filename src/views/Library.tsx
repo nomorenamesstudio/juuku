@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { CloseIcon } from '../icons';
 import { type Album, type Artist, type Song, coverUrl, getAlbums, search } from '../api';
 import { useCounts } from '../useCounts';
 import { navigate } from '../router';
@@ -7,14 +8,19 @@ import type { Jukebox } from '../useJukebox';
 
 type Tab = 'albums' | 'artists';
 
+// surviving the unmount between tab switches: refetching on every visit made the
+// grid paint empty first, which reads as a reload on a phone
+let albumCache: { albums: Album[]; hasMore: boolean } | null = null;
+
 export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [hasMore, setHasMore] = useState(false);
+  const [albums, setAlbums] = useState<Album[]>(albumCache?.albums ?? []);
+  const [hasMore, setHasMore] = useState(albumCache?.hasMore ?? false);
   const counts = useCounts();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ songs: Song[]; albums: Album[]; artists: Artist[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const [stuck, setStuck] = useState(false);
 
   // the search bar pins to the top once the title scrolls past it
@@ -27,10 +33,16 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   }, []);
 
   useEffect(() => {
+    let alive = true;
     getAlbums().then((payload) => {
+      albumCache = { albums: payload.albums, hasMore: payload.hasMore };
+      if (!alive) return;
       setAlbums(payload.albums);
       setHasMore(payload.hasMore);
     });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -40,7 +52,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
       return;
     }
     const timer = window.setTimeout(() => {
-      search(text).then(setResults, () => setResults(null));
+      search(text).then((payload) => {
+        // an artist with no albums has nothing to open
+        setResults({ ...payload, artists: payload.artists.filter((artist) => (artist.albumCount ?? 0) > 0) });
+      }, () => setResults(null));
     }, 250);
     return () => window.clearTimeout(timer);
   }, [query]);
@@ -53,7 +68,11 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
     setLoading(true);
     try {
       const payload = await getAlbums(albums.length);
-      setAlbums((prev) => [...prev, ...payload.albums]);
+      setAlbums((prev) => {
+        const next = [...prev, ...payload.albums];
+        albumCache = { albums: next, hasMore: payload.hasMore };
+        return next;
+      });
       setHasMore(payload.hasMore);
     } finally {
       setLoading(false);
@@ -82,12 +101,25 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
         <div className={`library-bar${stuck ? ' stuck' : ''}`}>
           <div className="searchbar">
             <input
+              ref={input}
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Songs, albums, artists"
               aria-label="Search the library"
             />
+            {query && (
+              <button
+                className="search-clear"
+                onClick={() => {
+                  setQuery('');
+                  input.current?.focus();
+                }}
+                aria-label="Clear search"
+              >
+                <CloseIcon size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>

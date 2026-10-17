@@ -4,6 +4,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — navigation no longer blanks the view: the entry animation starts at 0.62 opacity over 160ms instead of from nothing, which on iOS read as a flash, and the album list now survives the unmount between tab switches (module cache, 40ms repaint instead of an empty grid while it refetches).
+- **Feature** — a clear (×) button inside the search field, shown only when there is a query; it resets the field and returns focus.
+- **Change** — search drops artist results with `albumCount` 0: they have nothing to open, so they were dead rows.
+
 - **Change** — the title/tab row and the search field read as one unit now: the head's bottom padding dropped from 1.3rem to 0.35rem and the bar's top padding from 0.3rem to 0.2rem, so the gap is ~10px instead of ~30px.
 
 - **Change** — on phones the Albums/Artists switch moved out of the flow and into the title row, right aligned above the search, so the grid starts one control higher. The switch is tighter there (smaller pills, 1.9rem title) and drops its count pills under 360px, where the two would not both fit; it still hides itself while search results are showing.
