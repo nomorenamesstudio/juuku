@@ -4,6 +4,9 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — a `test` workflow runs on every push and pull request: `npm test`, `npm run build`, then builds the image and waits for `/api/live` to answer, so the Dockerfile cannot rot unnoticed between releases.
+- **Feature** — `docs/social.png`, a 1280×640 card for the repository's social preview.
+
 - **Change** — documentation neutralised for a public repo: no hostnames, LAN addresses, machine names, port-history anecdotes or descriptions of whose hardware this was built on. `sandbox-up.sh` also says plainly that `sandbox/music` starts empty instead of copying nothing and scanning.
 
 - **Feature** — the app can be mounted under a path prefix: `tailscale serve --set-path /juuku` proxies to the container and strips the prefix. The build emits relative assets, the manifest uses `start_url`/`scope` `./`, and every API call is relative to the document. Verified end to end behind a prefix-stripping proxy.

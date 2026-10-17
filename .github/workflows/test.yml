@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: the built image starts and answers /api/live
+        run: |
+          docker build -t juuku:ci .
+          docker run -d --name juuku-ci -p 3101:3101 juuku:ci
+          for _ in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:3101/api/live >/dev/null; then echo "ok"; exit 0; fi
+            sleep 1
+          done
+          docker logs juuku-ci
+          exit 1
