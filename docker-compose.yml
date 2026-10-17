@@ -15,9 +15,11 @@ services:
       ND_SCANSCHEDULE: "0"
       ND_JUKEBOX_ENABLED: "true"
       ND_JUKEBOX_ADMINONLY: "true"
-      # mpv ships inside the image. --ao=null keeps it silent; position still advances
-      # in real time, so the control surface behaves like a real jukebox.
-      ND_MPVCMDTEMPLATE: "mpv --ao=null --no-audio-display --pause %f --input-ipc-server=%s"
+      # mpv ships inside the image; its audio goes to the host's PipeWire/PulseAudio over TCP on the docker bridge
+      # (the container cannot reach the socket's directory). scripts/audio-dev.sh
+      # loads the module; unload it to cut the container off again.
+      PULSE_SERVER: "tcp:172.17.0.1:4713"
+      ND_MPVCMDTEMPLATE: "mpv --ao=pulse --no-audio-display --pause %f --input-ipc-server=%s"
     volumes:
       - navidrome-data:/data
       - navidrome-music:/music

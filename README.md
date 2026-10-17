@@ -15,6 +15,7 @@ Proof of concept: the whole control surface works end to end against a real Navi
 ```sh
 npm install
 ./scripts/sandbox-up.sh     # throwaway Navidrome + 15 test tracks, :4533
+./scripts/audio-dev.sh      # jukebox audio -> this machine's speakers
 npm run dev                 # api :3101 + web :3100
 ```
 

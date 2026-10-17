@@ -15,7 +15,7 @@
 Never point development at the Pi instance. `docker-compose.yml` runs a separate Navidrome with jukebox enabled:
 
 - container `juicebox-navidrome`, project `juicebox`
-- `Jukebox.Enabled=true`, `MPVCmdTemplate` with `--ao=null` (silent, but the position still advances)
+- `Jukebox.Enabled=true`, `MPVCmdTemplate` with `--ao=pulse` (real audio, see below)
 - `Jukebox.AdminOnly=true`
 - `mpv` is already inside the `navidrome/navidrome` image — nothing to install
 - volumes: `juicebox_navidrome-data` (`/data`) and `juicebox_navidrome-music` (`/music`)
@@ -27,6 +27,23 @@ Never point development at the Pi instance. `docker-compose.yml` runs a separate
 The script starts the container, seeds the music volume from `sandbox/music` if empty, creates the first admin (`admin` / `juicebox` by default, via `/auth/createAdmin` — that endpoint only exists while the user table is empty), and forces a scan.
 
 `sandbox/music` is gitignored: it holds two albums copied from the Pi library (Daft Punk — *Human After All*, Röyksopp — *Do It Again*, 15 tracks). Replace or extend them and re-run the script; `docker compose down -v` resets both volumes.
+
+## Hearing it
+
+The container cannot open the host's PulseAudio socket — its uid is not mapped to yours, so even a bind mount of `pipewire-0` gets `Permission denied`. It can reach it over TCP through the docker bridge instead:
+
+```sh
+./scripts/audio-dev.sh
+```
+
+That script loads `module-native-protocol-tcp` on `172.17.0.1:4713` (bridge only, not the LAN) and recreates the container with `PULSE_SERVER=tcp:172.17.0.1:4713`. mpv then plays into whatever PipeWire default sink you have, mixed with everything else — no device stealing, and your normal listening keeps running.
+
+Consequences:
+
+- The module is runtime state, not config: a PipeWire restart or reboot drops it, and mpv's connection with it. Re-run the script and restart the container.
+- `pactl unload-module <id>` cuts the container off again (the script prints the id).
+- Auth is `auth-anonymous=1` but bound to the docker bridge, so only local containers can use it. Fine for a dev box, not a pattern to copy onto a shared host.
+- Per-track audio is `pulse/...` device names; `Jukebox.Devices` / `Jukebox.Default` are unset on purpose so it always follows the current default sink.
 
 ## Credentials
 
@@ -45,7 +62,8 @@ The sandbox password is not a secret — the container is bound to loopback and 
 
 1. **Containers cannot read workspace bind mounts on this machine.** Even root inside a container gets `Permission denied` on `/home/k/Code/...`, while named volumes work fine. Hence music and data live in named volumes, seeded with `docker cp`, instead of `./sandbox/music:/music`.
 2. **`npm install` fails with `EROFS`** because `~/.npm/_cacache` is read-only under the file sandbox. Use a workspace cache: `npm install --cache "$PWD/.tmp/npm-cache"`.
-3. **Navidrome's dev-admin env vars are gone** in 0.64.x. New installs create the first admin through the web UI, or `POST /auth/createAdmin` while the user table is empty; after that, `navidrome user create` from the CLI.
+3. **A container's mpv cannot see the host audio socket** (uid mapping again), and busctl/dbus is unusable from there too — hence the TCP bridge instead of mounting `/run/user/1000/pulse`.
+4. **Navidrome's dev-admin env vars are gone** in 0.64.x. New installs create the first admin through the web UI, or `POST /auth/createAdmin` while the user table is empty; after that, `navidrome user create` from the CLI.
 
 ## Verifying the jukebox without the UI
 

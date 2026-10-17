@@ -24,7 +24,7 @@ Navidrome's jukebox is not exposed by its own web UI. The only interface is Subs
 
 **`set` vs `clear` + `add`.** `set` replaces the queue without interrupting the current track; `clear` empties it. The UI uses `remove` for single rows and leaves `set` for later (e.g. drag-reorder, save/restore a party queue).
 
-**Audio output is the host's problem, not the app's.** `MPVCmdTemplate` decides where sound goes — real device, `--ao=null`, or a Snapcast FIFO. The sandbox uses `--ao=null` so playback advances at real-time speed without needing a sound card or making noise.
+**Audio output is the host's problem, not the app's.** `MPVCmdTemplate` decides where sound goes — a real device, `--ao=null`, or a Snapcast FIFO. Navidrome only cares that mpv answers on its IPC socket. Locally the sandbox plays into the host's PipeWire over a TCP bridge (`scripts/audio-dev.sh`), because the container cannot reach the host's audio socket directly. On the Pi the equivalent is `--device /dev/snd` plus `--ao=alsa`, or the same bridge when PipeWire is present.
 
 ## Consequences to remember
 
