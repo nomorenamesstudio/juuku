@@ -282,24 +282,28 @@ h1.display {
 .wordmark-stack {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* both lines flush right, so the lockup reads as one block */
+  align-items: flex-end;
   line-height: 1;
 }
 
 .wordmark-latin {
   font-family: 'Instrument Serif', Georgia, serif;
   font-size: 1.6rem;
+  /* the topbar sets a dim colour for its status text; the name must not inherit it */
+  color: var(--cream);
 }
 
 .wordmark-kana {
-  /* tucked under the latin name, indented clear of the j's descender */
-  margin-top: 0.02rem;
-  margin-left: 0.5rem;
+  margin-top: 0.08rem;
+  /* cancel the trailing letter-space so the kana's last stroke lands flush with
+     the latin name (kana ink overhangs its advance by ~0.04em) */
+  margin-right: -0.3em;
   font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
   font-size: 0.58rem;
   font-weight: 500;
   letter-spacing: 0.34em;
-  color: var(--dim);
+  color: var(--muted);
 }
 
 .wordmark.small .wordmark-latin {
@@ -307,7 +311,7 @@ h1.display {
 }
 
 .wordmark.small .wordmark-kana {
-  margin-left: 0.4rem;
+  margin-right: -0.26em;
   font-size: 0.52rem;
   letter-spacing: 0.3em;
 }
