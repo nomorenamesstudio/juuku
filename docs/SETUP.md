@@ -38,11 +38,33 @@ Configuration is environment only — nothing is baked into the image:
 | variable | meaning |
 |---|---|
 | `NAVIDROME_URL` | base URL of the Navidrome to drive, e.g. `http://navidrome:4533` |
-| `NAVIDROME_USER` | a dedicated, non-admin Navidrome user |
+| `NAVIDROME_USER` | the Navidrome account Juuku signs in as — **it has to be an admin**, see below |
 | `NAVIDROME_PASSWORD` | that user's password |
 | `HOST` / `PORT` | bind address and port inside the container (`0.0.0.0:3101`) |
 | `JUUKU_PASSWORD` | optional shared password; unset means no login at all |
 | `NODE_EXTRA_CA_CERTS` | optional, for a Navidrome behind a private CA |
+
+### The Navidrome account has to be an admin
+
+Navidrome refuses `jukeboxControl` for non-admin users with `Jukebox is admin only
+(code 50)`, whatever the mode is set to. A dedicated admin account is the least-bad
+answer — a remote that can start music needs exactly that permission:
+
+```sh
+docker exec navidrome /app/navidrome user create --user juuku        # prompts twice
+docker exec navidrome /app/navidrome user edit --user juuku --set-admin
+```
+
+Treat that password like the jukebox key it is: it is in `deploy/.env` on the host
+(mode 600) and nowhere else.
+
+Navidrome also needs `mpv` (the official image ships it) and the sound card. In
+compose that means `ND_JUKEBOX_ENABLED=true`, `devices: ["/dev/snd:/dev/snd"]` and
+the host `audio` group via `group_add`. Leave `Jukebox.Default` alone: it is a
+*symbolic* name from `Jukebox.Devices`, which cannot be set from the environment,
+so the default (`auto`) is the right choice for a single output. Get the device
+names with `docker run --rm --device /dev/snd --entrypoint mpv <image>
+--audio-device=help` if you ever need them.
 
 If Navidrome runs in another compose stack, attach Juuku to that stack's network
 and use the service name as the host (`http://navidrome:4533`); the commented

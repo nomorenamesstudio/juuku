@@ -23,9 +23,11 @@ room, not like a website.
   SameSite=Lax cookie signed with a key derived from that password, with a
   timing-safe compare on sign-in and per-address throttling of failures. That
   trade only holds while the port stays private either way.
-- **Dedicated Navidrome user.** Create a normal (non-admin) user for Juuku
-  (`navidrome user create --username juuku`). It needs browse, play, playlist
-  access — not admin, not another user's data.
+- **Dedicated Navidrome user — which has to be an admin.** Navidrome only lets
+  admin accounts drive the jukebox (`Jukebox is admin only`, code 50), so the
+  account Juuku signs in as carries full admin rights in Navidrome. Make it a
+  dedicated account for that reason, keep its password only in the deployment
+  environment, and do not reuse your own admin login.
 - **No secrets in git.** Only `deploy/.env.example` with placeholder values is
   tracked; `.env`, `.env.remote` and `.git-token` are ignored, and `.dockerignore`
   keeps them out of build contexts too.

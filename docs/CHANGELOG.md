@@ -4,6 +4,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — README hero: no tagline, a smaller lockup, and the logo asset now has a symmetric box so centring it centres the ink (measured: ink centre 399/400 and 204.5/205).
+- **Fix** — `Jukebox is admin only (code 50)` was being reported as "jukebox mode off". The two cases are now separate messages, and `docs/SETUP.md` / `SECURITY.md` say plainly that the Navidrome account has to be an admin, with the CLI commands to create and promote it.
+- **Verified** — jukebox mode on the homelab Pi: `/api/play` queues and starts, position advances, the AMS-24 sits in ALSA `state: RUNNING` under mpv, and skip, pause/resume and `setGain` all answer 200 through the deployed app.
+
 - **Fix** — a Navidrome with jukebox mode off now answers 501 with what to do ("set ND_JUKEBOX_ENABLED=true … and make sure it has mpv and an audio output") instead of passing the upstream code on as a 502.
 - **Fix** — the error strip no longer disappears before it can be read: the one-second poll used to clear it, so a failed action flashed a message and vanished. It stays until Dismiss (or until an action succeeds).
 
