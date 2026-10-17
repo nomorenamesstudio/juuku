@@ -426,10 +426,6 @@ h1.display {
   position: sticky;
   top: 0;
   z-index: 6;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.7rem;
   padding: 0.3rem 0 0.8rem;
   transition: background-color var(--dur-2), box-shadow var(--dur-2);
 }
@@ -438,9 +434,6 @@ h1.display {
   width: 100%;
 }
 
-.library-bar .segmented {
-  margin-bottom: 0;
-}
 
 .library-bar.stuck {
   /* nearly opaque: at 0.9 the covers underneath stay legible and fight the field */
@@ -2123,15 +2116,7 @@ h1.display {
     padding: 1rem 1rem 1.1rem;
   }
 
-  .library-bar {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.8rem;
-  }
-
   .library-bar .searchbar {
-    flex: 1;
-    min-width: 0;
     /* full-width was a 1000px field on a wide screen */
     max-width: 34rem;
   }

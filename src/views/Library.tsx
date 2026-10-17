@@ -77,16 +77,6 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
             aria-label="Search the library"
           />
         </div>
-        {!results && (
-          <div className="segmented" role="tablist" aria-label="Browse">
-            <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
-              Albums
-            </button>
-            <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
-              Artists
-            </button>
-          </div>
-        )}
       </div>
 
       {results ? (
@@ -157,6 +147,15 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
         </div>
       ) : (
         <>
+          <div className="segmented" role="tablist" aria-label="Browse">
+            <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
+              Albums
+            </button>
+            <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
+              Artists
+            </button>
+          </div>
+
           {tab === 'albums' ? (
             <>
               <div className="album-grid">
