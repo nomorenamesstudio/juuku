@@ -26,7 +26,7 @@ RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --chown=node:node server ./server
 COPY --from=build --chown=node:node /app/dist ./dist
 
-# uid 1000, matching the usual homelab user; nothing in the app writes to disk
+# uid 1000, the usual first non-root user on a Linux box; nothing is written to disk
 USER node
 EXPOSE 3101
 

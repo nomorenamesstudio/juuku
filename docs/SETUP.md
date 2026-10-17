@@ -8,13 +8,17 @@
 | 3101 | Juuku API (and the built UI after `npm run build`) | `127.0.0.1` |
 | 3100 | Vite dev server (proxies `/api` → 3101) | `127.0.0.1` |
 
-8080 is **not** free on this machine — the Ghosted dev site owns it. That is why the app sits on 3100 (the usual port convention here) and the API on 3101.
+Those are defaults, not requirements: `PORT` moves the API and `server.port` in
+`vite.config.ts` moves the dev server. Change them if they clash with something you
+already run.
 
 ## Testing from a phone (LAN)
 
-`npm run dev` binds Vite to `0.0.0.0:3100`, so on this machine the phone opens `http://10.10.10.20:3100/`. The API is proxied by Vite to `127.0.0.1:3101`, but this machine's `.env` also sets `HOST=0.0.0.0` for the API so the built app (`npm run build && npm start`) is reachable too.
-
-Verified through a real external hop (the Pi on the same LAN): `:3100` and `:3101/api/health` both answer 200, so firewalld already allows both ports. If a port is ever closed: `sudo firewall-cmd --add-port=3100/tcp` (add `--permanent` to survive a reload).
+`npm run dev` binds Vite to `0.0.0.0:3100`, so from a phone on the same network open
+`http://<your-machine>:3100/`. Vite proxies `/api` to `127.0.0.1:3101`; set `HOST=0.0.0.0`
+in `.env` too if you want the built app (`npm run build && npm start`) reachable from
+the phone as well. Open both ports in your firewall if one is running, e.g.
+`sudo firewall-cmd --add-port=3100/tcp` (add `--permanent` to survive a reload).
 
 There is **no authentication** in front of Juuku, so on the LAN anyone can play, skip and rewrite the queue, and `/api/*` is open. Fine for a home network while this is a POC; not something to expose to the internet. The committed `.env.example` keeps `HOST=127.0.0.1` for that reason.
 
@@ -77,7 +81,8 @@ and use the service name as the host (`http://navidrome:4533`); the commented
 `networks:` block in `deploy/compose.yml` is that case. A Navidrome on another
 host is just its LAN address.
 
-Tagged releases publish a multi-arch image (amd64 + arm64, so a Pi pulls natively):
+Tagged releases publish a multi-arch image (amd64 + arm64, so a Raspberry Pi or an
+ARM server pulls natively):
 
 ```sh
 docker pull ghcr.io/nomorenamesstudio/juuku:latest
@@ -93,13 +98,13 @@ own network — the app has no login by design.
 
 ## Behind a path prefix (Tailscale, a reverse proxy subpath)
 
-Juuku works mounted at `/juuku` instead of the root, which is how it is served on
-the homelab: `tailscale serve` on the Pi mounts a path to the container port and
-strips it before proxying, exactly like the `roefik` dashboard next to it.
+Juuku works mounted at `/juuku` instead of the root. `tailscale serve` can mount a
+path to the container port and strips it before proxying, which is one way to put a
+private URL in front of the app without a certificate of your own.
 
 ```sh
 sudo tailscale serve --bg --set-path /juuku http://127.0.0.1:3101
-# -> https://<machine>.<tailnet>.ts.net/juuku/
+# -> https://<machine>.<your-tailnet>.ts.net/juuku/
 ```
 
 That works because the build is prefix-agnostic: `vite` emits relative asset URLs,
@@ -108,20 +113,24 @@ and every API call is relative to the document rather than the host root. Nothin
 in the server knows about the prefix — the proxy removes it. See
 `docs/ARCHITECTURE.md` before adding an absolute URL back.
 
-## Pointing at another Navidrome (e.g. the main library)
+## Pointing at another Navidrome (a real library)
 
 Read-only is fine: a server with jukebox mode off answers 501 for `jukeboxControl`, and the app shows no queue instead of failing. Credentials stay out of git:
 
 ```sh
-NAVIDROME_URL=http://10.10.10.10:4533 NAVIDROME_USER=juuku NAVIDROME_PASSWORD=… \
+NAVIDROME_URL=http://navidrome.example.lan:4533 NAVIDROME_USER=juuku NAVIDROME_PASSWORD=… \
   ./scripts/remote-instance.sh 3102
 ```
 
-Environment variables win over `.env`, so the sandbox on `:3100` keeps running unchanged. On the Pi the `juuku` user was created with `docker exec -it navidrome /app/navidrome user create --username juuku --name Juuku` (no password flag - it prompts twice, so it needs a TTY). Playback through that instance would need `Jukebox.Enabled`, `mpv` and an audio device on the Pi first.
+Environment variables win over `.env`, so the sandbox on `:3100` keeps running
+unchanged. Create the user once with `docker exec -it navidrome /app/navidrome user
+create --username juuku` (there is no password flag — it prompts twice, so it needs a
+TTY). Playback through a real server needs jukebox mode, `mpv` and an audio output on
+that host first.
 
 ## The throwaway Navidrome
 
-Never point development at the Pi instance. `docker-compose.yml` runs a separate Navidrome with jukebox enabled:
+Never point development at your live instance. `docker-compose.yml` runs a separate Navidrome with jukebox enabled:
 
 - container `juuku-navidrome`, project `juuku`
 - `Jukebox.Enabled=true`, `MPVCmdTemplate` with `--ao=pulse` (real audio, see below)
@@ -135,7 +144,8 @@ Never point development at the Pi instance. `docker-compose.yml` runs a separate
 
 The script starts the container, seeds the music volume from `sandbox/music` if empty, creates the first admin (`admin` / `juuku` by default, via `/auth/createAdmin` — that endpoint only exists while the user table is empty), and forces a scan.
 
-`sandbox/music` is gitignored: it holds two albums copied from the Pi library (Daft Punk — *Human After All*, Röyksopp — *Do It Again*, 15 tracks). Replace or extend them and re-run the script; `docker compose down -v` resets both volumes.
+`sandbox/music` is gitignored and starts empty: drop a few albums in it (any format
+Navidrome reads) and re-run the script. `docker compose down -v` resets both volumes.
 
 ## Hearing it
 
@@ -169,7 +179,11 @@ The sandbox password is not a secret — the container is bound to loopback and 
 
 ## Environment traps found while building this
 
-1. **Containers cannot read workspace bind mounts on this machine.** Even root inside a container gets `Permission denied` on `/home/k/Code/...`, while named volumes work fine. Hence music and data live in named volumes, seeded with `docker cp`, instead of `./sandbox/music:/music`.
+1. **Bind mounts can be unreadable inside the container.** Depending on the host's
+   filesystem and user namespaces, even root in the container gets `Permission
+   denied` on a bind mount while a named volume works fine. Hence music and data
+   live in named volumes, seeded with `docker cp`, instead of a `./sandbox/music`
+   mount.
 2. **`npm install` fails with `EROFS`** because `~/.npm/_cacache` is read-only under the file sandbox. Use a workspace cache: `npm install --cache "$PWD/.tmp/npm-cache"`.
 3. **A container's mpv cannot see the host audio socket** (uid mapping again), and busctl/dbus is unusable from there too — hence the TCP bridge instead of mounting `/run/user/1000/pulse`.
 4. **Navidrome's dev-admin env vars are gone** in 0.64.x. New installs create the first admin through the web UI, or `POST /auth/createAdmin` while the user table is empty; after that, `navidrome user create` from the CLI.

@@ -53,8 +53,8 @@ Works on a phone first and gets a sidebar on wide screens.
 
 ```sh
 npm install
-./scripts/sandbox-up.sh     # throwaway Navidrome + 15 test tracks, :4533
-./scripts/audio-dev.sh      # jukebox audio -> this machine's speakers
+./scripts/sandbox-up.sh     # throwaway Navidrome on :4533 (albums from sandbox/music)
+./scripts/audio-dev.sh      # jukebox audio -> your speakers
 npm run dev                 # api :3101 + web :3100
 ```
 
@@ -81,7 +81,7 @@ Copy `.env.example` to `.env` and point it at the Navidrome you want to control:
 | --- | --- | --- |
 | `NAVIDROME_URL` | `http://127.0.0.1:4533` | Navidrome base URL |
 | `NAVIDROME_USER` | `admin` | User with jukebox permission |
-| `NAVIDROME_PASSWORD` | `juuku` | That user's password (sandbox default) |
+| `NAVIDROME_PASSWORD` | `juuku` | That user's password (the sandbox default) |
 | `PORT` | `3101` | Juuku API port |
 
 ## Layout
@@ -93,7 +93,7 @@ src/views/       Library, AlbumView, ArtistView, QueueView, FavoritesView, Playe
 public/fonts/    Bricolage Grotesque + Instrument Serif (SIL OFL, licenses alongside)
 sandbox/         throwaway music/data mount points for the dev instance
 scripts/         sandbox-up.sh — compose + seed music + create admin + scan
-                 audio-dev.sh — route the container's mpv to this machine's speakers
+                 audio-dev.sh — route the container's mpv to your speakers
 docker-compose.yml   the throwaway Navidrome with jukebox enabled
 docs/            INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
 ```

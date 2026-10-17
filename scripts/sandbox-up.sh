@@ -15,8 +15,12 @@ for _ in $(seq 1 40); do
 done
 
 if ! docker exec juuku-navidrome sh -c '[ -n "$(ls -A /music 2>/dev/null)" ]'; then
-  echo "seeding music volume..."
-  docker cp sandbox/music/. juuku-navidrome:/music
+  if [ -z "$(ls -A sandbox/music 2>/dev/null)" ]; then
+    echo "sandbox/music is empty - drop a few albums in there and run this again" >&2
+  else
+    echo "seeding music volume..."
+    docker cp sandbox/music/. juuku-navidrome:/music
+  fi
 fi
 
 # First-run admin: /auth/createAdmin only exists while the user table is empty.

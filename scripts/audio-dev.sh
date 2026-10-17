@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Send the sandbox jukebox's audio to this machine's speakers.
+# Send the sandbox jukebox's audio to your machine's speakers.
 #
 # The container cannot read the host's PulseAudio socket directory (its uid is
 # not mapped to yours), but it can reach it over TCP through the docker bridge.

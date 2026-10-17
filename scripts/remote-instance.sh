@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Serve the built app against another Navidrome (e.g. the main library on the Pi)
+# Serve the built app against another Navidrome (a live library, say)
 # without touching the local sandbox. Secrets stay in the environment, never in git.
 #
-#   NAVIDROME_URL=http://10.10.10.10:4533 NAVIDROME_USER=me NAVIDROME_PASSWORD=… \
+#   NAVIDROME_URL=http://navidrome.example.lan:4533 NAVIDROME_USER=me NAVIDROME_PASSWORD=… \
 #     ./scripts/remote-instance.sh 3102
 set -euo pipefail
 cd "$(dirname "$0")/.."

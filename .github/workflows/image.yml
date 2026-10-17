@@ -35,7 +35,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          # the homelab Pi is arm64, laptops are amd64
+          # arm64 hosts (Raspberry Pi, ARM servers) and amd64 machines
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

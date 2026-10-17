@@ -4,14 +4,16 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
-- **Feature** — the app can be mounted under a path prefix, which is how it is published on the homelab at `https://jedha.goose-broadnose.ts.net/juuku/`: `tailscale serve --set-path /juuku` proxies to the container and strips the prefix, like the `roefik` dashboard. The build emits relative assets, the manifest uses `start_url`/`scope` `./`, and every API call is relative to the document. Verified end to end behind a stripping proxy before touching Tailscale.
+- **Change** — documentation neutralised for a public repo: no hostnames, LAN addresses, machine names, port-history anecdotes or descriptions of whose hardware this was built on. `sandbox-up.sh` also says plainly that `sandbox/music` starts empty instead of copying nothing and scanning.
 
-- **Change** — README screenshot retaken against the homelab library (266 albums) instead of the two-album sandbox, as a 1600px JPEG rather than a 2.9 MB PNG.
+- **Feature** — the app can be mounted under a path prefix: `tailscale serve --set-path /juuku` proxies to the container and strips the prefix. The build emits relative assets, the manifest uses `start_url`/`scope` `./`, and every API call is relative to the document. Verified end to end behind a prefix-stripping proxy.
+
+- **Change** — README screenshot retaken against a 266-album library instead of the two-album sandbox, as a 1600px JPEG rather than a 2.9 MB PNG.
 
 - **Change** — README hero: no tagline, smaller, and the lockup is now the app's own wordmark scaled with a transform instead of a generated SVG. The outline export could not reproduce the browser's kerning, so the kana sat a few percent off no matter how the anchors were measured; `public/logo.svg` and its build script are gone rather than left as a near-duplicate that drifts.
 - **Fix** — `Jukebox is admin only (code 50)` was being reported as "jukebox mode off". The two cases are now separate messages.
 - **Finding** — the admin requirement is not a bug: Navidrome checks `Jukebox.AdminOnly`, which defaults to **true** (`jukebox.adminonly` in `conf/configuration.go`, listed in the options reference, missing from the jukebox feature page). `ND_JUKEBOX_ADMINONLY=false` makes a plain account work, so SETUP/SECURITY now recommend that instead of promoting the user to admin.
-- **Verified** — jukebox mode on the homelab Pi: `/api/play` queues and starts, position advances, the AMS-24 sits in ALSA `state: RUNNING` under mpv, and skip, pause/resume and `setGain` all answer 200 through the deployed app.
+- **Verified** — jukebox mode against a real server on a Raspberry Pi: `/api/play` queues and starts, position advances, the USB DAC sits in ALSA `state: RUNNING` under mpv, and skip, pause/resume and `setGain` all answer 200 through the deployed app.
 
 - **Fix** — a Navidrome with jukebox mode off now answers 501 with what to do ("set ND_JUKEBOX_ENABLED=true … and make sure it has mpv and an audio output") instead of passing the upstream code on as a 502.
 - **Fix** — the error strip no longer disappears before it can be read: the one-second poll used to clear it, so a failed action flashed a message and vanished. It stays until Dismiss (or until an action succeeds).
@@ -29,7 +31,7 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 - **Feature** — optional shared-password login (`JUUKU_PASSWORD`, off by default so LAN use stays frictionless). Sessions are a signed expiry stamp in an HttpOnly, SameSite=Lax cookie (no server-side store; changing the password ends every session), the compare is timing-safe, failures are throttled per address, and the shell does not mount — nor poll — until the session is known. `server/auth.mjs` carries three tests for the token, expiry, cookie parsing and the throttle.
 - **Change** — the API answers `/api/session`, `/api/login` and `/api/logout`; everything else under `/api` requires the session when a password is configured.
 
-- **Feature** — container deployment: multi-stage `Dockerfile` (build the SPA, then a runtime with `express` as the only dependency), running as uid 1000 with a read-only rootfs, `cap_drop: ALL` and `no-new-privileges`. `deploy/compose.yml` plus `deploy/.env.example` are the homelab drop-in; configuration is environment only. Verified by running the image against the sandbox Navidrome: health, albums, covers, install assets and a jukebox write all work from inside a read-only container. Image is 246 MB.
+- **Feature** — container deployment: multi-stage `Dockerfile` (build the SPA, then a runtime with `express` as the only dependency), running as uid 1000 with a read-only rootfs, `cap_drop: ALL` and `no-new-privileges`. `deploy/compose.yml` plus `deploy/.env.example` are the drop-in; configuration is environment only. Verified by running the image against the sandbox Navidrome: health, albums, covers, install assets and a jukebox write all work from inside a read-only container. Image is 246 MB.
 - **Feature** — `/api/live`, a liveness route with no upstream call, used by the container healthcheck so a Navidrome outage does not mark the app unhealthy.
 - **Change** — `react`, `react-dom` and `lucide-react` moved to `devDependencies`: vite bundles them at build time, so the runtime image needs `express` alone (runtime `node_modules` is 3.8 MB).
 - **Feature** — `SECURITY.md`: what the app can do in the wrong hands, the LAN-only no-login trade, the reverse-proxy recipe, and the gaps stated plainly (no app login, no CSRF token beyond JSON-only writes, no rate limiting, password visible to `docker inspect`).
@@ -54,7 +56,7 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 - **Change** — on desktop the title and the search share one sticky row, and the row shrinks when pinned (title 2.5rem → 1.5rem, field padding and font down too), taking 53px instead of 72px. The phone keeps its behaviour: title scrolls away, only the field pins.
 - **Fix** — the *first* attempt at that row left the title grey and washed out: the phone bar's gradient is absolutely positioned, and with the bar made static on desktop it escaped to the sticky head and painted over the title. It is now disabled at that breakpoint, with the row carrying its own fade.
 
-- **Feature** — the library's Albums/Artists switch carries count pills. The album number comes from `GET /api/counts`, which reads Navidrome's own `X-Total-Count` (Subsonic never reports totals) and is cached for five minutes; it returns `null` on a non-Navidrome server, and the pill simply does not render. The artist number is the length of the list the tab actually shows — Navidrome's native artist total counts every credit row (827 on the main library against 73 browsable artists), so it would have been a lie next to a list of 73.
+- **Feature** — the library's Albums/Artists switch carries count pills. The album number comes from `GET /api/counts`, which reads Navidrome's own `X-Total-Count` (Subsonic never reports totals) and is cached for five minutes; it returns `null` on a non-Navidrome server, and the pill simply does not render. The artist number is the length of the list the tab actually shows — Navidrome's native artist total counts every credit row (one library reported 827 of them against 73 browsable artists), so it would have been a lie next to a list of 73.
 
 - **Change** — the pinned search is a floating glass pill now: the band behind it is gone, so covers scroll past and only the field frosts them (no cut edge), and it floats 0.55rem from the top instead of hugging the viewport. Its own tint went to 0.8 alpha because at 0.52 the placeholder over a bright cover measured ~2.5:1; the placeholder uses `--glass-text` for the same reason.
 - **Change** — the pinned search sits on a gradient again, but a fade rather than a band: opaque at the viewport edge, gone 2.2rem below the field, and with no `backdrop-filter` on it — the blur on that box was what produced the visible cut line the first time round.
@@ -76,7 +78,7 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 - **Feature** — browse-only mode: a Navidrome without jukebox mode answers **501** ("This endpoint is not implemented") for `jukeboxControl`, not just "Jukebox is disabled". `/api/state` now returns an empty queue in that case, so the library, playlists and search work against any Navidrome without an error strip; `/api/health` reports `jukebox.enabled: false`.
 - **Feature** — `scripts/remote-instance.sh`: serves the built app against another Navidrome on a second port, credentials from the environment, so the local sandbox stays untouched.
 - **Fix** — artist rows without any art showed a blank circle: the initial fallback lost its size when the avatar rule was narrowed to `img`. It is 44 px with the first letter again.
-- **Verified** — pointed at the main library (266 albums, 73 artists): first grid 112 ms, album detail 17 ms, cover 137 ms, search 28 ms, paging to offset 240 works, no console errors.
+- **Verified** — pointed at a 266-album library (73 artists): first grid 112 ms, album detail 17 ms, cover 137 ms, search 28 ms, paging to offset 240 works, no console errors.
 
 - **Change** — the `Favorites` playlist can’t be deleted: `/api/playlists/:id` answers 409 for it and the detail page hides the Delete action, with a one-liner explaining that the heart owns it. Other playlists delete as before.
 
@@ -156,7 +158,7 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 - **Fix** — volume slider no longer fights the 1s poll: the thumb holds a local draft while dragging, `setGain` is debounced 150 ms and applied from its own response, keyboard changes now commit too (previously only `pointerup` did), and the track/thumb are bigger with `touch-action: none`.
 - **Fix** — mobile layout: smaller cover art, volume on its own row, 44 px touch targets, and the queue scrolls inside its panel (with a fade) instead of pushing the library off the page.
-- **Feature** — jukebox audio actually plays on the dev machine's speakers: `scripts/audio-dev.sh` exposes PulseAudio on the docker bridge (`172.17.0.1:4713`) and recreates the container with `PULSE_SERVER` + `mpv --ao=pulse`. Verified: mpv streams at 44.1 kHz into the default sink and `position` advances in real time.
+- **Feature** — jukebox audio actually plays on the host's speakers: `scripts/audio-dev.sh` exposes PulseAudio on the docker bridge (`172.17.0.1:4713`) and recreates the container with `PULSE_SERVER` + `mpv --ao=pulse`. Verified: mpv streams at 44.1 kHz into the default sink and `position` advances in real time.
 
 - **Feature** — project skeleton: Vite + React UI, Express API, `.mjs` Subsonic client (no build step). Config via `.env`.
 - **Feature** — full jukebox control surface: `state` (queue + status in one call), `control` (`set`, `start`, `stop`, `skip` with offset, `add`, `clear`, `remove`, `shuffle`, `setGain`), library search, album browsing and a cover-art proxy.
@@ -167,5 +169,5 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 ### Notes
 
 - Behaviour verified against Navidrome 0.64.2: pause/play, skip with offset, gain, add, remove, shuffle all round-trip, and `position` advances in real time under `--ao=null`.
-- Port 8080 is taken on this machine; the dev server sits on 3100 and the API on 3101.
+- The dev server sits on 3100 and the API on 3101 (`PORT` and `server.port` move them).
 - Music and data live in docker named volumes because container bind mounts from the workspace are unreadable here.

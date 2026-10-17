@@ -1,6 +1,6 @@
-# Throwaway Navidrome for developing the jukebox remote. Unrelated to the Pi instance.
+# Throwaway Navidrome for developing the jukebox remote — never your real library.
 #
-# Bind mounts from the workspace are unreadable inside containers on this machine,
+# Bind mounts from the workspace can be unreadable inside containers,
 # so music and data live in named volumes; scripts/sandbox-up.sh seeds them.
 name: juuku
 

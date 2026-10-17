@@ -34,7 +34,10 @@ Navidrome's jukebox is not exposed by its own web UI. The only interface is Subs
 
 **`set` vs `clear` + `add`.** `set` replaces the queue without interrupting the current track; `clear` empties it. The UI uses `remove` for single rows and leaves `set` for later (e.g. drag-reorder, save/restore a party queue).
 
-**Audio output is the host's problem, not the app's.** `MPVCmdTemplate` decides where sound goes — a real device, `--ao=null`, or a Snapcast FIFO. Navidrome only cares that mpv answers on its IPC socket. Locally the sandbox plays into the host's PipeWire over a TCP bridge (`scripts/audio-dev.sh`), because the container cannot reach the host's audio socket directly. On the Pi the equivalent is `--device /dev/snd` plus `--ao=alsa`, or the same bridge when PipeWire is present.
+**Audio output is the host's problem, not the app's.** `MPVCmdTemplate` decides where sound goes — a real device, `--ao=null`, or a Snapcast FIFO. Navidrome only cares that mpv answers on its IPC socket. The sandbox plays into the host's PipeWire over a TCP bridge
+(`scripts/audio-dev.sh`), because the container cannot reach the host's audio socket
+directly. On a host with a real sound card the equivalent is mapping `/dev/snd` into
+the container and using `--ao=alsa`, or the same bridge where PipeWire is present.
 
 ## Consequences to remember
 
@@ -59,8 +62,8 @@ reproduce the browser's kerning and drifted by a few percent on the kana.
 
 ## URLs are relative on purpose
 
-The app is served at `/` on the LAN and at `/juuku` behind `tailscale serve`, which
-strips the mount path before proxying (the same trick the `roefik` dashboard uses).
+The app is served at `/` on the LAN, and can be mounted at `/juuku` behind something
+like `tailscale serve`, which strips the mount path before proxying.
 Everything on the client side is therefore relative:
 
 - `vite` builds with `base: './'` (dev keeps `/`), so assets are `./assets/…`
