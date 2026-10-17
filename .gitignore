@@ -6,3 +6,4 @@ sandbox/data/
 .tmp/
 tsconfig.tsbuildinfo
 .env.remote
+.git-token

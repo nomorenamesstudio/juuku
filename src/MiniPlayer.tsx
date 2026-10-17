@@ -57,7 +57,7 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
   };
 
   return (
-    <div className="nowbar">
+    <div className="nowbar" role="region" aria-label="Now playing">
       <div className="nowbar-row">
 
       <div className="nowbar-left">

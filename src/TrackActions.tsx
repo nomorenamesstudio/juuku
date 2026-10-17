@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { type Song, coverUrl } from './api';
 import { CloseIcon, PlusIcon } from './icons';
 import type { Jukebox } from './useJukebox';
@@ -30,11 +30,16 @@ export function TrackActions({
   const [step, setStep] = useState<'actions' | 'playlists' | 'new'>(target.step ?? 'actions');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const single = target.songs.length === 1 ? target.songs[0] : null;
   const title = single ? single.title : `${target.songs.length} tracks`;
 
+  // the sheet takes focus so a keyboard user lands inside it, and Escape closes
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    sheetRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
@@ -62,15 +67,19 @@ export function TrackActions({
   return (
     <div className="sheet-layer" onClick={onClose} role="presentation">
       <div
-        className="sheet"
+        ref={sheetRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label={`Actions for ${title}`}
+        aria-labelledby="sheet-title"
+        className="sheet"
         onClick={(event) => event.stopPropagation()}
       >
         <header className="sheet-head">
           <div>
-            <p className="sheet-eyebrow">{step === 'actions' ? title : step === 'new' ? 'New playlist' : 'Add to playlist'}</p>
+            <p className="sheet-eyebrow" id="sheet-title">
+              {step === 'actions' ? title : step === 'new' ? 'New playlist' : 'Add to playlist'}
+            </p>
             {step === 'actions' && single ? <p className="sheet-sub">{single.artist}</p> : null}
           </div>
           <button className="icon-button" onClick={onClose} aria-label="Close">

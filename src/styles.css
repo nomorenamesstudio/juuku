@@ -29,8 +29,8 @@
   --raise: #251d15;
   --line: #352a1f;
   --cream: #f4ead9;
-  --muted: #a08f78;
-  --dim: #6f5f4c;
+  --muted: #b6a68c;
+  --dim: #9a8870;
   --amber: #f0a24a;
   --ember: #c9583f;
   --radius: 18px;
@@ -41,7 +41,7 @@
   --dur-2: 200ms;
   --dur-3: 320ms;
   font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -289,7 +289,7 @@ h1.display {
 
 .wordmark-latin {
   font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 1.6rem;
+  font-size: 1.75rem;
   /* the topbar sets a dim colour for its status text; the name must not inherit it */
   color: var(--cream);
 }
@@ -298,22 +298,22 @@ h1.display {
   margin-top: 0.08rem;
   /* cancel the trailing letter-space so the kana's last stroke lands flush with
      the latin name (kana ink overhangs its advance by ~0.04em) */
-  margin-right: -0.3em;
+  margin-right: -0.14em;
   font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
-  font-size: 0.58rem;
-  font-weight: 500;
-  letter-spacing: 0.34em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
   color: var(--muted);
 }
 
 .wordmark.small .wordmark-latin {
-  font-size: 1.35rem;
+  font-size: 1.6rem;
 }
 
 .wordmark.small .wordmark-kana {
-  margin-right: -0.26em;
-  font-size: 0.52rem;
-  letter-spacing: 0.3em;
+  margin-right: -0.12em;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
 }
 
 .led {
@@ -587,6 +587,8 @@ h1.display {
 }
 
 .album-meta {
+  /* keep "35 min" together instead of orphaning the unit on its own line */
+  text-wrap: pretty;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -1153,7 +1155,7 @@ h1.display {
   align-items: center;
   justify-content: center;
   gap: 0.12rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--dim);
   position: relative;
 }
@@ -1173,7 +1175,7 @@ h1.display {
   border-radius: 999px;
   background: var(--amber);
   color: #201505;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 1rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -1767,7 +1769,7 @@ h1.display {
   .rail-group > p {
     margin: 0 0 0.25rem;
     padding: 0 0.6rem;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     letter-spacing: 0.01em;
     color: var(--dim);
   }

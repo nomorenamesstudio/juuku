@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { type Playlist, type Song, coverUrl, deletePlaylist, getPlaylist } from '../api';
 import { formatTotal } from '../format';
@@ -14,6 +14,17 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const [error, setError] = useState<string | null>(null);
   const openActions = useTrackActions();
   const [confirming, setConfirming] = useState(false);
+  const confirmRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!confirming) return;
+    confirmRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setConfirming(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [confirming]);
   const [deleting, setDeleting] = useState(false);
 
   const remove = async () => {
@@ -108,6 +119,8 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
         createPortal(
           <div className="sheet-layer" onClick={() => !deleting && setConfirming(false)} role="presentation">
           <div
+            ref={confirmRef}
+            tabIndex={-1}
             className="sheet confirm"
             role="alertdialog"
             aria-modal="true"

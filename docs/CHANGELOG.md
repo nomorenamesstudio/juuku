@@ -4,6 +4,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Fix** — readability pass, measured rather than guessed: root type 15px → 16px, `--dim` was `#6f5f4c` at **3.08:1** (below AA) and is now `#9a8870` (5.5 / 5.2 / 4.8 over bg, panel, raised), `--muted` lifted to `#b6a68c` (7.0–8.0:1). Every informational label under 12px was raised (now-playing sub and time 11.3 → 12, tab labels 10.8 → 12, badge 10.2 → 11.5). The wordmark went 21.6 → 25.6px on phones (24 → 28px in the rail) and its kana 7.8 → 10.4px at weight 600.
+- **Fix** — accessibility: axe now reports **no violations** across library, album, artists, queue, playlists, favorites, player and the open sheet. The one remaining hit was the now-playing bar sitting outside any landmark (`region`), so it is a labelled region now. The sheet and the delete confirmation take focus on open and close on Escape, with `role="dialog"`, `aria-modal` and `aria-labelledby`.
+- **Note** — axe reports 8–34 `color-contrast` nodes per view as *incomplete*, because the app paints gradients behind text and axe cannot resolve the effective background. Those pairs were checked by hand against the three surface tokens instead; anything on a gradient edge is a judgement call, not a measurement.
+
 - **Change** — the project is **Juuku** (`ジューク`): package name, README, docs, script and container names, and the wordmark now sets the latin name over the kana in small letterspaced type. Chosen after checking the old name was a live registered trademark (Juicebox App, Inc.), taken on npm, on all three domains, and used by five other music projects; `juuku` is free on npm with no projects using it. The sandbox was rebuilt under the new compose project, so its volumes and admin password (`juuku`) are fresh.
 
 - **Fix** — the artist initial sat low in its circle: a lone cap never centres by line box in Instrument Serif (its ascent/descent dominate), so the fallback now uses the UI face, flex-centred with `line-height: 1`.
