@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { coverUrl } from './api';
 import { formatTime } from './format';
 import {
+  AddToPlaylistIcon,
   ChevronDownIcon,
   HeartIcon,
   NextIcon,
@@ -12,11 +13,13 @@ import {
   VolumeIcon,
 } from './icons';
 import { goBack, navigate } from './router';
+import { useTrackActions } from './TrackActions';
 import type { Jukebox } from './useJukebox';
 
 /** Bottom bar: compact mini player on phones, full transport bar on wide screens. */
 export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () => void; expanded?: boolean }) {
   const { current, status, entries } = jbox;
+  const openActions = useTrackActions();
   const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
   const [positionDraft, setPositionDraft] = useState<number | null>(null);
   const volumeTimer = useRef<number | undefined>(undefined);
@@ -97,6 +100,13 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
           aria-label="Favorite this track"
         >
           <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
+        </button>
+        <button
+          className="icon-button bar-only"
+          onClick={() => current && openActions([current], { step: 'playlists' })}
+          aria-label="Add this track to a playlist"
+        >
+          <AddToPlaylistIcon size={18} />
         </button>
         <label className="nowbar-volume bar-only">
           <VolumeIcon size={18} />

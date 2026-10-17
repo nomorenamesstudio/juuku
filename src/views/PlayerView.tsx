@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Lyrics, coverUrl, getLyrics } from '../api';
 import { formatTime } from '../format';
 import {
+  AddToPlaylistIcon,
   ChevronDownIcon,
   HeartIcon,
   MicIcon,
@@ -9,10 +10,9 @@ import {
   PauseIcon,
   PlayIcon,
   PrevIcon,
-  RepeatIcon,
-  RepeatOneIcon,
   VolumeIcon,
 } from '../icons';
+import { useTrackActions } from '../TrackActions';
 import { goBack, navigate } from '../router';
 import type { Jukebox } from '../useJukebox';
 
@@ -141,6 +141,7 @@ export function PlayerView({
   const trackTimer = useRef<number | undefined>(undefined);
   const volumeTimer = useRef<number | undefined>(undefined);
   const lyrics = useLyrics(current?.id);
+  const openActions = useTrackActions();
   const close = () => goBack();
   const { dragY, dragging, handlers } = usePullToDismiss(close);
 
@@ -206,12 +207,11 @@ export function PlayerView({
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
         </span>
         <button
-          className={`icon-button ${jbox.repeat !== 'off' ? 'is-on' : ''}`}
-          onClick={jbox.cycleRepeat}
-          aria-pressed={jbox.repeat !== 'off'}
-          aria-label={`Repeat ${jbox.repeat}`}
+          className="icon-button"
+          onClick={() => openActions([current], { step: 'playlists' })}
+          aria-label="Add this track to a playlist"
         >
-          {jbox.repeat === 'one' ? <RepeatOneIcon size={18} /> : <RepeatIcon size={18} />}
+          <AddToPlaylistIcon size={18} />
         </button>
       </header>
 

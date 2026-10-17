@@ -33,7 +33,11 @@ export default function App() {
   const jbox = useJukebox();
   const { route } = useRoute();
   const [lyricsOpen, setLyricsOpen] = useState(false);
-  const [trackActions, setTrackActions] = useState<{ songs: Song[]; playlistId?: string } | null>(null);
+  const [trackActions, setTrackActions] = useState<{
+    songs: Song[];
+    playlistId?: string;
+    step?: 'playlists';
+  } | null>(null);
   const isPlayer = route.name === 'player';
   // on phones the full-screen player owns the screen, except in lyrics mode where
   // the mini player and tabs come back so you can still drive playback

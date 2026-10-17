@@ -7,9 +7,10 @@ import { usePlaylists } from './usePlaylists';
 interface TrackActionsTarget {
   songs: Song[];
   playlistId?: string;
+  step?: 'actions' | 'playlists';
 }
 
-type OpenActions = (songs: Song[], options?: { playlistId?: string }) => void;
+type OpenActions = (songs: Song[], options?: { playlistId?: string; step?: 'playlists' }) => void;
 
 const ActionsContext = createContext<OpenActions>(() => {});
 export const useTrackActions = () => useContext(ActionsContext);
@@ -26,7 +27,7 @@ export function TrackActions({
   jbox: Jukebox;
 }) {
   const playlists = usePlaylists();
-  const [step, setStep] = useState<'actions' | 'playlists' | 'new'>('actions');
+  const [step, setStep] = useState<'actions' | 'playlists' | 'new'>(target.step ?? 'actions');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const single = target.songs.length === 1 ? target.songs[0] : null;

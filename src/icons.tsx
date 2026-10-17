@@ -4,6 +4,7 @@ import {
   Heart,
   Library,
   ListMusic,
+  ListPlus,
   MoreHorizontal,
   MicVocal,
   Pause,
@@ -69,6 +70,7 @@ export const HeartIcon = icon(Heart);
 export const PlusIcon = icon(Plus);
 export const QueueIcon = icon(ListMusic);
 export const PlaylistIcon = icon(ListMusic);
+export const AddToPlaylistIcon = icon(ListPlus);
 export const LibraryIcon = icon(Library);
 export const ArtistIcon = icon(UserRound);
 export const SearchIcon = icon(Search);
