@@ -70,6 +70,29 @@ export async function binary(endpoint, params) {
   };
 }
 
+/**
+ * Subsonic never returns a total, but Navidrome's own API puts it in X-Total-Count.
+ * Only the album total is worth it: its artist count includes every credit row
+ * (827 on the main library) while the Subsonic artist list shows 73.
+ */
+export async function nativeTotal(resource) {
+  const login = await fetch(`${config.url}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: config.user, password: config.password }),
+  });
+  if (!login.ok) throw new ApiError(login.status, `Navidrome sign-in failed (${login.status})`);
+
+  const { token } = await login.json();
+  const response = await fetch(`${config.url}/api/${resource}?_end=1&_sort=name`, {
+    headers: { 'x-nd-authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) throw new ApiError(response.status, `Navidrome ${resource} count failed (${response.status})`);
+
+  const total = Number(response.headers.get('x-total-count'));
+  return Number.isFinite(total) && total >= 0 ? total : null;
+}
+
 export function serverInfo() {
   return { url: config.url, user: config.user };
 }

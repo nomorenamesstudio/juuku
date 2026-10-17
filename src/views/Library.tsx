@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { type Album, type Artist, type Song, coverUrl, getAlbums, getArtists, search } from '../api';
+import { type Album, type Artist, type Song, coverUrl, getAlbums, getArtists, getCounts, search } from '../api';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
@@ -10,6 +10,7 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [artists, setArtists] = useState<Artist[]>([]);
+  const [albumTotal, setAlbumTotal] = useState<number | null>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ songs: Song[]; albums: Album[]; artists: Artist[] } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,9 +34,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   }, []);
 
   useEffect(() => {
-    if (tab !== 'artists' || artists.length > 0) return;
+    getCounts().then((payload) => setAlbumTotal(payload.albums), () => setAlbumTotal(null));
+    // the artist tab shows this exact list, so the pill counts it too
     getArtists().then((payload) => setArtists(payload.artists));
-  }, [tab, artists.length]);
+  }, []);
 
   useEffect(() => {
     const text = query.trim();
@@ -150,9 +152,11 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
           <div className="segmented" role="tablist" aria-label="Browse">
             <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
               Albums
+              {albumTotal !== null && <span className="count-pill">{albumTotal}</span>}
             </button>
             <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
               Artists
+              {artists.length > 0 && <span className="count-pill">{artists.length}</span>}
             </button>
           </div>
 

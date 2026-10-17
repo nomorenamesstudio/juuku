@@ -96,6 +96,8 @@ export const getAlbums = (offset = 0, size = 30, type = 'newest') =>
   request<{ albums: Album[]; hasMore: boolean }>(`/api/albums?type=${type}&size=${size}&offset=${offset}`);
 
 export const getAlbum = (id: string) => request<{ album: Album; songs: Song[] }>(`/api/albums/${id}`);
+export const getCounts = () => request<{ albums: number | null }>('/api/counts');
+
 export const getArtists = () => request<{ artists: Artist[] }>('/api/artists');
 export const getArtist = (id: string) => request<{ artist: Artist; albums: Album[] }>(`/api/artists/${id}`);
 

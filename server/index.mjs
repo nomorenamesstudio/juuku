@@ -2,7 +2,7 @@ import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseLrc } from './lyrics.mjs';
-import { ApiError, binary, call, serverInfo } from './subsonic.mjs';
+import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
 try {
   process.loadEnvFile('.env');
@@ -230,6 +230,16 @@ app.get('/api/albums/:id', wrap(async (req, res) => {
     album: album(response.album),
     songs: (response.album.song ?? []).map(song),
   });
+}));
+
+// totals for the library tab pills; null when the server is not Navidrome
+let counts = { at: 0, value: { albums: null } };
+
+app.get('/api/counts', wrap(async (_req, res) => {
+  if (Date.now() - counts.at > 300_000) {
+    counts = { at: Date.now(), value: { albums: await nativeTotal('album').catch(() => null) } };
+  }
+  res.json(counts.value);
 }));
 
 app.get('/api/artists', wrap(async (_req, res) => {

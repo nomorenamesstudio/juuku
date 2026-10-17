@@ -485,6 +485,21 @@ h1.display {
   border-radius: 10px;
 }
 
+.count-pill {
+  margin-left: 0.4rem;
+  padding: 0.06rem 0.42rem;
+  border-radius: 999px;
+  background: rgba(244, 234, 217, 0.07);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.segmented button[aria-selected='true'] .count-pill {
+  background: rgba(240, 162, 74, 0.16);
+  color: var(--amber);
+}
+
 .segmented button {
   padding: 0.4rem 0.85rem;
   border-radius: 8px;

@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — the library's Albums/Artists switch carries count pills. The album number comes from `GET /api/counts`, which reads Navidrome's own `X-Total-Count` (Subsonic never reports totals) and is cached for five minutes; it returns `null` on a non-Navidrome server, and the pill simply does not render. The artist number is the length of the list the tab actually shows — Navidrome's native artist total counts every credit row (827 on the main library against 73 browsable artists), so it would have been a lie next to a list of 73.
+
 - **Change** — the pinned search is a floating glass pill now: the band behind it is gone, so covers scroll past and only the field frosts them (no cut edge), and it floats 0.55rem from the top instead of hugging the viewport. Its own tint went to 0.8 alpha because at 0.52 the placeholder over a bright cover measured ~2.5:1; the placeholder uses `--glass-text` for the same reason.
 - **Change** — the pinned search sits on a gradient again, but a fade rather than a band: opaque at the viewport edge, gone 2.2rem below the field, and with no `backdrop-filter` on it — the blur on that box was what produced the visible cut line the first time round.
 - **Note** — the tab bar was tried as a floating rounded container matching the deck, then reverted to the full-width bar on request; only the deck floats. Page padding still follows the deck's presence through a `has-deck` class instead of one blanket value.
