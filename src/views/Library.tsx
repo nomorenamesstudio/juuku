@@ -66,6 +66,18 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
       <div className={`library-head${stuck ? ' stuck' : ''}`}>
         <header className="view-head">
           <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
+          {!results && (
+            <div className="segmented" role="tablist" aria-label="Browse">
+              <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
+                Albums
+                {albumTotal !== null && <span className="count-pill">{albumTotal}</span>}
+              </button>
+              <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
+                Artists
+                {artists.length > 0 && <span className="count-pill">{artists.length}</span>}
+              </button>
+            </div>
+          )}
         </header>
         <div className={`library-bar${stuck ? ' stuck' : ''}`}>
           <div className="searchbar">
@@ -148,17 +160,6 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
         </div>
       ) : (
         <>
-          <div className="segmented" role="tablist" aria-label="Browse">
-            <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
-              Albums
-              {albumTotal !== null && <span className="count-pill">{albumTotal}</span>}
-            </button>
-            <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
-              Artists
-              {artists.length > 0 && <span className="count-pill">{artists.length}</span>}
-            </button>
-          </div>
-
           {tab === 'albums' ? (
             <>
               <div className="album-grid">

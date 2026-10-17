@@ -402,6 +402,43 @@ h1.display {
   padding: 0.9rem 0.15rem 1.3rem;
 }
 
+/* library: the browse switch sits beside the title, right aligned */
+.library-head .view-head {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.library-head .display {
+  font-size: 1.9rem;
+}
+
+.library-head .segmented {
+  margin-bottom: 0;
+  flex: none;
+  /* tighter than the standalone control: it shares the line with the title */
+  padding: 0.16rem;
+}
+
+.library-head .segmented button {
+  padding: 0.34rem 0.62rem;
+  font-size: 0.86rem;
+}
+
+.library-head .count-pill {
+  margin-left: 0.3rem;
+  padding: 0.04rem 0.34rem;
+  font-size: 0.68rem;
+}
+
+/* on a 320px screen the switch and the title only both fit without the counts */
+@media (max-width: 359px) {
+  .library-head .count-pill {
+    display: none;
+  }
+}
+
 .view-head .fineprint {
   margin-top: -0.5rem;
 }
