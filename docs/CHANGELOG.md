@@ -4,6 +4,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — container deployment: multi-stage `Dockerfile` (build the SPA, then a runtime with `express` as the only dependency), running as uid 1000 with a read-only rootfs, `cap_drop: ALL` and `no-new-privileges`. `deploy/compose.yml` plus `deploy/.env.example` are the homelab drop-in; configuration is environment only. Verified by running the image against the sandbox Navidrome: health, albums, covers, install assets and a jukebox write all work from inside a read-only container. Image is 246 MB.
+- **Feature** — `/api/live`, a liveness route with no upstream call, used by the container healthcheck so a Navidrome outage does not mark the app unhealthy.
+- **Change** — `react`, `react-dom` and `lucide-react` moved to `devDependencies`: vite bundles them at build time, so the runtime image needs `express` alone (runtime `node_modules` is 3.8 MB).
+- **Feature** — `SECURITY.md`: what the app can do in the wrong hands, the LAN-only no-login trade, the reverse-proxy recipe, and the gaps stated plainly (no app login, no CSRF token beyond JSON-only writes, no rate limiting, password visible to `docker inspect`).
+- **Feature** — `.github/workflows/image.yml` publishes a multi-arch image (amd64 + arm64) to GHCR on `v*` tags or manual dispatch.
+
 - **Change** — navigation no longer blanks the view: the entry animation starts at 0.62 opacity over 160ms instead of from nothing, which on iOS read as a flash, and the album list now survives the unmount between tab switches (module cache, 40ms repaint instead of an empty grid while it refetches).
 - **Feature** — a clear (×) button inside the search field, shown only when there is a query; it resets the field and returns focus.
 - **Change** — search drops artist results with `albumCount` 0: they have nothing to open, so they were dead rows.

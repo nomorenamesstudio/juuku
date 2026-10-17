@@ -2,6 +2,12 @@
 
 *Juuku* (`ジューク`) — the jukebox, shortened.
 
+- [SETUP](SETUP.md) — sandbox, pointing at another Navidrome, Docker deploy
+- [API](API.md) — the HTTP surface the app talks to
+- [ARCHITECTURE](ARCHITECTURE.md) — how the jukebox polling works, and why
+- [CHANGELOG](CHANGELOG.md) — dated entries
+- [SECURITY](../SECURITY.md) — threat model, the no-login trade, reverse proxy
+
 Entry point for everything about Juuku.
 
 | Doc | What's in it |

@@ -1,0 +1,11 @@
+# never ship credentials or the local sandbox into a build context
+.env
+.env.*
+.git-token
+.git
+node_modules
+dist
+.tmp
+sandbox
+docs
+*.log

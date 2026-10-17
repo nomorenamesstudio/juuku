@@ -18,6 +18,45 @@ Verified through a real external hop (the Pi on the same LAN): `:3100` and `:310
 
 There is **no authentication** in front of Juuku, so on the LAN anyone can play, skip and rewrite the queue, and `/api/*` is open. Fine for a home network while this is a POC; not something to expose to the internet. The committed `.env.example` keeps `HOST=127.0.0.1` for that reason.
 
+## Deploy with Docker
+
+The image is self-contained: it builds the SPA, serves it and the API from the
+same origin on one port, and keeps nothing on disk.
+
+```sh
+git clone https://github.com/nomorenamesstudio/juuku && cd juuku
+cp deploy/.env.example deploy/.env      # then edit it
+cd deploy && docker compose up -d
+```
+
+`deploy/compose.yml` publishes `3101` on the LAN, runs read-only as uid 1000 with
+no capabilities, and healthchecks `/api/live` (liveness only, so a Navidrome
+outage does not mark the app unhealthy).
+
+Configuration is environment only — nothing is baked into the image:
+
+| variable | meaning |
+|---|---|
+| `NAVIDROME_URL` | base URL of the Navidrome to drive, e.g. `http://navidrome:4533` |
+| `NAVIDROME_USER` | a dedicated, non-admin Navidrome user |
+| `NAVIDROME_PASSWORD` | that user's password |
+| `HOST` / `PORT` | bind address and port inside the container (`0.0.0.0:3101`) |
+| `NODE_EXTRA_CA_CERTS` | optional, for a Navidrome behind a private CA |
+
+If Navidrome runs in another compose stack, attach Juuku to that stack's network
+and use the service name as the host (`http://navidrome:4533`); the commented
+`networks:` block in `deploy/compose.yml` is that case. A Navidrome on another
+host is just its LAN address.
+
+Tagged releases publish a multi-arch image (amd64 + arm64, so a Pi pulls natively):
+
+```sh
+docker pull ghcr.io/nomorenamesstudio/juuku:latest
+```
+
+Read [SECURITY.md](../SECURITY.md) before exposing the port to anything beyond your
+own network — the app has no login by design.
+
 ## Pointing at another Navidrome (e.g. the main library)
 
 Read-only is fine: a server with jukebox mode off answers 501 for `jukeboxControl`, and the app shows no queue instead of failing. Credentials stay out of git:

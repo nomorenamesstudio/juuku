@@ -1,0 +1,38 @@
+# Juuku, deployed. Copy this file and .env.example next to it, fill in .env, run
+# `docker compose up -d`. Nothing here writes to disk, so the rootfs stays read-only.
+services:
+  juuku:
+    image: ghcr.io/nomorenamesstudio/juuku:latest
+    # building on the box instead? comment the image line and uncomment:
+    # build:
+    #   context: ..
+    container_name: juuku
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3101
+    ports:
+      # LAN only on purpose: the API can drive the jukebox and has no login.
+      # Reach it through your reverse proxy (see docs/SECURITY.md) if it ever
+      # needs to be reachable from outside.
+      - "3101:3101"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3101/api/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Navidrome running in another compose stack? Attach to its network and use
+    # the service name in NAVIDROME_URL, e.g. http://navidrome:4533
+    # networks: [navidrome]
+# networks:
+#   navidrome:
+#     external: true

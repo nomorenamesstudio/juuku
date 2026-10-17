@@ -85,6 +85,9 @@ const statusOf = (response) => ({
 
 // ---------------------------------------------------------------- connection
 
+// liveness only: a container is healthy when it is serving, not when Navidrome is
+app.get('/api/live', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
+
 app.get('/api/health', wrap(async (_req, res) => {
   const ping = await call('ping');
   const jukebox = await call('jukeboxControl', { action: 'status' }).then(

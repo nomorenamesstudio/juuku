@@ -8,6 +8,19 @@ Navidrome's own web UI cannot drive the jukebox — the feature is only reachabl
 
 ![Now playing, queue and library](docs/screenshot.png)
 
+## Run it
+
+```sh
+docker run -d --name juuku -p 3101:3101 --read-only --cap-drop ALL \
+  -e NAVIDROME_URL=http://navidrome:4533 -e NAVIDROME_USER=juuku -e NAVIDROME_PASSWORD=… \
+  ghcr.io/nomorenamesstudio/juuku:latest
+```
+
+Then open `http://<host>:3101` on the phone. `deploy/compose.yml` is the fuller
+version (read-only rootfs, no capabilities, healthcheck) and
+[SECURITY.md](SECURITY.md) says what it can do in the wrong hands — it is a remote
+for the room, not a website, and it has no login.
+
 ## What it does
 
 - **Library** — album grid with paging, artist list, and one search across songs, albums and artists. Tapping a track queues it; ▶ plays it now.
