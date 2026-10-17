@@ -295,7 +295,13 @@ app.get('/api/albums', wrap(async (req, res) => {
 app.get('/api/albums/:id', wrap(async (req, res) => {
   const response = await call('getAlbum', { id: req.params.id });
   res.json({
-    album: album(response.album),
+    album: {
+      ...album(response.album),
+      // Navidrome's OpenSubsonic discTitles: one per disc, title possibly empty
+      discTitles: (response.album.discTitles ?? [])
+        .filter((entry) => entry.title)
+        .map(({ disc, title }) => ({ disc, title })),
+    },
     songs: (response.album.song ?? []).map(song),
   });
 }));

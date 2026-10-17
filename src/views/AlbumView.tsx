@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { type Album, type Song, coverUrl, getAlbum } from '../api';
 import { formatTotal } from '../format';
 import { ChevronLeftIcon, HeartIcon, PlayIcon, PlusIcon } from '../icons';
@@ -26,6 +26,13 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
   if (error) return <p className="empty">{error}</p>;
 
   const art = album?.coverArt ? coverUrl(album.coverArt, 600) : null;
+
+  // a multi-disc album gets a separator before each disc's first track
+  const discs = [...new Set(songs.map((song) => song.disc ?? 1))];
+  const multiDisc = discs.length > 1;
+  const discTitle = (disc: number) =>
+    album?.discTitles?.find((entry) => entry.disc === disc)?.title ?? '';
+  const discOf = (song: Song) => song.disc ?? 1;
 
   return (
     <div className="view album-view">
@@ -96,8 +103,14 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
         </div>
       <ul className="rows album-tracks">
         {songs.map((song, index) => (
+          <Fragment key={song.id}>
+          {multiDisc && (index === 0 || discOf(songs[index - 1]) !== discOf(song)) ? (
+            <li className="disc-head">
+              <span className="disc-number">Disc {discOf(song)}</span>
+              {discTitle(discOf(song)) ? <span className="disc-name">{discTitle(discOf(song))}</span> : null}
+            </li>
+          ) : null}
           <SongRow
-            key={song.id}
             song={song}
             number={song.track ?? index + 1}
             subtitle={null}
@@ -107,6 +120,7 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             onPlay={() => jbox.playFrom(songs, index)}
             onFavorite={() => jbox.toggleFavorite(song)}
           />
+          </Fragment>
         ))}
       </ul>
       </div>

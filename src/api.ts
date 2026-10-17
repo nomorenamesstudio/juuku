@@ -21,6 +21,8 @@ export interface Album {
   songCount: number;
   duration?: number;
   coverArt?: string;
+  /** Navidrome's per-disc titles (OpenSubsonic `discTitles`), when the tags have them */
+  discTitles?: { disc: number; title: string }[];
 }
 
 export interface Artist {

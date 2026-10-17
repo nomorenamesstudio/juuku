@@ -2,13 +2,19 @@
 
 Newest first. Tags: **Feature**, **Fix**, **Break**.
 
-## 2026-10-17
+## How versions are cut
+
+`package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
+minor, and the tag is what CI builds the published image from.
+
+## v0.2.0 — 2026-10-17
 
 - **Feature** — the album page paints its cover behind the hero: blurred, radial-masked, fading out in every direction and bleeding up to the viewport top (the header needed `z-index: 1` to stay readable). The hero is one centred column on phones, with the cover at 62% and both actions sharing the row evenly.
 - **Feature** — the same glow on the player, following the current track, and dimmer in lyrics mode where text sits on it.
 - **Change** — the album year moved onto the facts line (`Various Artists · 2012 · 14 tracks · 24 min`); it used to drop to a line of its own as soon as the title wrapped.
 - **Fix** — back navigation: the album, artist and playlist views hard-coded their parent, so Library → Artist → Album → back jumped to the library root. The router keeps its own stack now (it cannot read the browser's) and the link is labelled with where it goes, which also stays right after going back one step.
 - **Feature** — edge-swipe back on phones: drag from the left edge, with a chevron cue. Vertical drags are ignored so the player's pull-to-dismiss still works, and it never fires over a sheet.
+- **Feature** — multi-disc albums get a separator with the disc number (and Navidrome's `discTitles` name when the tags carry one) before each disc's first track. Verified on a 30-track two-disc album: separators land before track 1 and before track 16, single-disc albums stay untouched.
 - **Fix** — lyrics mode had no `<h1>` and its scrollable pane was not focusable (both from axe): a visually hidden heading and `role="region"` + `tabIndex` now.
 
 - **Change** — the album year moved onto the facts line (`Various Artists · 2012 · 14 tracks · 24 min`) instead of sitting under the title, where it landed on a line of its own whenever the title wrapped.
