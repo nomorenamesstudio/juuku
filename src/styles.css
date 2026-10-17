@@ -619,20 +619,63 @@ h1.display {
   overflow: hidden;
 }
 
-.nowbar-progress {
+.nowbar-scrub {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  width: 100%;
+  height: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  margin: 0;
+  cursor: pointer;
+  touch-action: none;
 }
 
-.nowbar-progress span {
-  display: block;
-  height: 100%;
+.nowbar-scrub::-webkit-slider-runnable-track {
+  height: 3px;
+  background: linear-gradient(to right, var(--amber) var(--progress), rgba(255, 255, 255, 0.08) var(--progress));
+}
+
+.nowbar-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--cream);
+  opacity: 0;
+}
+
+.nowbar-scrub:hover::-webkit-slider-thumb,
+.nowbar-scrub:focus-visible::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.nowbar-scrub::-moz-range-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nowbar-scrub::-moz-range-progress {
+  height: 3px;
   background: var(--amber);
-  transition: width 0.9s linear;
+}
+
+.nowbar-scrub::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cream);
+  opacity: 0;
+}
+
+.nowbar-scrub:hover::-moz-range-thumb,
+.nowbar-scrub:focus-visible::-moz-range-thumb {
+  opacity: 1;
 }
 
 .nowbar-left {
@@ -1561,6 +1604,12 @@ h1.display {
   background: #3a2e22;
 }
 
+.volume-inline input[type='range']::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--muted);
+}
+
 .volume-inline input[type='range']::-moz-range-thumb {
   width: 11px;
   height: 11px;
@@ -1833,9 +1882,8 @@ h1.display {
     box-shadow: 0 -20px 40px -30px #000;
   }
 
-  .nowbar-progress {
-    top: 0;
-    height: 3px;
+  .nowbar-scrub {
+    height: 16px;
   }
 
   .nowbar-left {
@@ -1912,6 +1960,26 @@ h1.display {
     background: var(--muted);
   }
 
+  .nowbar-volume input[type='range']::-moz-range-track {
+    height: 3px;
+    border-radius: 2px;
+    background: #3a2e22;
+  }
+
+  .nowbar-volume input[type='range']::-moz-range-progress {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--muted);
+  }
+
+  .nowbar-volume input[type='range']::-moz-range-thumb {
+    width: 11px;
+    height: 11px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
   .toast {
     bottom: 6.6rem;
   }
@@ -1941,10 +2009,17 @@ h1.display {
     justify-content: center;
   }
 
-  /* the deck already carries volume and a close affordance on wide screens */
+  /* the deck carries playback on wide screens: the open player is cover + lyrics */
   .player-bottom,
-  .player-minimize {
+  .player-minimize,
+  .player-top,
+  .scrub,
+  .transport {
     display: none;
+  }
+
+  .player-meta {
+    padding-top: 0.4rem;
   }
 
   .player-stage {
@@ -1970,6 +2045,7 @@ h1.display {
   .player-aside .lyrics {
     max-height: 100%;
     height: 100%;
+    padding-bottom: 2.5rem;
   }
 
   .player-stage .lyrics {

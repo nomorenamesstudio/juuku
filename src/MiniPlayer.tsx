@@ -19,15 +19,32 @@ import type { Jukebox } from './useJukebox';
 export function NowBar({ jbox }: { jbox: Jukebox }) {
   const { current, status, entries } = jbox;
   const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
+  const [positionDraft, setPositionDraft] = useState<number | null>(null);
   const volumeTimer = useRef<number | undefined>(undefined);
+  const positionTimer = useRef<number | undefined>(undefined);
 
-  useEffect(() => () => window.clearTimeout(volumeTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(volumeTimer.current);
+      window.clearTimeout(positionTimer.current);
+    },
+    [],
+  );
 
   if (!current || !status) return null;
 
   const duration = current.duration || 0;
-  const progress = duration ? Math.min(status.position / duration, 1) : 0;
+  const position = positionDraft ?? status.position;
+  const progress = duration ? Math.min(position / duration, 1) : 0;
   const gain = volumeDraft ?? status.gain;
+
+  const onScrub = (value: number) => {
+    setPositionDraft(value);
+    window.clearTimeout(positionTimer.current);
+    positionTimer.current = window.setTimeout(() => {
+      jbox.seek(value).then(() => setPositionDraft(null));
+    }, 180);
+  };
 
   const onVolume = (value: number) => {
     setVolumeDraft(value);
@@ -39,9 +56,18 @@ export function NowBar({ jbox }: { jbox: Jukebox }) {
 
   return (
     <div className="nowbar">
-      <div className="nowbar-progress" aria-hidden>
-        <span style={{ width: `${progress * 100}%` }} />
-      </div>
+      <input
+        className="nowbar-scrub"
+        type="range"
+        min={0}
+        max={Math.max(duration, 1)}
+        step={1}
+        value={Math.min(position, duration || 1)}
+        onChange={(event) => onScrub(Number(event.target.value))}
+        aria-label="Playback position"
+        aria-valuetext={`${formatTime(position)} of ${formatTime(duration)}`}
+        style={{ ['--progress' as string]: `${progress * 100}%` }}
+      />
 
       <div className="nowbar-left">
         <button className="nowbar-open" onClick={() => navigate('/player')} aria-label="Open the player">
@@ -52,7 +78,7 @@ export function NowBar({ jbox }: { jbox: Jukebox }) {
             <span className="nowbar-title">{current.title}</span>
             <span className="nowbar-sub">
               {current.artist}
-              <span className="nowbar-time"> · {formatTime(status.position)}</span>
+              <span className="nowbar-time"> · {formatTime(position)}</span>
             </span>
           </span>
         </button>
