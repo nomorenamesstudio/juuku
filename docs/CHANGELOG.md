@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — README screenshot retaken against the homelab library (266 albums) instead of the two-album sandbox, as a 1600px JPEG rather than a 2.9 MB PNG.
+
 - **Change** — README hero: no tagline, smaller, and the lockup is now the app's own wordmark scaled with a transform instead of a generated SVG. The outline export could not reproduce the browser's kerning, so the kana sat a few percent off no matter how the anchors were measured; `public/logo.svg` and its build script are gone rather than left as a near-duplicate that drifts.
 - **Fix** — `Jukebox is admin only (code 50)` was being reported as "jukebox mode off". The two cases are now separate messages.
 - **Finding** — the admin requirement is not a bug: Navidrome checks `Jukebox.AdminOnly`, which defaults to **true** (`jukebox.adminonly` in `conf/configuration.go`, listed in the options reference, missing from the jukebox feature page). `ND_JUKEBOX_ADMINONLY=false` makes a plain account work, so SETUP/SECURITY now recommend that instead of promoting the user to admin.

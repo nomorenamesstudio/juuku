@@ -8,7 +8,7 @@ Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: b
 
 Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juuku is that remote.
 
-![Now playing, queue and library](docs/screenshot.png)
+![The library, with the player docked at the bottom](docs/screenshot.jpg)
 
 ## Run it
 
