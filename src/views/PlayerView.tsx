@@ -11,8 +11,63 @@ import {
   PrevIcon,
   VolumeIcon,
 } from '../icons';
-import { navigate } from '../router';
+import { goBack, navigate } from '../router';
 import type { Jukebox } from '../useJukebox';
+
+/**
+ * Pull the sheet down to close it. Only the mobile sheet is draggable: the layout
+ * has no scroll on the stage/header, so `touch-action: none` there gives us the
+ * whole pointer stream while the lyrics pane keeps scrolling normally.
+ */
+function usePullToDismiss(onDismiss: () => void) {
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const origin = useRef<{ y: number; time: number } | null>(null);
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch' && event.isPrimary === false) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('input, button, a, [role="slider"], .lyrics')) return;
+    origin.current = { y: event.clientY, time: performance.now() };
+    setDragging(true);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // pointer capture is an optimisation, not a requirement for the drag
+    }
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!origin.current) return;
+    setDragY(Math.max(0, event.clientY - origin.current.y));
+  };
+
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!origin.current) return;
+    const travel = Math.max(0, event.clientY - origin.current.y);
+    const elapsed = Math.max(1, performance.now() - origin.current.time);
+    const velocity = travel / elapsed;
+    origin.current = null;
+    setDragging(false);
+    if (travel > 110 || (velocity > 0.6 && travel > 40)) {
+      setDragY(window.innerHeight);
+      window.setTimeout(onDismiss, 190);
+      return;
+    }
+    setDragY(0);
+  };
+
+  return {
+    dragY,
+    dragging,
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: endDrag,
+      onPointerCancel: endDrag,
+    },
+  };
+}
 
 function useLyrics(songId: string | undefined) {
   const [lyrics, setLyrics] = useState<Lyrics | null>(null);
@@ -84,6 +139,8 @@ export function PlayerView({
   const trackTimer = useRef<number | undefined>(undefined);
   const volumeTimer = useRef<number | undefined>(undefined);
   const lyrics = useLyrics(current?.id);
+  const close = () => goBack();
+  const { dragY, dragging, handlers } = usePullToDismiss(close);
 
   const duration = current?.duration ?? 0;
   const position = trackDraft ?? status?.position ?? 0;
@@ -108,7 +165,7 @@ export function PlayerView({
   if (!current) {
     return (
       <div className={`view player ${showLyrics ? 'lyrics-on' : ''}`}>
-        <button className="back" onClick={() => window.history.back()}>
+        <button className="back" onClick={() => goBack()}>
           <ChevronDownIcon size={18} /> Back
         </button>
         <p className="empty">Nothing playing. The queue is empty.</p>
@@ -135,7 +192,13 @@ export function PlayerView({
   const gain = volumeDraft ?? status?.gain ?? 1;
 
   return (
-    <div className={`view player ${showLyrics ? 'lyrics-on' : ''}`}>
+    <div
+      className={`view player ${showLyrics ? 'lyrics-on' : ''} ${dragging ? 'dragging' : ''}`}
+      style={{ transform: `translate3d(0, ${dragY}px, 0)` }}
+      {...handlers}
+    >
+      <div className="player-inner">
+      <span className="player-grabber" aria-hidden />
       <header className="player-top">
         <button className="icon-button player-minimize" onClick={() => window.history.back()} aria-label="Minimize player">
           <ChevronDownIcon size={18} />
@@ -168,7 +231,9 @@ export function PlayerView({
               <LyricsPane lyrics={lyrics} activeLine={activeLine} />
             ) : (
               <div className="player-art">
-                {current.coverArt ? <img src={coverUrl(current.coverArt, 800)} alt={`${current.album} cover`} /> : null}
+                {current.coverArt ? (
+                  <img src={coverUrl(current.coverArt, 800)} alt={`${current.album} cover`} draggable={false} />
+                ) : null}
               </div>
             )}
           </div>
@@ -261,6 +326,7 @@ export function PlayerView({
         <aside className="player-aside" aria-label="Lyrics">
           <LyricsPane lyrics={lyrics} activeLine={activeLine} />
         </aside>
+      </div>
       </div>
     </div>
   );

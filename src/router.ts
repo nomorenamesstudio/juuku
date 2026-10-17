@@ -33,6 +33,19 @@ export function navigate(path: string) {
   window.location.hash = path.startsWith('#') ? path : `#${path}`;
 }
 
+// how many in-app hash changes happened; 0 means the current route was entered
+// directly (deep link), where history.back() would leave the app
+let depth = 0;
+window.addEventListener('hashchange', () => {
+  depth += 1;
+});
+
+/** Close a view: go back if this route was reached inside the app, else fall back. */
+export function goBack(fallback = '/library') {
+  if (depth > 0) window.history.back();
+  else navigate(fallback);
+}
+
 export function useRoute() {
   const [route, setRoute] = useState<Route>(() => parse(window.location.hash));
   const previous = useRef<Route>(route);

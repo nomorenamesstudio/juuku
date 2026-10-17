@@ -38,6 +38,8 @@ export default function App() {
   }, [route.name, lyricsOpen]);
   const count = jbox.entries.length;
 
+  const routeKey = route.name === 'album' || route.name === 'artist' ? `${route.name}:${route.id}` : route.name;
+
   const section =
     route.name === 'library'
       ? route.tab
@@ -94,7 +96,11 @@ export default function App() {
                 >
                   <Icon size={18} />
                   {label}
-                  {path === '/queue' && count > 0 && <span className="badge">{count}</span>}
+                  {path === '/queue' && count > 0 && (
+                    <span className="badge" key={count}>
+                      {count}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -127,7 +133,9 @@ export default function App() {
           </div>
         )}
 
-        <main className="content">{view}</main>
+        <main className="content" key={routeKey}>
+          {view}
+        </main>
 
         {count > 0 && <NowBar jbox={jbox} onOpen={isPlayer && lyricsOpen ? () => setLyricsOpen(false) : undefined} />}
 
