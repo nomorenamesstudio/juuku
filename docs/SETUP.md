@@ -44,19 +44,25 @@ Configuration is environment only — nothing is baked into the image:
 | `JUUKU_PASSWORD` | optional shared password; unset means no login at all |
 | `NODE_EXTRA_CA_CERTS` | optional, for a Navidrome behind a private CA |
 
-### The Navidrome account has to be an admin
+### The Navidrome account, and `Jukebox.AdminOnly`
 
-Navidrome refuses `jukeboxControl` for non-admin users with `Jukebox is admin only
-(code 50)`, whatever the mode is set to. A dedicated admin account is the least-bad
-answer — a remote that can start music needs exactly that permission:
+Navidrome ships `Jukebox.AdminOnly` set to **true** (the options reference lists it,
+the jukebox feature page does not), so a non-admin account is refused with
+`Jukebox is admin only (code 50)` even with jukebox mode enabled. Two ways out:
 
 ```sh
-docker exec navidrome /app/navidrome user create --user juuku        # prompts twice
-docker exec navidrome /app/navidrome user edit --user juuku --set-admin
+# preferred: keep the user least-privileged
+ND_JUKEBOX_ADMINONLY=false        # in Navidrome's environment, then restart it
 ```
 
-Treat that password like the jukebox key it is: it is in `deploy/.env` on the host
-(mode 600) and nowhere else.
+```sh
+# or promote the account (it then has full Navidrome admin rights)
+docker exec navidrome /app/navidrome user edit --user <user> --set-admin
+```
+
+Juuku is fine with either — the account only needs to browse, play and manage its
+own playlists. Use a dedicated account either way, and keep its password in
+`deploy/.env` on the host (mode 600) and nowhere else.
 
 Navidrome also needs `mpv` (the official image ships it) and the sound card. In
 compose that means `ND_JUKEBOX_ENABLED=true`, `devices: ["/dev/snd:/dev/snd"]` and

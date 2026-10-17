@@ -5,7 +5,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 ## 2026-10-17
 
 - **Change** — README hero: no tagline, smaller, and the lockup is now the app's own wordmark scaled with a transform instead of a generated SVG. The outline export could not reproduce the browser's kerning, so the kana sat a few percent off no matter how the anchors were measured; `public/logo.svg` and its build script are gone rather than left as a near-duplicate that drifts.
-- **Fix** — `Jukebox is admin only (code 50)` was being reported as "jukebox mode off". The two cases are now separate messages, and `docs/SETUP.md` / `SECURITY.md` say plainly that the Navidrome account has to be an admin, with the CLI commands to create and promote it.
+- **Fix** — `Jukebox is admin only (code 50)` was being reported as "jukebox mode off". The two cases are now separate messages.
+- **Finding** — the admin requirement is not a bug: Navidrome checks `Jukebox.AdminOnly`, which defaults to **true** (`jukebox.adminonly` in `conf/configuration.go`, listed in the options reference, missing from the jukebox feature page). `ND_JUKEBOX_ADMINONLY=false` makes a plain account work, so SETUP/SECURITY now recommend that instead of promoting the user to admin.
 - **Verified** — jukebox mode on the homelab Pi: `/api/play` queues and starts, position advances, the AMS-24 sits in ALSA `state: RUNNING` under mpv, and skip, pause/resume and `setGain` all answer 200 through the deployed app.
 
 - **Fix** — a Navidrome with jukebox mode off now answers 501 with what to do ("set ND_JUKEBOX_ENABLED=true … and make sure it has mpv and an audio output") instead of passing the upstream code on as a 502.
