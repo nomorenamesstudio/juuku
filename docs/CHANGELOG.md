@@ -4,6 +4,13 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — the album page paints its cover behind the hero: blurred, radial-masked, fading out in every direction and bleeding up to the viewport top (the header needed `z-index: 1` to stay readable). The hero is one centred column on phones, with the cover at 62% and both actions sharing the row evenly.
+- **Feature** — the same glow on the player, following the current track, and dimmer in lyrics mode where text sits on it.
+- **Change** — the album year moved onto the facts line (`Various Artists · 2012 · 14 tracks · 24 min`); it used to drop to a line of its own as soon as the title wrapped.
+- **Fix** — back navigation: the album, artist and playlist views hard-coded their parent, so Library → Artist → Album → back jumped to the library root. The router keeps its own stack now (it cannot read the browser's) and the link is labelled with where it goes, which also stays right after going back one step.
+- **Feature** — edge-swipe back on phones: drag from the left edge, with a chevron cue. Vertical drags are ignored so the player's pull-to-dismiss still works, and it never fires over a sheet.
+- **Fix** — lyrics mode had no `<h1>` and its scrollable pane was not focusable (both from axe): a visually hidden heading and `role="region"` + `tabIndex` now.
+
 - **Change** — the album year moved onto the facts line (`Various Artists · 2012 · 14 tracks · 24 min`) instead of sitting under the title, where it landed on a line of its own whenever the title wrapped.
 - **Fix** — long album titles broke the mobile hero: a 70-character title had ~215px next to a 122px cover and pushed the facts and the buttons around. On phones the hero is one column now (cover, then title, then facts, then actions), the cover is bigger, and the track count and duration are unbreakable units so "2 hr 29 min" never leaves "min" alone. Desktop keeps the cover beside the title at 200px. Verified with the longest titles in the library at 320px and 390px: no horizontal overflow, facts on one line.
 

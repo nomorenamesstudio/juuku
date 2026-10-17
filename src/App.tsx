@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { NowBar } from './MiniPlayer';
-import { ArtistIcon, HeartIcon, LibraryIcon, LogOutIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
+import { ArtistIcon, ChevronLeftIcon, HeartIcon, LibraryIcon, LogOutIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
 import { TrackActions, TrackActionsProvider } from './TrackActions';
 import { LoginView } from './views/LoginView';
 import { type Session, getSession, signOut, type Song } from './api';
-import { navigate, useRoute } from './router';
+import { goBack, navigate, useRoute } from './router';
 import { useCounts } from './useCounts';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
@@ -31,12 +31,69 @@ const TABS = [
   { path: '/queue', label: 'Queue', icon: QueueIcon },
 ];
 
+/**
+ * iOS-style back: a left-edge drag on a phone. Nothing moves while dragging (that
+ * would fight the sticky bar and the fixed deck), so a chevron fades in as a cue.
+ */
+function useEdgeSwipeBack(onBack: () => void) {
+  const [pull, setPull] = useState(0);
+
+  useEffect(() => {
+    let origin: { x: number; y: number } | null = null;
+    let travel = 0;
+
+    const reset = () => {
+      origin = null;
+      travel = 0;
+      setPull(0);
+    };
+
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse' || event.clientX > 26) return;
+      if (!window.matchMedia('(max-width: 899px)').matches) return;
+      if (document.querySelector('.sheet-layer')) return;
+      origin = { x: event.clientX, y: event.clientY };
+      travel = 0;
+    };
+
+    const onMove = (event: PointerEvent) => {
+      if (!origin) return;
+      const dx = event.clientX - origin.x;
+      const dy = event.clientY - origin.y;
+      // a vertical drag belongs to the player's pull-to-dismiss, not to us
+      if (Math.abs(dy) > 50 && travel === 0) return reset();
+      if (dx <= 0) return setPull(0);
+      travel = dx;
+      setPull(Math.min(1, dx / 110));
+    };
+
+    const onUp = () => {
+      if (origin && travel > 90) onBack();
+      reset();
+    };
+
+    window.addEventListener('pointerdown', onDown, true);
+    window.addEventListener('pointermove', onMove, true);
+    window.addEventListener('pointerup', onUp, true);
+    window.addEventListener('pointercancel', reset, true);
+    return () => {
+      window.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', reset, true);
+    };
+  }, [onBack]);
+
+  return pull;
+}
+
 export default function App() {
+  const { route } = useRoute();
   const [session, setSession] = useState<Session | null>(null);
+  const edgePull = useEdgeSwipeBack(() => goBack(route.name === 'playlist' ? '/playlists' : '/library'));
   // nothing polls until we know whether a password is needed
   const paused = !session || (session.required && !session.authenticated);
   const jbox = useJukebox({ paused });
-  const { route } = useRoute();
   const [lyricsOpen, setLyricsOpen] = useState(false);
   const counts = useCounts({ paused });
 
@@ -255,6 +312,12 @@ export default function App() {
           </nav>
         )}
       </div>
+
+      {edgePull > 0 && (
+        <div className="edge-back" style={{ opacity: edgePull }} aria-hidden="true">
+          <ChevronLeftIcon size={18} />
+        </div>
+      )}
 
       {jbox.toast && <output className="toast">{jbox.toast}</output>}
       {jbox.error && (

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { type Album, type Song, coverUrl, getAlbum } from '../api';
 import { formatTotal } from '../format';
 import { ChevronLeftIcon, HeartIcon, PlayIcon, PlusIcon } from '../icons';
-import { navigate } from '../router';
+import { navigate, useBack } from '../router';
 import { SongRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
 
 export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
+  const back = useBack('/library');
   const [album, setAlbum] = useState<Album | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -24,15 +25,24 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
 
   if (error) return <p className="empty">{error}</p>;
 
+  const art = album?.coverArt ? coverUrl(album.coverArt, 600) : null;
+
   return (
-    <div className="view">
-      <button className="back" onClick={() => navigate('/library')}>
-        <ChevronLeftIcon size={18} /> Library
+    <div className="view album-view">
+      {art ? (
+        <div
+          className="album-backdrop"
+          style={{ backgroundImage: `url(${art})` }}
+          aria-hidden="true"
+        />
+      ) : null}
+      <button className="back" onClick={back.go}>
+        <ChevronLeftIcon size={18} /> {back.label}
       </button>
 
       <header className="album-head">
         <div className="album-art large">
-          {album?.coverArt ? <img src={coverUrl(album.coverArt, 600)} alt="" /> : null}
+          {art ? <img src={art} alt="" /> : null}
         </div>
         <div className="album-meta">
           <div className="album-title">

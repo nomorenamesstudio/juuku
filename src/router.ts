@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export type Route =
   | { name: 'library'; tab: 'albums' | 'artists' }
@@ -42,8 +42,22 @@ export function navigate(path: string) {
 // how many in-app hash changes happened; 0 means the current route was entered
 // directly (deep link), where history.back() would leave the app
 let depth = 0;
+// The browser's history stack cannot be read, so keep our own: push on a forward
+// navigation, pop when the new route is the one below the top (i.e. we went back).
+// Module level so every view reads the same answer, not a copy made at mount.
+const same = (a: Route, b: Route) => a.name === b.name && (a as { id?: string }).id === (b as { id?: string }).id;
+
+let here: Route = parse(window.location.hash);
+let stack: Route[] = [here];
+let cameFrom: Route = here;
+
 window.addEventListener('hashchange', () => {
   depth += 1;
+  const next = parse(window.location.hash);
+  if (stack.length > 1 && same(stack[stack.length - 2], next)) stack.pop();
+  else stack.push(next);
+  here = next;
+  cameFrom = stack[stack.length - 2] ?? next;
 });
 
 /** Close a view: go back if this route was reached inside the app, else fall back. */
@@ -52,22 +66,36 @@ export function goBack(fallback = '/library') {
   else navigate(fallback);
 }
 
+const LABELS: Record<Route['name'], string> = {
+  library: 'Library',
+  album: 'Album',
+  artist: 'Artist',
+  favorites: 'Favorites',
+  playlists: 'Playlists',
+  playlist: 'Playlist',
+  queue: 'Queue',
+  player: 'Player',
+};
+
+/** Back, labelled with where it actually goes: the previous view inside the app. */
+export function useBack(fallback = '/library') {
+  // subscribe so the label follows navigation
+  useRoute();
+  const target = depth > 0 ? cameFrom : parse(fallback);
+  return { label: LABELS[target.name], go: () => goBack(fallback) };
+}
+
 export function useRoute() {
   const [route, setRoute] = useState<Route>(() => parse(window.location.hash));
-  const previous = useRef<Route>(route);
 
   useEffect(() => {
     const onHashChange = () => {
-      const next = parse(window.location.hash);
-      setRoute((current) => {
-        if (current.name !== 'player') previous.current = current;
-        return next;
-      });
+      setRoute(parse(window.location.hash));
       window.scrollTo({ top: 0 });
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  return { route, previous: previous.current };
+  return { route };
 }

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { type Playlist, type Song, coverUrl, deletePlaylist, getPlaylist } from '../api';
 import { formatTotal } from '../format';
 import { ChevronLeftIcon, PlayIcon, PlusIcon, TrashIcon } from '../icons';
-import { navigate } from '../router';
+import { navigate, useBack } from '../router';
 import { SongRow } from '../rows';
 import { useTrackActions } from '../TrackActions';
 import type { Jukebox } from '../useJukebox';
@@ -12,6 +12,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const back = useBack('/playlists');
   const openActions = useTrackActions();
   const [confirming, setConfirming] = useState(false);
   const confirmRef = useRef<HTMLDivElement>(null);
@@ -55,8 +56,8 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
 
   return (
     <div className="view">
-      <button className="back" onClick={() => navigate('/playlists')}>
-        <ChevronLeftIcon size={18} /> Playlists
+      <button className="back" onClick={back.go}>
+        <ChevronLeftIcon size={18} /> {back.label}
       </button>
 
       <header className="album-head">

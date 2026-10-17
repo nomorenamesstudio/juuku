@@ -98,7 +98,13 @@ function LyricsPane({ lyrics, activeLine }: { lyrics: Lyrics | null; activeLine:
   }, [activeLine]);
 
   return (
-    <div className="lyrics" ref={ref}>
+    <div
+      className="lyrics"
+      ref={ref}
+      tabIndex={0}
+      role="region"
+      aria-label="Lyrics"
+    >
       {lyrics === null && <p className="lyrics-note">Reading…</p>}
       {lyrics && lyrics.lines.length === 0 && (
         <p className="lyrics-note">
@@ -194,12 +200,18 @@ export function PlayerView({
 
   const gain = volumeDraft ?? status?.gain ?? 1;
 
+  const glow = current.coverArt ? coverUrl(current.coverArt, 300) : null;
+
   return (
     <div
       className={`view player ${showLyrics ? 'lyrics-on' : ''} ${dragging ? 'dragging' : ''}`}
       style={{ transform: `translate3d(0, ${dragY}px, 0)` }}
       {...handlers}
     >
+      {/* the same cover glow the album page has, following the current track */}
+      {glow ? (
+        <div className="album-backdrop player-glow" style={{ backgroundImage: `url(${glow})` }} aria-hidden="true" />
+      ) : null}
       <div className="player-inner">
       <span className="player-grabber" aria-hidden />
       <header className="player-top">
@@ -219,7 +231,11 @@ export function PlayerView({
         <div className="player-main">
           <div className={`player-stage ${showLyrics ? 'lyrics-on' : ''}`}>
             {showLyrics ? (
-              <LyricsPane lyrics={lyrics} activeLine={activeLine} />
+              <>
+                {/* lyrics mode has no visible track title, so the page still needs one */}
+                <h1 className="sr-only">{current.title} — lyrics</h1>
+                <LyricsPane lyrics={lyrics} activeLine={activeLine} />
+              </>
             ) : (
               <div className="player-art">
                 {current.coverArt ? (

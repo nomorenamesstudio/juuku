@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { type Album, type Artist, coverUrl, getArtist } from '../api';
 import { ChevronLeftIcon } from '../icons';
-import { navigate } from '../router';
+import { navigate, useBack } from '../router';
 
 export function ArtistView({ id }: { id: string }) {
+  const back = useBack('/library');
   const [artist, setArtist] = useState<Artist | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
 
@@ -16,8 +17,8 @@ export function ArtistView({ id }: { id: string }) {
 
   return (
     <div className="view">
-      <button className="back" onClick={() => navigate('/library')}>
-        <ChevronLeftIcon size={18} /> Library
+      <button className="back" onClick={back.go}>
+        <ChevronLeftIcon size={18} /> {back.label}
       </button>
       <header className="view-head">
         <h1 className="display">{artist?.name ?? '…'}</h1>

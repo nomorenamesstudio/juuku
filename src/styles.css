@@ -290,6 +290,9 @@ h1.display {
 }
 
 .topbar {
+  /* an album backdrop bleeds up behind the header; keep the header readable */
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -393,6 +396,26 @@ h1.display {
     opacity: 0;
     transform: translateY(14px);
   }
+}
+
+.player {
+  position: relative;
+}
+
+.player-glow {
+  /* behind the cover and, in lyrics mode, behind the words */
+  top: -2.2rem;
+  height: min(96vw, 620px);
+  filter: blur(56px) saturate(1.25);
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(58% 58% at 50% 34%, #000 0%, rgba(0, 0, 0, 0.55) 46%, transparent 76%);
+  mask-image: radial-gradient(58% 58% at 50% 34%, #000 0%, rgba(0, 0, 0, 0.55) 46%, transparent 76%);
+}
+
+.player.lyrics-on .player-glow {
+  /* text sits on it, so keep the wash quieter */
+  opacity: 0.3;
+  height: min(80vw, 520px);
 }
 
 .player-inner {
@@ -758,8 +781,34 @@ h1.display {
   font-size: 0.86rem;
 }
 
+.album-view {
+  position: relative;
+}
+
+/* the cover, blurred and faded, behind the hero */
+.album-backdrop {
+  position: absolute;
+  z-index: -1;
+  /* bleeds up over the content padding to the viewport top */
+  top: -4.6rem;
+  left: 0;
+  right: 0;
+  height: min(86vw, 560px);
+  background-size: cover;
+  background-position: center;
+  filter: blur(52px) saturate(1.25);
+  opacity: 0.42;
+  pointer-events: none;
+  /* radial, not linear: a vertical-only fade left visible side edges where the
+     blur met the clip */
+  -webkit-mask-image: radial-gradient(72% 64% at 50% 30%, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 76%);
+  mask-image: radial-gradient(72% 64% at 50% 30%, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 76%);
+}
+
 .album-head {
   display: grid;
+  justify-items: center;
+  text-align: center;
   /* one column on a phone: a long album title next to a 122px cover had nowhere to
      go and pushed the facts and buttons around (see CHANGELOG 2026-10-17) */
   grid-template-columns: minmax(0, 1fr);
@@ -769,7 +818,7 @@ h1.display {
 }
 
 .album-art.large {
-  width: min(52%, 190px);
+  width: min(62%, 220px);
   border-radius: 12px;
 }
 
@@ -778,6 +827,7 @@ h1.display {
   text-wrap: pretty;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.15rem;
   min-width: 0;
 }
@@ -815,6 +865,15 @@ h1.display {
 
 .album-actions {
   margin: 0 0 1.4rem;
+  /* two buttons sharing the row, not two sizes of pill */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.album-actions .primary,
+.album-actions .secondary {
+  justify-content: center;
 }
 
 .album-facts .fact {
@@ -1640,6 +1699,38 @@ h1.display {
   background: var(--muted);
 }
 
+/* the cue for an edge-swipe back, phone only */
+.edge-back {
+  position: fixed;
+  z-index: 30;
+  left: 0.35rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 4.2rem;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-edge);
+  color: var(--cream);
+  pointer-events: none;
+  transition: opacity var(--dur-1) linear;
+}
+
+/* screen-reader-only text that still counts as a heading */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------------------------------------------------------------- login */
 
 .boot {
@@ -2128,10 +2219,31 @@ h1.display {
     padding: 0.4rem 0 1.7rem;
   }
 
+  .album-backdrop {
+    top: -3.1rem;
+    height: 480px;
+  }
+
   .album-head {
     grid-template-columns: 200px minmax(0, 1fr);
     align-items: end;
+    justify-items: start;
+    text-align: left;
     gap: 1.4rem;
+  }
+
+  .album-meta {
+    align-items: flex-start;
+  }
+
+  .album-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .album-actions .primary,
+  .album-actions .secondary {
+    justify-content: flex-start;
   }
 
   .album-art.large {

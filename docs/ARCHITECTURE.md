@@ -73,3 +73,16 @@ Everything on the client side is therefore relative:
 
 One absolute URL anywhere breaks the prefixed deployment while still working on the
 LAN, which makes it an easy mistake to ship.
+
+## Navigation and back
+
+Hash routes, one `useRoute()` subscription in `App`, and a back link in each detail
+view. The link is labelled with where it actually goes, so the router keeps its own
+stack of visited routes: a hash change pushes, and a change that lands on the entry
+below the top pops (that is a back). The browser's history cannot be read, and
+`history.back()` is only used when the app already navigated — otherwise a deep
+link's back button would leave the site.
+
+Phones also get an edge-swipe: a pointer drag that starts within 26px of the left
+edge, travels 90px horizontally, and is ignored when it looks vertical so the
+player's pull-to-dismiss keeps working.
