@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+sandbox/music/
+sandbox/data/
+.tmp/
+tsconfig.tsbuildinfo

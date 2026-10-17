@@ -1,0 +1,13 @@
+# Docs
+
+Entry point for everything about Juicebox.
+
+| Doc | What's in it |
+| --- | --- |
+| [API.md](API.md) | Juicebox's own HTTP surface and how each call maps to Subsonic |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Pieces, data flow, and the decisions behind them |
+| [SETUP.md](SETUP.md) | Ports, the throwaway Navidrome, credentials, environment traps |
+| [CHANGELOG.md](CHANGELOG.md) | Dated Feature / Fix / Break entries |
+| [screenshot.png](screenshot.png) | The POC UI |
+
+Also: the project [README](../README.md) for quick start.

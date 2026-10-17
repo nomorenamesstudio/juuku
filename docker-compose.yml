@@ -1,0 +1,28 @@
+# Throwaway Navidrome for developing the jukebox remote. Unrelated to the Pi instance.
+#
+# Bind mounts from the workspace are unreadable inside containers on this machine,
+# so music and data live in named volumes; scripts/sandbox-up.sh seeds them.
+name: juicebox
+
+services:
+  navidrome:
+    image: navidrome/navidrome:latest
+    container_name: juicebox-navidrome
+    ports:
+      - "127.0.0.1:4533:4533"
+    environment:
+      ND_LOGLEVEL: info
+      ND_SCANSCHEDULE: "0"
+      ND_JUKEBOX_ENABLED: "true"
+      ND_JUKEBOX_ADMINONLY: "true"
+      # mpv ships inside the image. --ao=null keeps it silent; position still advances
+      # in real time, so the control surface behaves like a real jukebox.
+      ND_MPVCMDTEMPLATE: "mpv --ao=null --no-audio-display --pause %f --input-ipc-server=%s"
+    volumes:
+      - navidrome-data:/data
+      - navidrome-music:/music
+    restart: unless-stopped
+
+volumes:
+  navidrome-data:
+  navidrome-music:
