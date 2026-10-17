@@ -206,22 +206,6 @@ export function PlayerView({
         <span className="player-context">
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
         </span>
-        <button
-          className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
-          onClick={() => setShowLyrics(!showLyrics)}
-          aria-pressed={showLyrics}
-          aria-label="Toggle lyrics"
-        >
-          <MicIcon size={16} />
-        </button>
-        <button
-          className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
-          onClick={() => jbox.toggleFavorite(current)}
-          aria-pressed={jbox.favoriteIds.has(current.id)}
-          aria-label="Favorite this track"
-        >
-          <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
-        </button>
       </header>
 
       <div className="player-grid">
@@ -280,6 +264,14 @@ export function PlayerView({
 
           <div className="transport">
             <button
+              className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
+              onClick={() => setShowLyrics(!showLyrics)}
+              aria-pressed={showLyrics}
+              aria-label="Toggle lyrics"
+            >
+              <MicIcon size={18} />
+            </button>
+            <button
               className="icon-button"
               onClick={() => jbox.step(-1)}
               disabled={jbox.busy || !status || status.currentIndex <= 0}
@@ -302,6 +294,14 @@ export function PlayerView({
               aria-label="Next track"
             >
               <NextIcon size={22} />
+            </button>
+            <button
+              className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
+              onClick={() => jbox.toggleFavorite(current)}
+              aria-pressed={jbox.favoriteIds.has(current.id)}
+              aria-label="Favorite this track"
+            >
+              <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
             </button>
           </div>
 

@@ -215,10 +215,19 @@ h1.display {
   min-height: 0;
 }
 
+/* lyrics mode keeps the mic (and the heart) so there is a way back to the cover */
 .player.lyrics-on .player-meta,
 .player.lyrics-on .scrub,
-.player.lyrics-on .transport,
 .player.lyrics-on .player-bottom {
+  display: none;
+}
+
+.player.lyrics-on .transport {
+  gap: 2.2rem;
+  padding-bottom: 0.6rem;
+}
+
+.player.lyrics-on .transport > :not(.lyrics-toggle):not(.fav) {
   display: none;
 }
 
@@ -1288,7 +1297,7 @@ h1.display {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.4rem;
+  gap: 1.1rem;
   padding: 0.2rem 0;
 }
 
@@ -1429,6 +1438,12 @@ h1.display {
 /* --------------------------------------------------------- mobile sheet */
 
 @media (max-width: 899px) {
+  /* the sheet has no deck under it, so the toast would land on the transport */
+  .shell-player .toast {
+    top: 4.4rem;
+    bottom: auto;
+  }
+
   .player {
     touch-action: none; /* the sheet drags; only the lyrics pane scrolls */
     transition: transform var(--dur-2) var(--ease-spring);
@@ -1854,10 +1869,6 @@ h1.display {
   }
 
   .player-stage .lyrics {
-    display: none;
-  }
-
-  .lyrics-toggle {
     display: none;
   }
 
