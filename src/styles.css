@@ -269,12 +269,12 @@ h1.display {
 }
 
 .wordmark.small {
-  font-size: 1.28rem;
+  font-size: 1.6rem;
 }
 
 .led {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--dim);
   flex: none;
@@ -927,36 +927,6 @@ h1.display {
 
 .nowbar-play:hover:not(:disabled) {
   filter: brightness(1.06);
-}
-
-.wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 1.6rem;
-  letter-spacing: -0.01em;
-}
-
-.wordmark.small {
-  font-size: 1.28rem;
-}
-
-.led {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--dim);
-  flex: none;
-}
-
-.led.good {
-  background: var(--amber);
-  box-shadow: 0 0 10px rgba(240, 162, 74, 0.7);
-}
-
-.led.bad {
-  background: var(--ember);
 }
 
 /* ----------------------------------------------------------- mini player */
