@@ -12,6 +12,11 @@ All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "err
 | GET | `/api/state` | Whole remote state: queue plus playback status |
 | POST | `/api/control` | Every write action |
 | POST | `/api/play` | Replace the queue with these songs and start playing |
+| POST | `/api/queue/next` | Insert songs right after the track that is playing |
+| GET/POST | `/api/playlists` | List playlists / create one (`{ name, ids? }`) |
+| GET | `/api/playlists/:id` | Playlist plus its songs |
+| POST | `/api/playlists/:id/songs` | Append songs to a playlist |
+| DELETE | `/api/playlists/:id/songs/:songId` | Remove one song from a playlist |
 | GET | `/api/search?q=` | Songs + albums + artists in one call |
 | GET | `/api/albums?type=newest&size=30&offset=0` | Album list, paged (`newest`, `alphabeticalByName`, …) |
 | GET | `/api/albums/:id` | Album plus its songs |
@@ -75,6 +80,10 @@ Body: `{ action, index?, offset?, ids?, gain? }`, returns the new `status`.
 ### `POST /api/play`
 
 `{ "ids": ["…"] }` — `set` + `skip` to index 0 + `start`, in that order, returning the new status. One call so the UI cannot leave the jukebox in a half-changed state.
+
+### `POST /api/queue/next`
+
+`{ "ids": ["…"] }` — splices the songs in after the current index. Subsonic only has append and replace, and Navidrome's `set` **restarts at index 0 and stops**, so the endpoint re-skips to the current track with the offset it had reached and resumes if it was playing. Verified: queue `[A,B,C]` playing B → `[A,B,X,C]`, still playing B, position continuing.
 
 ### `GET /api/lyrics/:id`
 

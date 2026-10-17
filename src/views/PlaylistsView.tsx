@@ -1,0 +1,79 @@
+import { useState } from 'react';
+import { coverUrl } from '../api';
+import { formatTotal } from '../format';
+import { PlusIcon } from '../icons';
+import { navigate } from '../router';
+import { usePlaylists } from '../usePlaylists';
+
+export function PlaylistsView() {
+  const { playlists, loading, create } = usePlaylists();
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setBusy(true);
+    try {
+      const playlist = await create(trimmed);
+      setName('');
+      navigate(`/playlist/${playlist.id}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="view">
+      <header className="view-head">
+        <h1 className="display">Playlists</h1>
+        <p className="fineprint">Built here or in any Subsonic client</p>
+        <form
+          className="playlist-new"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="New playlist name"
+            aria-label="New playlist name"
+          />
+          <button className="primary" type="submit" disabled={busy || !name.trim()}>
+            <PlusIcon size={18} /> Create
+          </button>
+        </form>
+      </header>
+
+      {loading && <p className="empty">Reading playlists…</p>}
+      {!loading && playlists.length === 0 && (
+        <p className="empty">
+          No playlists yet. Name one above, or use the ⋯ menu on any track and pick “New playlist”.
+        </p>
+      )}
+
+      <ul className="plain-list">
+        {playlists.map((playlist) => (
+          <li key={playlist.id}>
+            <button className="link-row with-art" onClick={() => navigate(`/playlist/${playlist.id}`)}>
+              {playlist.coverArt ? (
+                <img src={coverUrl(playlist.coverArt, 96)} alt="" loading="lazy" />
+              ) : (
+                <span className="playlist-art-fallback" aria-hidden />
+              )}
+              <span className="link-text">
+                <span className="row-title">{playlist.name}</span>
+                <span className="row-sub">
+                  {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'}
+                  {playlist.duration ? ` · ${formatTotal(playlist.duration)}` : ''}
+                </span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

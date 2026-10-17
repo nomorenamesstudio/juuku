@@ -1,6 +1,7 @@
 import type { Song } from './api';
 import { formatTime } from './format';
-import { HeartIcon, PlusIcon } from './icons';
+import { HeartIcon, MoreIcon, PlusIcon } from './icons';
+import { useTrackActions } from './TrackActions';
 
 export function Eq({ playing }: { playing: boolean }) {
   return (
@@ -19,9 +20,10 @@ interface SongRowProps {
   playing?: boolean;
   number?: number;
   subtitle?: string | null;
-  onAdd: () => void;
   onPlay: () => void;
   onFavorite: () => void;
+  /** Overrides the default "more actions" sheet (e.g. to add a playlist context). */
+  onMenu?: () => void;
 }
 
 /** Library row: tapping the row queues the track, the ▶ button plays it now. */
@@ -32,10 +34,11 @@ export function SongRow({
   playing,
   number,
   subtitle,
-  onAdd,
   onPlay,
   onFavorite,
+  onMenu,
 }: SongRowProps) {
+  const openActions = useTrackActions();
   return (
     <li className={`row ${active ? 'row-active' : ''}`}>
       {number !== undefined && (
@@ -54,8 +57,12 @@ export function SongRow({
       >
         <HeartIcon filled={favorite} size={18} />
       </button>
-      <button className="row-icon" onClick={onAdd} aria-label={`Add ${song.title} to queue`}>
-        <PlusIcon size={18} />
+      <button
+        className="row-icon"
+        onClick={onMenu ?? (() => openActions([song]))}
+        aria-label={`More actions for ${song.title}`}
+      >
+        <MoreIcon size={18} />
       </button>
     </li>
   );

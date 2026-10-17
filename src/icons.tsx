@@ -4,17 +4,21 @@ import {
   Heart,
   Library,
   ListMusic,
+  MoreHorizontal,
   MicVocal,
   Pause,
   Play,
   Plus,
   RotateCw,
+  Repeat,
+  Repeat1,
   Search,
   Shuffle,
   SkipBack,
   SkipForward,
   Trash2,
   UserRound,
+  X,
   Volume2,
   type LucideIcon,
 } from 'lucide-react';
@@ -64,6 +68,7 @@ export const TrashIcon = icon(Trash2);
 export const HeartIcon = icon(Heart);
 export const PlusIcon = icon(Plus);
 export const QueueIcon = icon(ListMusic);
+export const PlaylistIcon = icon(ListMusic);
 export const LibraryIcon = icon(Library);
 export const ArtistIcon = icon(UserRound);
 export const SearchIcon = icon(Search);
@@ -72,3 +77,7 @@ export const ChevronDownIcon = icon(ChevronDown);
 export const ChevronLeftIcon = icon(ChevronLeft);
 export const VolumeIcon = icon(Volume2);
 export const MicIcon = icon(MicVocal);
+export const MoreIcon = icon(MoreHorizontal);
+export const CloseIcon = icon(X);
+export const RepeatIcon = icon(Repeat);
+export const RepeatOneIcon = icon(Repeat1);

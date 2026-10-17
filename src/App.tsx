@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NowBar } from './MiniPlayer';
-import { ArtistIcon, HeartIcon, LibraryIcon, QueueIcon, RefreshIcon } from './icons';
+import { ArtistIcon, HeartIcon, LibraryIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
+import { TrackActions, TrackActionsProvider } from './TrackActions';
+import type { Song } from './api';
 import { navigate, useRoute } from './router';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
@@ -8,17 +10,21 @@ import { ArtistView } from './views/ArtistView';
 import { FavoritesView } from './views/FavoritesView';
 import { Library } from './views/Library';
 import { PlayerView } from './views/PlayerView';
+import { PlaylistView } from './views/PlaylistView';
+import { PlaylistsView } from './views/PlaylistsView';
 import { QueueView } from './views/QueueView';
 
 const RAIL = [
   { path: '/library/albums', label: 'Albums', group: 'Browse', icon: LibraryIcon },
   { path: '/library/artists', label: 'Artists', group: 'Browse', icon: ArtistIcon },
+  { path: '/playlists', label: 'Playlists', group: 'Yours', icon: PlaylistIcon },
   { path: '/favorites', label: 'Favorites', group: 'Yours', icon: HeartIcon },
   { path: '/queue', label: 'Queue', group: 'Yours', icon: QueueIcon },
 ];
 
 const TABS = [
   { path: '/library/albums', label: 'Library', icon: LibraryIcon },
+  { path: '/playlists', label: 'Playlists', icon: PlaylistIcon },
   { path: '/favorites', label: 'Favorites', icon: HeartIcon },
   { path: '/queue', label: 'Queue', icon: QueueIcon },
 ];
@@ -27,6 +33,7 @@ export default function App() {
   const jbox = useJukebox();
   const { route } = useRoute();
   const [lyricsOpen, setLyricsOpen] = useState(false);
+  const [trackActions, setTrackActions] = useState<{ songs: Song[]; playlistId?: string } | null>(null);
   const isPlayer = route.name === 'player';
   // on phones the full-screen player owns the screen, except in lyrics mode where
   // the mini player and tabs come back so you can still drive playback
@@ -41,7 +48,9 @@ export default function App() {
   const routeKey = route.name === 'album' || route.name === 'artist' ? `${route.name}:${route.id}` : route.name;
 
   const section =
-    route.name === 'library'
+    route.name === 'playlists' || route.name === 'playlist'
+      ? 'playlists'
+      : route.name === 'library'
       ? route.tab
       : route.name === 'album'
         ? 'albums'
@@ -61,6 +70,10 @@ export default function App() {
         return <ArtistView key={route.id} id={route.id} />;
       case 'favorites':
         return <FavoritesView jbox={jbox} />;
+      case 'playlists':
+        return <PlaylistsView />;
+      case 'playlist':
+        return <PlaylistView id={route.id} jbox={jbox} />;
       case 'queue':
         return <QueueView jbox={jbox} />;
       case 'player':
@@ -77,6 +90,7 @@ export default function App() {
   })();
 
   return (
+    <TrackActionsProvider value={(songs, options) => setTrackActions({ songs, ...options })}>
     <div className={`shell ${isPlayer ? 'shell-player' : ''} ${lyricsOpen ? 'lyrics-open' : ''}`}>
       <aside className="rail" aria-label="Main">
         <button className="wordmark" onClick={() => navigate('/library/albums')}>
@@ -173,6 +187,11 @@ export default function App() {
           <button onClick={jbox.refresh}>Retry</button>
         </div>
       )}
+
+      {trackActions && (
+        <TrackActions target={trackActions} onClose={() => setTrackActions(null)} jbox={jbox} />
+      )}
     </div>
+    </TrackActionsProvider>
   );
 }

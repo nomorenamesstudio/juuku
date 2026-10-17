@@ -44,7 +44,6 @@ export function FavoritesView({ jbox }: { jbox: Jukebox }) {
               favorite
               active={jbox.current?.id === song.id}
               playing={jbox.status?.playing}
-              onAdd={() => jbox.addToQueue([song])}
               onPlay={() => jbox.playFrom(favorites, index)}
               onFavorite={() => jbox.toggleFavorite(song)}
             />

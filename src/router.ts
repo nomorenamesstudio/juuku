@@ -5,6 +5,8 @@ export type Route =
   | { name: 'album'; id: string }
   | { name: 'artist'; id: string }
   | { name: 'favorites' }
+  | { name: 'playlists' }
+  | { name: 'playlist'; id: string }
   | { name: 'queue' }
   | { name: 'player' };
 
@@ -20,6 +22,10 @@ function parse(hash: string): Route {
       return { name: 'library', tab: id === 'artists' ? 'artists' : 'albums' };
     case 'favorites':
       return { name: 'favorites' };
+    case 'playlists':
+      return { name: 'playlists' };
+    case 'playlist':
+      return id ? { name: 'playlist', id } : { name: 'playlists' };
     case 'queue':
       return { name: 'queue' };
     case 'player':

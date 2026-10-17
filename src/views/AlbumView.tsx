@@ -88,7 +88,6 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             favorite={jbox.favoriteIds.has(song.id)}
             active={jbox.current?.id === song.id}
             playing={jbox.status?.playing}
-            onAdd={() => jbox.addToQueue([song])}
             onPlay={() => jbox.playFrom(songs, index)}
             onFavorite={() => jbox.toggleFavorite(song)}
           />

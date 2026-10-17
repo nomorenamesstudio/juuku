@@ -10,11 +10,23 @@ import {
   getFavorites,
   getHealth,
   getState,
+  playNext as playNextRequest,
   playNow as playNowRequest,
   removeFavorite,
 } from './api';
 
 const POLL_MS = 1000;
+const REPEAT_KEY = 'juicebox.repeat';
+
+export type RepeatMode = 'off' | 'all' | 'one';
+
+interface Snapshot {
+  playing: boolean;
+  index: number;
+  position: number;
+  duration: number;
+  lastIndex: number;
+}
 
 export interface Jukebox {
   state: State | null;
@@ -31,6 +43,9 @@ export interface Jukebox {
   addToQueue: (songs: Song[], label?: string) => Promise<void>;
   playNow: (songs: Song[]) => Promise<void>;
   playFrom: (songs: Song[], index: number) => Promise<void>;
+  playNext: (songs: Song[]) => Promise<void>;
+  repeat: RepeatMode;
+  cycleRepeat: () => void;
   playAt: (index: number, offset?: number) => Promise<void>;
   removeAt: (index: number) => Promise<void>;
   clearQueue: () => Promise<void>;
@@ -50,7 +65,13 @@ export function useJukebox(): Jukebox {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<RepeatMode>(() => {
+    const stored = window.localStorage.getItem(REPEAT_KEY);
+    return stored === 'all' || stored === 'one' ? stored : 'off';
+  });
   const toastTimer = useRef<number | undefined>(undefined);
+  const repeatRef = useRef(repeat);
+  const lastSnapshot = useRef<Snapshot | null>(null);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -58,14 +79,62 @@ export function useJukebox(): Jukebox {
     toastTimer.current = window.setTimeout(() => setToast(null), 2600);
   }, []);
 
+  useEffect(() => {
+    repeatRef.current = repeat;
+    window.localStorage.setItem(REPEAT_KEY, repeat);
+  }, [repeat]);
+
+  const cycleRepeat = useCallback(() => {
+    setRepeat((current) => (current === 'off' ? 'all' : current === 'all' ? 'one' : 'off'));
+  }, []);
+
+  /**
+   * Subsonic has no repeat, so the client watches the poll and restarts. When the
+   * queue runs out Navidrome leaves the last index but resets position to 0 and
+   * stops, which is what separates "finished" from a manual pause (position kept).
+   */
+  const handleQueueEnd = useCallback(async (next: State, prev: Snapshot) => {
+    const mode = repeatRef.current;
+    if (mode === 'off') return;
+
+    const stopped = prev.playing && !next.status.playing;
+    const finished = stopped && next.status.position <= 1 && prev.position > 2;
+    const advanced = prev.playing && next.status.playing && next.status.currentIndex > prev.index;
+
+    try {
+      if (mode === 'one' && (finished || (advanced && prev.position >= prev.duration - 5))) {
+        const index = finished ? Math.max(next.status.currentIndex, 0) : prev.index;
+        await control({ action: 'skip', index, offset: 0 });
+        await control({ action: 'start' });
+        lastSnapshot.current = null;
+      } else if (mode === 'all' && finished && prev.index >= prev.lastIndex) {
+        await control({ action: 'skip', index: 0, offset: 0 });
+        await control({ action: 'start' });
+        lastSnapshot.current = null;
+      }
+    } catch {
+      // a failed loop is not worth an error banner; the next poll shows reality
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
-      setState(await getState());
+      const next = await getState();
+      const previous = lastSnapshot.current;
+      lastSnapshot.current = {
+        playing: next.status.playing,
+        index: next.status.currentIndex,
+        position: next.status.position,
+        duration: next.entries[next.status.currentIndex]?.duration ?? 0,
+        lastIndex: next.entries.length - 1,
+      };
+      setState(next);
       setError(null);
+      if (previous) void handleQueueEnd(next, previous);
     } catch (err) {
       setError((err as Error).message);
     }
-  }, []);
+  }, [handleQueueEnd]);
 
   useEffect(() => {
     getHealth().then(setHealth, (err: Error) => setError(err.message));
@@ -131,6 +200,17 @@ export function useJukebox(): Jukebox {
         await playNowRequest(songs.map((song) => song.id), index);
         await afterQueueChange();
       }, songs.length === 1 ? `Playing ${songs[0].title}` : `Playing ${songs.length} tracks`);
+    },
+    [run, afterQueueChange],
+  );
+
+  const playNext = useCallback(
+    async (songs: Song[]) => {
+      if (songs.length === 0) return;
+      await run(async () => {
+        await playNextRequest(songs.map((song) => song.id));
+        await afterQueueChange();
+      }, songs.length === 1 ? `Playing ${songs[0].title} next` : `Playing ${songs.length} tracks next`);
     },
     [run, afterQueueChange],
   );
@@ -225,6 +305,8 @@ export function useJukebox(): Jukebox {
 
   return {
     state,
+    repeat,
+    cycleRepeat,
     status,
     entries,
     current,
@@ -238,6 +320,7 @@ export function useJukebox(): Jukebox {
     addToQueue,
     playNow,
     playFrom,
+    playNext,
     playAt,
     removeAt,
     clearQueue,

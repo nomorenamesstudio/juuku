@@ -116,6 +116,45 @@ app.post('/api/control', wrap(async (req, res) => {
 }));
 
 /**
+ * Queue the songs right after the current one. `set` resets playback to index 0 and
+ * stops it, so the current track is re-skipped (with the position it had reached)
+ * and resumed afterwards - otherwise "play next" would jump to the start.
+ */
+app.post('/api/queue/next', wrap(async (req, res) => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
+
+  const current = await call('jukeboxControl', { action: 'get' });
+  const entries = current.jukeboxPlaylist?.entry ?? [];
+  const index = current.jukeboxPlaylist?.currentIndex ?? -1;
+
+  if (entries.length === 0 || index < 0) {
+    await call('jukeboxControl', { action: 'set', id: ids }, { repeat: ['id'] });
+    await waitForQueue(ids);
+    await call('jukeboxControl', { action: 'start' });
+  } else {
+    const currentId = entries[index].id;
+    const wasPlaying = Boolean(current.jukeboxPlaylist.playing);
+    const resumeAt = current.jukeboxPlaylist.position ?? 0;
+    const next = [
+      ...entries.slice(0, index + 1).map((entry) => entry.id),
+      ...ids,
+      ...entries.slice(index + 1).map((entry) => entry.id),
+    ];
+    const started = Date.now();
+    await call('jukeboxControl', { action: 'set', id: next }, { repeat: ['id'] });
+    await waitForQueue(next);
+    const target = next.indexOf(currentId);
+    const offset = Math.round(resumeAt + (Date.now() - started) / 1000);
+    await call('jukeboxControl', { action: 'skip', index: target, offset });
+    if (wasPlaying) await call('jukeboxControl', { action: 'start' });
+  }
+
+  const response = await call('jukeboxControl', { action: 'status' });
+  res.json(statusOf(response));
+}));
+
+/**
  * `set` returns before the new queue is live, so a `skip` sent straight after it
  * lands on the old queue and is overwritten. Poll `get` until the queue matches.
  */
@@ -259,6 +298,60 @@ app.get('/api/lyrics/:id', wrap(async (req, res) => {
 
   lyricsCache.set(id, { value: payload, expires: Date.now() + LYRIC_TTL });
   res.json(payload);
+}));
+
+// ---------------------------------------------------------------- playlists
+
+const playlistMeta = (entry) => ({
+  id: entry.id,
+  name: entry.name,
+  comment: entry.comment,
+  songCount: entry.songCount ?? 0,
+  duration: entry.duration,
+  owner: entry.owner,
+  coverArt: entry.coverArt,
+  created: entry.created,
+  changed: entry.changed,
+});
+
+app.get('/api/playlists', wrap(async (_req, res) => {
+  const response = await call('getPlaylists');
+  res.json({ playlists: (response.playlists?.playlist ?? []).map(playlistMeta) });
+}));
+
+app.get('/api/playlists/:id', wrap(async (req, res) => {
+  const response = await call('getPlaylist', { id: req.params.id });
+  res.json({
+    playlist: playlistMeta(response.playlist),
+    songs: (response.playlist.entry ?? []).map(song),
+  });
+}));
+
+app.post('/api/playlists', wrap(async (req, res) => {
+  const name = String(req.body?.name ?? '').trim();
+  if (!name) throw badRequest('name is required');
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  const response = await call('createPlaylist', { name, songId: ids }, { repeat: ['songId'] });
+  res.status(201).json({ playlist: playlistMeta(response.playlist) });
+}));
+
+app.post('/api/playlists/:id/songs', wrap(async (req, res) => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
+  await call('updatePlaylist', { playlistId: req.params.id, songIdToAdd: ids }, { repeat: ['songIdToAdd'] });
+  const response = await call('getPlaylist', { id: req.params.id });
+  res.json({ playlist: playlistMeta(response.playlist), songs: (response.playlist.entry ?? []).map(song) });
+}));
+
+app.delete('/api/playlists/:id/songs/:songId', wrap(async (req, res) => {
+  const response = await call('getPlaylist', { id: req.params.id });
+  const songs = (response.playlist.entry ?? []).map(song);
+  const index = songs.findIndex((entry) => entry.id === req.params.songId);
+  if (index >= 0) {
+    await call('updatePlaylist', { playlistId: req.params.id, songIndexToRemove: index });
+  }
+  const after = await call('getPlaylist', { id: req.params.id });
+  res.json({ playlist: playlistMeta(after.playlist), songs: (after.playlist.entry ?? []).map(song) });
 }));
 
 // ----------------------------------------------------------------- favourites

@@ -9,6 +9,8 @@ import {
   PauseIcon,
   PlayIcon,
   PrevIcon,
+  RepeatIcon,
+  RepeatOneIcon,
   VolumeIcon,
 } from '../icons';
 import { goBack, navigate } from '../router';
@@ -203,6 +205,14 @@ export function PlayerView({
         <span className="player-context">
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
         </span>
+        <button
+          className={`icon-button ${jbox.repeat !== 'off' ? 'is-on' : ''}`}
+          onClick={jbox.cycleRepeat}
+          aria-pressed={jbox.repeat !== 'off'}
+          aria-label={`Repeat ${jbox.repeat}`}
+        >
+          {jbox.repeat === 'one' ? <RepeatOneIcon size={18} /> : <RepeatIcon size={18} />}
+        </button>
       </header>
 
       <div className="player-grid">

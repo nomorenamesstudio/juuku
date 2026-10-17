@@ -1,5 +1,5 @@
 import { formatTime, formatTotal } from '../format';
-import { ShuffleIcon, TrashIcon } from '../icons';
+import { RepeatIcon, RepeatOneIcon, ShuffleIcon, TrashIcon } from '../icons';
 import { navigate } from '../router';
 import { QueueRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
@@ -20,6 +20,15 @@ export function QueueView({ jbox }: { jbox: Jukebox }) {
           <div className="actions">
             <button className="secondary" disabled={jbox.busy} onClick={jbox.shuffleQueue}>
               <ShuffleIcon size={18} /> Shuffle
+            </button>
+            <button
+              className="secondary"
+              aria-pressed={jbox.repeat !== 'off'}
+              onClick={jbox.cycleRepeat}
+              title={`Repeat ${jbox.repeat}`}
+            >
+              {jbox.repeat === 'one' ? <RepeatOneIcon size={18} /> : <RepeatIcon size={18} />}
+              {jbox.repeat === 'off' ? 'Repeat' : jbox.repeat === 'all' ? 'Repeat all' : 'Repeat one'}
             </button>
             <button className="secondary danger" disabled={jbox.busy} onClick={jbox.clearQueue}>
               <TrashIcon size={18} /> Clear

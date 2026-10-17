@@ -56,6 +56,18 @@ export interface Lyrics {
   lines: { time?: number; text: string }[];
 }
 
+export interface Playlist {
+  id: string;
+  name: string;
+  songCount: number;
+  duration?: number;
+  coverArt?: string;
+  comment?: string;
+  owner?: string;
+  created?: string;
+  changed?: string;
+}
+
 export interface Favorites {
   playlistId: string | null;
   songs: Song[];
@@ -107,6 +119,24 @@ export const control = (body: ControlBody) =>
 /** Replace the queue with these songs and start playing at `index`. */
 export const playNow = (ids: string[], index = 0) =>
   request<PlaybackStatus>('/api/play', { method: 'POST', body: JSON.stringify({ ids, index }) });
+
+/** Insert right after the current track instead of at the end of the queue. */
+export const playNext = (ids: string[]) =>
+  request<PlaybackStatus>('/api/queue/next', { method: 'POST', body: JSON.stringify({ ids }) });
+
+export const getPlaylists = () => request<{ playlists: Playlist[] }>('/api/playlists');
+export const getPlaylist = (id: string) => request<{ playlist: Playlist; songs: Song[] }>(`/api/playlists/${id}`);
+export const createPlaylist = (name: string, ids: string[] = []) =>
+  request<{ playlist: Playlist }>('/api/playlists', { method: 'POST', body: JSON.stringify({ name, ids }) });
+export const addToPlaylist = (id: string, ids: string[]) =>
+  request<{ playlist: Playlist; songs: Song[] }>(`/api/playlists/${id}/songs`, {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+export const removeFromPlaylist = (id: string, songId: string) =>
+  request<{ playlist: Playlist; songs: Song[] }>(`/api/playlists/${id}/songs/${encodeURIComponent(songId)}`, {
+    method: 'DELETE',
+  });
 
 export const coverUrl = (id: string | undefined, size = 400) =>
   id ? `/api/cover/${encodeURIComponent(id)}?size=${size}` : undefined;

@@ -122,7 +122,6 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                     favorite={jbox.favoriteIds.has(song.id)}
                     active={jbox.current?.id === song.id}
                     playing={jbox.status?.playing}
-                    onAdd={() => jbox.addToQueue([song])}
                     onPlay={() => jbox.playNow([song])}
                     onFavorite={() => jbox.toggleFavorite(song)}
                   />
