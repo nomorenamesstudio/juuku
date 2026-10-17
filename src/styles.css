@@ -742,8 +742,15 @@ h1.display {
   background: var(--raise);
   display: grid;
   place-items: center;
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 1.1rem;
+  /* a lone cap never centres by line box in the serif (huge ascent/descent), so
+     the initial uses the UI face, flex-centred, with its own line box */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1;
   color: var(--muted);
   text-transform: uppercase;
 }
