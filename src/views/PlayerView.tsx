@@ -128,7 +128,7 @@ export function PlayerView({ jbox }: { jbox: Jukebox }) {
   return (
     <div className="view player">
       <header className="player-top">
-        <button className="icon-button" onClick={() => window.history.back()} aria-label="Minimize player">
+        <button className="icon-button player-minimize" onClick={() => window.history.back()} aria-label="Minimize player">
           <ChevronDownIcon size={22} />
         </button>
         <span className="player-context">

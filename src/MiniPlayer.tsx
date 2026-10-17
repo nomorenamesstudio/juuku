@@ -56,20 +56,9 @@ export function NowBar({ jbox }: { jbox: Jukebox }) {
             </span>
           </span>
         </button>
-        <button
-          className={`icon-button bar-only ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
-          onClick={() => jbox.toggleFavorite(current)}
-          aria-pressed={jbox.favoriteIds.has(current.id)}
-          aria-label="Favorite this track"
-        >
-          <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
-        </button>
       </div>
 
       <div className="nowbar-center">
-        <button className="icon-button bar-only" onClick={jbox.shuffleQueue} disabled={jbox.busy || entries.length < 2} aria-label="Shuffle queue">
-          <ShuffleIcon size={18} />
-        </button>
         <button className="icon-button bar-only" onClick={() => jbox.step(-1)} disabled={jbox.busy || status.currentIndex <= 0} aria-label="Previous track">
           <PrevIcon size={20} />
         </button>
@@ -87,6 +76,17 @@ export function NowBar({ jbox }: { jbox: Jukebox }) {
       </div>
 
       <div className="nowbar-right">
+        <button
+          className={`icon-button bar-only ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
+          onClick={() => jbox.toggleFavorite(current)}
+          aria-pressed={jbox.favoriteIds.has(current.id)}
+          aria-label="Favorite this track"
+        >
+          <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
+        </button>
+        <button className="icon-button bar-only" onClick={jbox.shuffleQueue} disabled={jbox.busy || entries.length < 2} aria-label="Shuffle queue">
+          <ShuffleIcon size={18} />
+        </button>
         <label className="nowbar-volume bar-only">
           <VolumeIcon size={16} />
           <input

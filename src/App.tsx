@@ -113,7 +113,7 @@ export default function App() {
 
         <main className="content">{view}</main>
 
-        {!isPlayer && count > 0 && <NowBar jbox={jbox} />}
+        {count > 0 && <NowBar jbox={jbox} />}
 
         {!isPlayer && (
           <nav className="tabbar" aria-label="Main">
