@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type Album,
   type Health,
@@ -30,6 +30,8 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
+  const [gainDraft, setGainDraft] = useState<number | null>(null);
+  const gainTimer = useRef<number | undefined>(undefined);
 
   const refresh = useCallback(async () => {
     try {
@@ -80,6 +82,30 @@ export default function App() {
     },
     [refresh],
   );
+
+  // Volume is a drag target, so the polled value must not fight the thumb:
+  // while a draft exists it is what the slider shows, and the send is debounced.
+  const commitGain = useCallback(async (gain: number) => {
+    try {
+      const applied = await control({ action: 'setGain', gain });
+      setState((prev) => (prev ? { ...prev, status: { ...prev.status, gain: applied.gain } } : prev));
+      setGainDraft(null);
+    } catch (err) {
+      setError((err as Error).message);
+      setGainDraft(null);
+    }
+  }, []);
+
+  const onGainInput = useCallback(
+    (gain: number) => {
+      setGainDraft(gain);
+      window.clearTimeout(gainTimer.current);
+      gainTimer.current = window.setTimeout(() => commitGain(gain), 150);
+    },
+    [commitGain],
+  );
+
+  useEffect(() => () => window.clearTimeout(gainTimer.current), []);
 
   const entries = state?.entries ?? [];
   const status = state?.status;
@@ -195,10 +221,10 @@ export default function App() {
                   min={0}
                   max={1}
                   step={0.01}
-                  value={status?.gain ?? 1}
+                  value={gainDraft ?? status?.gain ?? 1}
                   aria-label="Volume"
-                  onChange={(event) => setState((prev) => prev && { ...prev, status: { ...prev.status, gain: Number(event.target.value) } })}
-                  onPointerUp={(event) => run({ action: 'setGain', gain: Number((event.target as HTMLInputElement).value) })}
+                  aria-valuetext={`${Math.round((gainDraft ?? status?.gain ?? 1) * 100)}%`}
+                  onChange={(event) => onGainInput(Number(event.target.value))}
                 />
               </label>
             </div>
