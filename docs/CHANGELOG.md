@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Fix** — README: dropped the juicebox pun (nobody arriving fresh knows the old name) and added a settings table, because the two passwords are easy to confuse: `NAVIDROME_PASSWORD` is how the server signs in to Navidrome, `JUUKU_PASSWORD` is the optional lock on Juuku's own UI.
+
 - **Change** — the app icon carries the amber LED dot from the wordmark, with a soft glow, in the square, maskable and favicon variants.
 - **Fix** — the sign-in screen's lockup had the kana hanging off to the left of the name and the block pinned to the page margin: it now uses the same right-aligned stack as the rest of the app, shrunk to its content.
 

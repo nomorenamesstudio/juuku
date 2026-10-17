@@ -1,6 +1,6 @@
 # Juuku <sub>ジューク</sub>
 
-*Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`, and it keeps the old juicebox/jukebox pun in six letters.
+*Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`.
 
 Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: browse the library, queue music, skip, pause, favorite and set the volume on the box that actually has the speakers, from any browser on the network.
 
@@ -17,9 +17,25 @@ docker run -d --name juuku -p 3101:3101 --read-only --cap-drop ALL \
 ```
 
 Then open `http://<host>:3101` on the phone. `deploy/compose.yml` is the fuller
-version (read-only rootfs, no capabilities, healthcheck) and
-[SECURITY.md](SECURITY.md) says what it can do in the wrong hands — it is a remote
-for the room, not a website, and it has no login.
+version (read-only rootfs, no capabilities, healthcheck).
+
+### Settings
+
+Two different passwords, and they are not interchangeable:
+
+| variable | what it is |
+|---|---|
+| `NAVIDROME_URL` | the Navidrome that plays the music, e.g. `http://navidrome:4533` |
+| `NAVIDROME_USER` | the Navidrome account Juuku signs in as — a normal, non-admin one is enough |
+| `NAVIDROME_PASSWORD` | **that** account's password. Used by the server only; never sent to the browser |
+| `JUUKU_PASSWORD` | optional lock on **Juuku itself**. Unset means no login at all (LAN default). Set it and the browser asks once, for 30 days |
+| `HOST` / `PORT` | where the app listens inside the container, `0.0.0.0:3101` |
+
+So `NAVIDROME_PASSWORD` is how the box talks to the music server; `JUUKU_PASSWORD`
+is what stops someone else on the network from queueing their own taste.
+
+[SECURITY.md](SECURITY.md) says the rest — it is a remote for the room, not a
+website.
 
 ## What it does
 
