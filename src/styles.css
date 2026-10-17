@@ -414,6 +414,15 @@ h1.display {
   font-size: 1.9rem;
 }
 
+/* the title row and the field are one unit: no room for a paragraph gap */
+.library-head .view-head {
+  padding-bottom: 0.35rem;
+}
+
+.library-bar {
+  padding-top: 0.2rem;
+}
+
 .library-head .segmented {
   margin-bottom: 0;
   flex: none;

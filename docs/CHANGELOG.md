@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — the title/tab row and the search field read as one unit now: the head's bottom padding dropped from 1.3rem to 0.35rem and the bar's top padding from 0.3rem to 0.2rem, so the gap is ~10px instead of ~30px.
+
 - **Change** — on phones the Albums/Artists switch moved out of the flow and into the title row, right aligned above the search, so the grid starts one control higher. The switch is tighter there (smaller pills, 1.9rem title) and drops its count pills under 360px, where the two would not both fit; it still hides itself while search results are showing.
 
 - **Feature** — installable home-screen app: `manifest.webmanifest` (standalone, warm `#14100b` theme, 192/512/maskable-512/SVG icons), `apple-touch-icon.png` at 180, `apple-mobile-web-app-*` meta with `black-translucent` so the app draws under the status bar (the page carries `env(safe-area-inset-top)` for it), and a new record-and-amber-label icon derived from the wordmark's LED. Rendered from `public/icon.svg` at exact sizes, no transparency.
