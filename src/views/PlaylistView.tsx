@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { type Playlist, type Song, coverUrl, getPlaylist } from '../api';
+import { createPortal } from 'react-dom';
+import { type Playlist, type Song, coverUrl, deletePlaylist, getPlaylist } from '../api';
 import { formatTotal } from '../format';
-import { ChevronLeftIcon, PlayIcon, PlusIcon } from '../icons';
+import { ChevronLeftIcon, PlayIcon, PlusIcon, TrashIcon } from '../icons';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
 import { useTrackActions } from '../TrackActions';
@@ -12,6 +13,21 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const [songs, setSongs] = useState<Song[]>([]);
   const [error, setError] = useState<string | null>(null);
   const openActions = useTrackActions();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const remove = async () => {
+    setDeleting(true);
+    try {
+      await deletePlaylist(id);
+      jbox.notify(`Deleted ${playlist?.name ?? 'playlist'}`);
+      navigate('/playlists');
+    } catch (err) {
+      jbox.notify((err as Error).message);
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
 
   useEffect(() => {
     setPlaylist(null);
@@ -56,6 +72,9 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
         >
           <PlusIcon size={18} /> Add to queue
         </button>
+        <button className="secondary danger" disabled={!playlist} onClick={() => setConfirming(true)}>
+          <TrashIcon size={18} /> Delete
+        </button>
       </div>
 
       {songs.length === 0 ? (
@@ -78,6 +97,35 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
           ))}
         </ul>
       )}
+
+      {confirming &&
+        createPortal(
+          <div className="sheet-layer" onClick={() => !deleting && setConfirming(false)} role="presentation">
+          <div
+            className="sheet confirm"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Delete playlist"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="sheet-head">
+              <div>
+                <p className="sheet-eyebrow">Delete “{playlist?.name}”?</p>
+                <p className="sheet-sub">The playlist goes, the tracks stay in your library.</p>
+              </div>
+            </header>
+            <div className="confirm-actions">
+              <button className="secondary" onClick={() => setConfirming(false)} disabled={deleting}>
+                Cancel
+              </button>
+              <button className="danger-solid" onClick={() => void remove()} disabled={deleting}>
+                {deleting ? 'Deleting…' : 'Delete playlist'}
+              </button>
+            </div>
+          </div>
+        </div>,
+          document.body,
+        )}
     </div>
   );
 }

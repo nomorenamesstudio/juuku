@@ -343,6 +343,13 @@ app.post('/api/playlists/:id/songs', wrap(async (req, res) => {
   res.json({ playlist: playlistMeta(response.playlist), songs: (response.playlist.entry ?? []).map(song) });
 }));
 
+app.delete('/api/playlists/:id', wrap(async (req, res) => {
+  const response = await call('getPlaylist', { id: req.params.id }).catch(() => null);
+  const name = response?.playlist?.name;
+  await call('deletePlaylist', { id: req.params.id });
+  res.json({ deleted: req.params.id, name });
+}));
+
 app.delete('/api/playlists/:id/songs/:songId', wrap(async (req, res) => {
   const response = await call('getPlaylist', { id: req.params.id });
   const songs = (response.playlist.entry ?? []).map(song);

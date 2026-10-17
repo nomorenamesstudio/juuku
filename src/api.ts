@@ -133,6 +133,9 @@ export const addToPlaylist = (id: string, ids: string[]) =>
     method: 'POST',
     body: JSON.stringify({ ids }),
   });
+export const deletePlaylist = (id: string) =>
+  request<{ deleted: string; name?: string }>(`/api/playlists/${encodeURIComponent(id)}`, { method: 'DELETE' });
+
 export const removeFromPlaylist = (id: string, songId: string) =>
   request<{ playlist: Playlist; songs: Song[] }>(`/api/playlists/${id}/songs/${encodeURIComponent(songId)}`, {
     method: 'DELETE',

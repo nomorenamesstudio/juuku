@@ -1540,6 +1540,33 @@ h1.display {
   margin-top: 0.9rem;
 }
 
+.sheet.confirm {
+  max-width: 460px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+.danger-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: var(--ember);
+  color: #1a0f0a;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.danger-solid:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
 @keyframes sheet-up {
   from {
     opacity: 0;
