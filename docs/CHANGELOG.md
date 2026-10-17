@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Fix** — the search glyph flashed once and then vanished: it was an overlaid element sitting inside the field's own `backdrop-filter` layer, so the compositor dropped it after the first frame. It is the field's `background-image` now (a data-URI lucide magnifier), which no layer can paint over, and the native `search` decorations are suppressed so no second glyph appears on Safari/iOS.
+
 - **Change** — the pinned shade is a softer fade: 0.9 at the viewport edge tapering over 2.7rem (phone) / 2rem (desktop) instead of running almost solid, so the artwork stays visible underneath and the band reads as a gradient rather than a blackout. Cream on the darkened backdrop still measures 10.6:1 against the busiest cover behind it.
 
 - **Feature** — count pills everywhere the browse switch appears: the phone tabs and the desktop rail both show albums/artists totals, from one cached fetch (a module-level hook shared by the rail and the view).

@@ -417,32 +417,33 @@ h1.display {
   color: var(--cream);
 }
 
-.searchbar {
-  position: relative;
-}
-
-.searchbar > svg {
-  position: absolute;
-  left: 0.9rem;
-  top: 50%;
-  translate: 0 -50%;
-  color: var(--muted);
-  pointer-events: none;
-}
-
 .searchbar input {
   width: 100%;
   /* the glass belongs to the field, not to a band behind it: covers scroll past
      and only the field frosts them, so there is no cut edge anywhere */
-  background: rgba(20, 16, 11, 0.8);
+  background-color: rgba(20, 16, 11, 0.8);
+  /* the glyph is the field's own background: as a separate overlaid element it sat
+     in the backdrop-filter layer and vanished after the first frame */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b6a68c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.9rem center;
+  background-size: 18px 18px;
+  appearance: none;
+  -webkit-appearance: none;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
-  /* left padding clears the search glyph; the shorthand above would reset it */
+  /* clears the glyph */
   padding: 0.72rem 0.9rem 0.72rem 2.7rem;
   font-size: 0.94rem;
   box-shadow: var(--glass-sheen), 0 16px 34px -26px #000;
+}
+
+.searchbar input::-webkit-search-decoration,
+.searchbar input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .searchbar input::placeholder {

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { type Album, type Artist, type Song, coverUrl, getAlbums, search } from '../api';
-import { SearchIcon } from '../icons';
 import { useCounts } from '../useCounts';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
@@ -70,7 +69,6 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
         </header>
         <div className={`library-bar${stuck ? ' stuck' : ''}`}>
           <div className="searchbar">
-            <SearchIcon size={18} />
             <input
               type="search"
               value={query}
