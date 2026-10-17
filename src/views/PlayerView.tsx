@@ -138,7 +138,7 @@ export function PlayerView({
     <div className={`view player ${showLyrics ? 'lyrics-on' : ''}`}>
       <header className="player-top">
         <button className="icon-button player-minimize" onClick={() => window.history.back()} aria-label="Minimize player">
-          <ChevronDownIcon size={22} />
+          <ChevronDownIcon size={18} />
         </button>
         <span className="player-context">
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
@@ -149,7 +149,7 @@ export function PlayerView({
           aria-pressed={showLyrics}
           aria-label="Toggle lyrics"
         >
-          <MicIcon size={22} />
+          <MicIcon size={18} />
         </button>
         <button
           className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
@@ -220,7 +220,7 @@ export function PlayerView({
               disabled={jbox.busy || !status || status.currentIndex <= 0}
               aria-label="Previous track"
             >
-              <PrevIcon size={26} />
+              <PrevIcon size={22} />
             </button>
             <button
               className="play-button"
@@ -228,7 +228,7 @@ export function PlayerView({
               disabled={jbox.busy}
               aria-label={status?.playing ? 'Pause' : 'Play'}
             >
-              {status?.playing ? <PauseIcon size={28} /> : <PlayIcon size={28} />}
+              {status?.playing ? <PauseIcon size={26} /> : <PlayIcon size={26} />}
             </button>
             <button
               className="icon-button"
@@ -236,7 +236,7 @@ export function PlayerView({
               disabled={jbox.busy || !status || status.currentIndex >= entries.length - 1}
               aria-label="Next track"
             >
-              <NextIcon size={26} />
+              <NextIcon size={22} />
             </button>
           </div>
 

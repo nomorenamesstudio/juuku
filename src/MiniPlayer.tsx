@@ -74,10 +74,10 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
 
       <div className="nowbar-center">
         <button className="icon-button bar-only" onClick={() => jbox.step(-1)} disabled={jbox.busy || status.currentIndex <= 0} aria-label="Previous track">
-          <PrevIcon size={20} />
+          <PrevIcon size={18} />
         </button>
         <button className="nowbar-play" onClick={jbox.togglePlay} disabled={jbox.busy} aria-label={status.playing ? 'Pause' : 'Play'}>
-          {status.playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
+          {status.playing ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
         </button>
         <button
           className="icon-button"
@@ -85,7 +85,7 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
           disabled={jbox.busy || status.currentIndex >= entries.length - 1}
           aria-label="Next track"
         >
-          <NextIcon size={20} />
+          <NextIcon size={18} />
         </button>
       </div>
 
@@ -113,7 +113,7 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
           />
         </label>
         <button className="icon-button bar-only" onClick={() => navigate('/queue')} aria-label="Open the queue">
-          <QueueIcon size={20} />
+          <QueueIcon size={18} />
         </button>
         <button className="icon-button bar-only" onClick={() => navigate('/player')} aria-label="Expand the player">
           <ChevronDownIcon size={18} style={{ transform: 'rotate(180deg)' }} />

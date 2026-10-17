@@ -1,5 +1,12 @@
 import type { SVGProps } from 'react';
 
+// Icon size scale - anything outside it is an accident:
+// 14 meta (table headers, fineprint icons)
+// 16 row actions (heart, queue in lists)
+// 18 controls (icon buttons, rail, deck, mic)
+// 20 header actions and large controls (player favourite, deck play)
+// 22 the big transport's prev/next
+// 26 the big round play
 type Props = SVGProps<SVGSVGElement> & { size?: number };
 
 function Icon({ size = 20, children, ...rest }: Props) {
@@ -104,6 +111,13 @@ export const ArtistIcon = (props: Props) => (
   <Icon {...props}>
     <circle cx="12" cy="8.5" r="3.6" />
     <path d="M5 20.5c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2" />
+  </Icon>
+);
+
+export const RefreshIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="M20 11a8 8 0 1 0-2.5 5.8" />
+    <path d="M20 5v6h-6" />
   </Icon>
 );
 

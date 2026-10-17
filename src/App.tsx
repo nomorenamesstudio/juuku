@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NowBar } from './MiniPlayer';
-import { ArtistIcon, HeartIcon, LibraryIcon, QueueIcon } from './icons';
+import { ArtistIcon, HeartIcon, LibraryIcon, QueueIcon, RefreshIcon } from './icons';
 import { navigate, useRoute } from './router';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
@@ -92,7 +92,7 @@ export default function App() {
                   aria-current={section === path.split('/').pop() ? 'page' : undefined}
                   onClick={() => navigate(path)}
                 >
-                  <Icon size={17} />
+                  <Icon size={18} />
                   {label}
                   {path === '/queue' && count > 0 && <span className="badge">{count}</span>}
                 </button>
@@ -122,7 +122,7 @@ export default function App() {
               <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
             </button>
             <button className="icon-button" onClick={jbox.refresh} aria-label="Refresh state">
-              ↻
+              <RefreshIcon size={20} />
             </button>
           </div>
         )}
@@ -143,7 +143,7 @@ export default function App() {
                 }
                 onClick={() => navigate(path)}
               >
-                <Icon size={21} />
+                <Icon size={20} />
                 {label}
                 {path === '/queue' && count > 0 && <span className="badge">{count}</span>}
               </button>
