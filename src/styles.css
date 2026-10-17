@@ -199,7 +199,7 @@ h1.display {
 
 /* the deck floats above the tab bar, so the page needs the extra room only then */
 .has-deck .content {
-  padding-bottom: 10.6rem;
+  padding-bottom: 9.6rem;
 }
 
 .shell-player .nowbar {
@@ -260,7 +260,7 @@ h1.display {
   width: 100%;
   max-width: 860px;
   margin: 0 auto;
-  padding: 0.5rem 1.15rem 6.4rem;
+  padding: 0.5rem 1.15rem 5.2rem;
 }
 
 .rail {
@@ -442,9 +442,26 @@ h1.display {
   margin-bottom: -1px;
 }
 
+.library-bar.stuck::before {
+  content: '';
+  position: absolute;
+  inset: -0.55rem -1.15rem -2.2rem;
+  z-index: -1;
+  pointer-events: none;
+  /* a fade, not a band: no backdrop-filter here, which is what produced the cut */
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 16, 11, 1) 0%,
+    rgba(20, 16, 11, 0.9) 38%,
+    rgba(20, 16, 11, 0.72) 62%,
+    rgba(20, 16, 11, 0.34) 82%,
+    rgba(20, 16, 11, 0) 100%
+  );
+}
+
 .library-bar {
   position: sticky;
-  /* floats like the deck and tab bar instead of hugging the viewport edge */
+  /* floats like the deck instead of hugging the viewport edge */
   top: 0.55rem;
   z-index: 6;
   padding: 0.3rem 0 0.8rem;
@@ -889,7 +906,7 @@ h1.display {
   position: fixed;
   left: 0.65rem;
   right: 0.65rem;
-  bottom: calc(4.85rem + env(safe-area-inset-bottom));
+  bottom: calc(4.1rem + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -1064,7 +1081,7 @@ h1.display {
   position: fixed;
   left: 0.65rem;
   right: 0.65rem;
-  bottom: calc(4.85rem + env(safe-area-inset-bottom));
+  bottom: calc(4.1rem + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
   align-items: center;
@@ -1179,19 +1196,17 @@ h1.display {
 
 .tabbar {
   position: fixed;
-  left: 0.65rem;
-  right: 0.65rem;
-  bottom: calc(0.65rem + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 19;
   display: flex;
-  height: 3.7rem;
-  border: 1px solid var(--glass-edge);
-  /* same radius as the deck it floats next to */
-  border-radius: 10px;
+  height: calc(3.9rem + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
   background: var(--glass-strong);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-sheen), 0 20px 44px -26px rgba(0, 0, 0, 0.92);
+  border-top: 1px solid var(--glass-edge);
 }
 
 .tabbar button {
