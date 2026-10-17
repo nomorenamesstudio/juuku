@@ -4,6 +4,9 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Fix** — the kana in the wordmark fell back to whatever Japanese face the device had (none of the self-hosted fonts carry kana), so the lockup looked different on every machine and could not be scaled faithfully. `ジューク` is now a 2.3 KB Noto Sans JP subset (OFL, self-hosted) used by the app and by the logo.
+- **Feature** — `public/logo.svg`: the lockup as outlines, generated from those same fonts by `scripts/build-logo.py`, with the measured sizes and baselines at the top. The README hero is now that SVG scaled, instead of hand-set type that drifted from the app.
+
 - **Change** — README hero: the app's own background gradient over a faded wall of covers from the library, with the lockup and its LED centred, rendered from real covers rather than a stock image (`docs/hero.jpg`, 63 KB).
 
 - **Fix** — README: dropped the juicebox pun (nobody arriving fresh knows the old name) and added a settings table, because the two passwords are easy to confuse: `NAVIDROME_PASSWORD` is how the server signs in to Navidrome, `JUUKU_PASSWORD` is the optional lock on Juuku's own UI.

@@ -44,3 +44,21 @@ Navidrome's jukebox is not exposed by its own web UI. The only interface is Subs
 - Polling at 1s means up to a second of lag on a second phone's view; acceptable for control, would not be for synchronized lyrics — the lyrics highlight is driven by the same 1s status, so it can be a beat behind.
 - Seeking is `skip` with `index = currentIndex` and an `offset`, because Subsonic has no seek endpoint. It restarts the track at that position rather than scrubbing the existing stream, which is invisible on the server but does reset mpv's buffer.
 - The favorites playlist is a shared, append-only list: two phones favoriting at once is last-write-wins on the read side, but dedupe keeps it from growing duplicates.
+
+## Brand assets
+
+`public/logo.svg` is the wordmark as outlines — Instrument Serif for `juuku`,
+Noto Sans JP 600 for `ジューク`, and the LED dot — generated from the same font
+files the app uses, so it keeps the app's proportions at any size:
+
+```sh
+python3 scripts/build-logo.py     # needs fontTools; rewrites public/logo.svg
+```
+
+The sizes and baselines at the top of that script are the ones measured from the
+running app; change those together with the CSS. The kana is self-hosted as a
+2.3 KB subset (`public/fonts/noto-sans-jp-kana.woff2`, OFL) because system
+fallbacks gave a different face on every device.
+
+`public/icon.svg` is the app icon (record + label + LED); its PNG set is rendered
+from it at 180/192/512/1024 plus a maskable variant.

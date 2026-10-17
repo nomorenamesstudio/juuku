@@ -7,11 +7,31 @@
 }
 
 @font-face {
+  /* only ジューク, subset and self-hosted so the kana does not fall back to a
+     different face on every device */
+  font-family: 'Noto Sans JP Kana';
+  src: url('/fonts/noto-sans-jp-kana.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+30AF-30B0, U+30B7-30B8, U+30E5, U+30FC, U+3099;
+}
+
+@font-face {
   font-family: 'Instrument Serif';
   src: url('/fonts/instrument-serif.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+}
+
+@font-face {
+  /* only ジューク, subset and self-hosted so the kana does not fall back to a
+     different face on every device */
+  font-family: 'Noto Sans JP Kana';
+  src: url('/fonts/noto-sans-jp-kana.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+30AF-30B0, U+30B7-30B8, U+30E5, U+30FC, U+3099;
 }
 
 @font-face {
@@ -315,7 +335,7 @@ h1.display {
   /* cancel the trailing letter-space so the kana's last stroke lands flush with
      the latin name (kana ink overhangs its advance by ~0.04em) */
   margin-right: -0.14em;
-  font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
+  font-family: 'Noto Sans JP Kana', 'Bricolage Grotesque', ui-sans-serif, sans-serif;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.16em;
