@@ -34,5 +34,5 @@ for _ in $(seq 1 60); do
   sleep 1
 done
 
-echo "albums: $(curl -sf "$BASE/rest/getAlbumList2?$AUTH&type=alphabeticalByName&size=500" | grep -o '"albumId"' | wc -l)"
+echo "albums: $(curl -sf "$BASE/rest/getAlbumList2?$AUTH&type=alphabeticalByName&size=500" | grep -o '"id":"' | wc -l)"
 echo "jukebox: $(curl -sf "$BASE/rest/jukeboxControl?$AUTH&action=status")"
