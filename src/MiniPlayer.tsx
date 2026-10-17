@@ -9,7 +9,6 @@ import {
   PlayIcon,
   PrevIcon,
   QueueIcon,
-  ShuffleIcon,
   VolumeIcon,
 } from './icons';
 import { navigate } from './router';
@@ -110,9 +109,6 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
         >
           <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
         </button>
-        <button className="icon-button bar-only" onClick={jbox.shuffleQueue} disabled={jbox.busy || entries.length < 2} aria-label="Shuffle queue">
-          <ShuffleIcon size={18} />
-        </button>
         <label className="nowbar-volume bar-only">
           <VolumeIcon size={16} />
           <input
@@ -127,7 +123,7 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
             style={{ ['--progress' as string]: `${gain * 100}%` }}
           />
         </label>
-        <button className="icon-button" onClick={() => navigate('/queue')} aria-label="Open the queue">
+        <button className="icon-button bar-only" onClick={() => navigate('/queue')} aria-label="Open the queue">
           <QueueIcon size={20} />
         </button>
         <button className="icon-button bar-only" onClick={() => navigate('/player')} aria-label="Expand the player">

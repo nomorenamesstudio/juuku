@@ -35,10 +35,19 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
           {album?.coverArt ? <img src={coverUrl(album.coverArt, 600)} alt="" /> : null}
         </div>
         <div className="album-meta">
-          <h1 className="display">{album?.name ?? '…'}</h1>
+          <div className="album-title">
+            <h1 className="display">{album?.name ?? '…'}</h1>
+            {album?.year ? <span className="year">{album.year}</span> : null}
+          </div>
           <p className="album-facts">
-            {album?.artist}
-            {album?.year ? ` · ${album.year}` : ''} · {songs.length} tracks ·{' '}
+            {album?.artistId ? (
+              <button className="artist-link" onClick={() => navigate(`/artist/${album.artistId}`)}>
+                {album.artist}
+              </button>
+            ) : (
+              album?.artist
+            )}{' '}
+            · {songs.length} tracks ·{' '}
             {formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))}
           </p>
           <div className="actions">

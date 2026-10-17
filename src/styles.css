@@ -448,6 +448,33 @@ h1.display {
   min-width: 0;
 }
 
+.album-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.year {
+  color: var(--dim);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.artist-link:hover,
+.artist-link:focus-visible {
+  color: var(--amber);
+  border-bottom-color: rgba(240, 162, 74, 0.5);
+}
+
 .album-meta h1 {
   font-size: clamp(1.6rem, 5.4vw, 2.2rem);
 }
@@ -772,18 +799,21 @@ h1.display {
   font-variant-numeric: tabular-nums;
 }
 
-.nowbar-center,
-.nowbar-right {
+.nowbar-center {
   display: flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.55rem;
+}
+
+.nowbar-right {
+  display: none;
 }
 
 .nowbar-play {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--amber);
   color: #201505;
@@ -791,10 +821,6 @@ h1.display {
 
 .nowbar-play:hover:not(:disabled) {
   filter: brightness(1.06);
-}
-
-.icon-button {
-  margin-left: auto;
 }
 
 .wordmark {
@@ -1039,6 +1065,33 @@ h1.display {
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
+}
+
+.album-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.year {
+  color: var(--dim);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.artist-link:hover,
+.artist-link:focus-visible {
+  color: var(--amber);
+  border-bottom-color: rgba(240, 162, 74, 0.5);
 }
 
 .album-meta h1 {
@@ -1580,8 +1633,8 @@ h1.display {
 .transport {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
+  justify-content: center;
+  gap: 2.4rem;
   padding: 0.2rem 0;
 }
 
@@ -1941,6 +1994,8 @@ h1.display {
   }
 
   .nowbar-right {
+    display: flex;
+    align-items: center;
     justify-self: end;
     gap: 0.8rem;
   }

@@ -9,9 +9,9 @@ import {
   PauseIcon,
   PlayIcon,
   PrevIcon,
-  ShuffleIcon,
   VolumeIcon,
 } from '../icons';
+import { navigate } from '../router';
 import type { Jukebox } from '../useJukebox';
 
 function useLyrics(songId: string | undefined) {
@@ -144,6 +144,14 @@ export function PlayerView({
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
         </span>
         <button
+          className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
+          onClick={() => setShowLyrics(!showLyrics)}
+          aria-pressed={showLyrics}
+          aria-label="Toggle lyrics"
+        >
+          <LyricsIcon size={20} />
+        </button>
+        <button
           className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
           onClick={() => jbox.toggleFavorite(current)}
           aria-pressed={jbox.favoriteIds.has(current.id)}
@@ -168,7 +176,15 @@ export function PlayerView({
           <div className="player-meta">
             <h1 className="display track-title">{current.title}</h1>
             <p className="byline">
-              {current.artist} <span className="sep">·</span> {current.album}
+              {current.artistId ? (
+                <button className="artist-link" onClick={() => navigate(`/artist/${current.artistId}`)}>
+                  {current.artist}
+                </button>
+              ) : (
+                current.artist
+              )}{' '}
+              <span className="sep">·</span> {current.album}
+              {current.year ? <span className="year"> · {current.year}</span> : null}
             </p>
           </div>
 
@@ -193,14 +209,6 @@ export function PlayerView({
           <div className="transport">
             <button
               className="icon-button"
-              onClick={jbox.shuffleQueue}
-              disabled={jbox.busy || entries.length < 2}
-              aria-label="Shuffle queue"
-            >
-              <ShuffleIcon size={20} />
-            </button>
-            <button
-              className="icon-button"
               onClick={() => jbox.step(-1)}
               disabled={jbox.busy || !status || status.currentIndex <= 0}
               aria-label="Previous track"
@@ -222,14 +230,6 @@ export function PlayerView({
               aria-label="Next track"
             >
               <NextIcon size={26} />
-            </button>
-            <button
-              className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
-              onClick={() => setShowLyrics(!showLyrics)}
-              aria-pressed={showLyrics}
-              aria-label="Toggle lyrics"
-            >
-              <LyricsIcon size={20} />
             </button>
           </div>
 
