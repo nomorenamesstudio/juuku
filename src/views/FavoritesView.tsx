@@ -37,7 +37,7 @@ export function FavoritesView({ jbox }: { jbox: Jukebox }) {
         </p>
       ) : (
         <ul className="rows">
-          {favorites.map((song) => (
+          {favorites.map((song, index) => (
             <SongRow
               key={song.id}
               song={song}
@@ -45,9 +45,8 @@ export function FavoritesView({ jbox }: { jbox: Jukebox }) {
               active={jbox.current?.id === song.id}
               playing={jbox.status?.playing}
               onAdd={() => jbox.addToQueue([song])}
-              onPlay={() => jbox.playNow([song])}
+              onPlay={() => jbox.playFrom(favorites, index)}
               onFavorite={() => jbox.toggleFavorite(song)}
-              onToggle={() => jbox.togglePlay()}
             />
           ))}
         </ul>

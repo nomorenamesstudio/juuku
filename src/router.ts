@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 export type Route =
-  | { name: 'library' }
+  | { name: 'library'; tab: 'albums' | 'artists' }
   | { name: 'album'; id: string }
   | { name: 'artist'; id: string }
   | { name: 'favorites' }
@@ -13,9 +13,11 @@ function parse(hash: string): Route {
   const [head, id] = path.split('/');
   switch (head) {
     case 'album':
-      return id ? { name: 'album', id } : { name: 'library' };
+      return id ? { name: 'album', id } : { name: 'library', tab: 'albums' };
     case 'artist':
-      return id ? { name: 'artist', id } : { name: 'library' };
+      return id ? { name: 'artist', id } : { name: 'library', tab: 'artists' };
+    case 'library':
+      return { name: 'library', tab: id === 'artists' ? 'artists' : 'albums' };
     case 'favorites':
       return { name: 'favorites' };
     case 'queue':
@@ -23,7 +25,7 @@ function parse(hash: string): Route {
     case 'player':
       return { name: 'player' };
     default:
-      return { name: 'library' };
+      return { name: 'library', tab: 'albums' };
   }
 }
 

@@ -100,6 +100,13 @@ export const LibraryIcon = (props: Props) => (
   </Icon>
 );
 
+export const ArtistIcon = (props: Props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="8.5" r="3.6" />
+    <path d="M5 20.5c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2" />
+  </Icon>
+);
+
 export const SearchIcon = (props: Props) => (
   <Icon {...props}>
     <circle cx="11" cy="11" r="6.5" />

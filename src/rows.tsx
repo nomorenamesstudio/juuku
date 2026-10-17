@@ -1,6 +1,6 @@
 import type { Song } from './api';
 import { formatTime } from './format';
-import { HeartIcon, PauseIcon, PlayIcon, PlusIcon } from './icons';
+import { HeartIcon, PlusIcon } from './icons';
 
 export function Eq({ playing }: { playing: boolean }) {
   return (
@@ -22,8 +22,6 @@ interface SongRowProps {
   onAdd: () => void;
   onPlay: () => void;
   onFavorite: () => void;
-  /** When the row is the current track, its button toggles playback instead. */
-  onToggle?: () => void;
 }
 
 /** Library row: tapping the row queues the track, the ▶ button plays it now. */
@@ -37,14 +35,13 @@ export function SongRow({
   onAdd,
   onPlay,
   onFavorite,
-  onToggle,
 }: SongRowProps) {
   return (
     <li className={`row ${active ? 'row-active' : ''}`}>
       {number !== undefined && (
         <span className="row-number">{active ? <Eq playing={!!playing} /> : number}</span>
       )}
-      <button className="row-main" onClick={onAdd} aria-label={`Add ${song.title} to queue`}>
+      <button className="row-main" onClick={onPlay} aria-label={`Play ${song.title}`}>
         <span className="row-title">{song.title}</span>
         {subtitle !== null && <span className="row-sub">{subtitle ?? `${song.artist} · ${song.album}`}</span>}
       </button>
@@ -57,15 +54,9 @@ export function SongRow({
       >
         <HeartIcon filled={favorite} size={18} />
       </button>
-      {active && onToggle ? (
-        <button className="row-icon" onClick={onToggle} aria-label={playing ? 'Pause' : 'Play'}>
-          {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
-        </button>
-      ) : (
-        <button className="row-icon" onClick={onPlay} aria-label={`Play ${song.title} now`}>
-          <PlayIcon size={16} />
-        </button>
-      )}
+      <button className="row-icon" onClick={onAdd} aria-label={`Add ${song.title} to queue`}>
+        <PlusIcon size={17} />
+      </button>
     </li>
   );
 }

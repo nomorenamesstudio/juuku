@@ -30,6 +30,7 @@ export interface Jukebox {
   notify: (message: string) => void;
   addToQueue: (songs: Song[], label?: string) => Promise<void>;
   playNow: (songs: Song[]) => Promise<void>;
+  playFrom: (songs: Song[], index: number) => Promise<void>;
   playAt: (index: number, offset?: number) => Promise<void>;
   removeAt: (index: number) => Promise<void>;
   clearQueue: () => Promise<void>;
@@ -117,6 +118,17 @@ export function useJukebox(): Jukebox {
       if (songs.length === 0) return;
       await run(async () => {
         await playNowRequest(songs.map((song) => song.id));
+        await afterQueueChange();
+      }, songs.length === 1 ? `Playing ${songs[0].title}` : `Playing ${songs.length} tracks`);
+    },
+    [run, afterQueueChange],
+  );
+
+  const playFrom = useCallback(
+    async (songs: Song[], index: number) => {
+      if (songs.length === 0) return;
+      await run(async () => {
+        await playNowRequest(songs.map((song) => song.id), index);
         await afterQueueChange();
       }, songs.length === 1 ? `Playing ${songs[0].title}` : `Playing ${songs.length} tracks`);
     },
@@ -225,6 +237,7 @@ export function useJukebox(): Jukebox {
     notify,
     addToQueue,
     playNow,
+    playFrom,
     playAt,
     removeAt,
     clearQueue,

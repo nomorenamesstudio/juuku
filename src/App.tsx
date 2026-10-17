@@ -1,5 +1,5 @@
 import { NowBar } from './MiniPlayer';
-import { HeartIcon, LibraryIcon, QueueIcon } from './icons';
+import { ArtistIcon, HeartIcon, LibraryIcon, QueueIcon } from './icons';
 import { navigate, useRoute } from './router';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
@@ -9,8 +9,15 @@ import { Library } from './views/Library';
 import { PlayerView } from './views/PlayerView';
 import { QueueView } from './views/QueueView';
 
-const NAV = [
-  { path: '/library', label: 'Library', icon: LibraryIcon },
+const RAIL = [
+  { path: '/library/albums', label: 'Albums', group: 'Browse', icon: LibraryIcon },
+  { path: '/library/artists', label: 'Artists', group: 'Browse', icon: ArtistIcon },
+  { path: '/favorites', label: 'Favorites', group: 'Yours', icon: HeartIcon },
+  { path: '/queue', label: 'Queue', group: 'Yours', icon: QueueIcon },
+];
+
+const TABS = [
+  { path: '/library/albums', label: 'Library', icon: LibraryIcon },
   { path: '/favorites', label: 'Favorites', icon: HeartIcon },
   { path: '/queue', label: 'Queue', icon: QueueIcon },
 ];
@@ -19,9 +26,20 @@ export default function App() {
   const jbox = useJukebox();
   const { route } = useRoute();
   const isPlayer = route.name === 'player';
-
-  const activeSection = route.name === 'album' || route.name === 'artist' ? 'library' : route.name;
   const count = jbox.entries.length;
+
+  const section =
+    route.name === 'library'
+      ? route.tab
+      : route.name === 'album'
+        ? 'albums'
+        : route.name === 'artist'
+          ? 'artists'
+          : route.name === 'favorites'
+            ? 'favorites'
+            : route.name === 'queue'
+              ? 'queue'
+              : 'albums';
 
   const view = (() => {
     switch (route.name) {
@@ -36,30 +54,37 @@ export default function App() {
       case 'player':
         return <PlayerView jbox={jbox} />;
       default:
-        return <Library jbox={jbox} />;
+        return <Library jbox={jbox} tab={route.tab} />;
     }
   })();
 
   return (
     <div className={`shell ${isPlayer ? 'shell-player' : ''}`}>
       <aside className="rail" aria-label="Main">
-        <button className="wordmark" onClick={() => navigate('/library')}>
+        <button className="wordmark" onClick={() => navigate('/library/albums')}>
           juicebox
           <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
         </button>
+
         <nav className="rail-nav">
-          {NAV.map(({ path, label, icon: Icon }) => (
-            <button
-              key={path}
-              aria-current={activeSection === path.slice(1) ? 'page' : undefined}
-              onClick={() => navigate(path)}
-            >
-              <Icon size={19} />
-              {label}
-              {path === '/queue' && count > 0 && <span className="badge">{count}</span>}
-            </button>
+          {['Browse', 'Yours'].map((group) => (
+            <div key={group} className="rail-group">
+              <p>{group}</p>
+              {RAIL.filter((item) => item.group === group).map(({ path, label, icon: Icon }) => (
+                <button
+                  key={path}
+                  aria-current={section === path.split('/').pop() ? 'page' : undefined}
+                  onClick={() => navigate(path)}
+                >
+                  <Icon size={17} />
+                  {label}
+                  {path === '/queue' && count > 0 && <span className="badge">{count}</span>}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
+
         <p className="rail-note">
           {jbox.health ? (
             <>
@@ -76,7 +101,7 @@ export default function App() {
       <div className="page">
         {!isPlayer && (
           <div className="topbar">
-            <button className="wordmark small" onClick={() => navigate('/library')}>
+            <button className="wordmark small" onClick={() => navigate('/library/albums')}>
               juicebox
               <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
             </button>
@@ -92,10 +117,14 @@ export default function App() {
 
         {!isPlayer && (
           <nav className="tabbar" aria-label="Main">
-            {NAV.map(({ path, label, icon: Icon }) => (
+            {TABS.map(({ path, label, icon: Icon }) => (
               <button
                 key={path}
-                aria-current={activeSection === path.slice(1) ? 'page' : undefined}
+                aria-current={
+                  section === path.split('/').pop() || (path === '/library/albums' && section === 'artists')
+                    ? 'page'
+                    : undefined
+                }
                 onClick={() => navigate(path)}
               >
                 <Icon size={21} />

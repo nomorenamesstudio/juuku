@@ -6,8 +6,7 @@ import type { Jukebox } from '../useJukebox';
 
 type Tab = 'albums' | 'artists';
 
-export function Library({ jbox }: { jbox: Jukebox }) {
-  const [tab, setTab] = useState<Tab>('albums');
+export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -53,7 +52,7 @@ export function Library({ jbox }: { jbox: Jukebox }) {
   return (
     <div className="view">
       <header className="view-head">
-        <h1 className="display">Library</h1>
+        <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
         <div className="searchbar">
           <input
             type="search"
@@ -117,7 +116,6 @@ export function Library({ jbox }: { jbox: Jukebox }) {
                     onAdd={() => jbox.addToQueue([song])}
                     onPlay={() => jbox.playNow([song])}
                     onFavorite={() => jbox.toggleFavorite(song)}
-                    onToggle={() => jbox.togglePlay()}
                   />
                 ))}
               </ul>
@@ -127,10 +125,10 @@ export function Library({ jbox }: { jbox: Jukebox }) {
       ) : (
         <>
           <div className="segmented" role="tablist" aria-label="Browse">
-            <button role="tab" aria-selected={tab === 'albums'} onClick={() => setTab('albums')}>
+            <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
               Albums
             </button>
-            <button role="tab" aria-selected={tab === 'artists'} onClick={() => setTab('artists')}>
+            <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
               Artists
             </button>
           </div>

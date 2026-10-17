@@ -103,9 +103,9 @@ export interface ControlBody {
 export const control = (body: ControlBody) =>
   request<PlaybackStatus>('/api/control', { method: 'POST', body: JSON.stringify(body) });
 
-/** Replace the queue with these songs and start playing from the first. */
-export const playNow = (ids: string[]) =>
-  request<PlaybackStatus>('/api/play', { method: 'POST', body: JSON.stringify({ ids }) });
+/** Replace the queue with these songs and start playing at `index`. */
+export const playNow = (ids: string[], index = 0) =>
+  request<PlaybackStatus>('/api/play', { method: 'POST', body: JSON.stringify({ ids, index }) });
 
 export const coverUrl = (id: string | undefined, size = 400) =>
   id ? `/api/cover/${encodeURIComponent(id)}?size=${size}` : undefined;

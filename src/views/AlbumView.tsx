@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { type Album, type Song, coverUrl, getAlbum } from '../api';
 import { formatTotal } from '../format';
-import { ChevronLeftIcon, PlayIcon, PlusIcon } from '../icons';
+import { ChevronLeftIcon, HeartIcon, PlayIcon, PlusIcon } from '../icons';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
@@ -61,8 +61,12 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
           <span>#</span>
           <span>Title</span>
           <span className="track-head-time">Time</span>
-          <span />
-          <span />
+          <span className="track-head-icon">
+            <HeartIcon size={13} />
+          </span>
+          <span className="track-head-icon">
+            <PlusIcon size={13} />
+          </span>
         </div>
       <ul className="rows album-tracks">
         {songs.map((song, index) => (
@@ -75,9 +79,8 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             active={jbox.current?.id === song.id}
             playing={jbox.status?.playing}
             onAdd={() => jbox.addToQueue([song])}
-            onPlay={() => jbox.playNow([song])}
+            onPlay={() => jbox.playFrom(songs, index)}
             onFavorite={() => jbox.toggleFavorite(song)}
-            onToggle={() => jbox.togglePlay()}
           />
         ))}
       </ul>

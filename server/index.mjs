@@ -113,12 +113,29 @@ app.post('/api/control', wrap(async (req, res) => {
   res.json(statusOf(response));
 }));
 
-/** Play immediately: replace the queue, jump to its first track and start. */
+/**
+ * `set` returns before the new queue is live, so a `skip` sent straight after it
+ * lands on the old queue and is overwritten. Poll `get` until the queue matches.
+ */
+async function waitForQueue(ids, timeoutMs = 2500) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const response = await call('jukeboxControl', { action: 'get' });
+    const entries = response.jukeboxPlaylist?.entry ?? [];
+    if (entries.length === ids.length && entries.every((entry, i) => entry.id === ids[i])) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+}
+
+/** Play immediately: replace the queue, jump to a track and start. */
 app.post('/api/play', wrap(async (req, res) => {
-  const { ids } = req.body ?? {};
+  const { ids, index = 0 } = req.body ?? {};
   if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
+  if (!Number.isInteger(index) || index < 0 || index >= ids.length) throw badRequest('index must be inside ids');
   await call('jukeboxControl', { action: 'set', id: ids }, { repeat: ['id'] });
-  await call('jukeboxControl', { action: 'skip', index: 0 });
+  await waitForQueue(ids);
+  await call('jukeboxControl', { action: 'skip', index });
   const response = await call('jukeboxControl', { action: 'start' });
   res.json(statusOf(response));
 }));
