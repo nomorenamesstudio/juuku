@@ -12,7 +12,7 @@ export function FavoritesView({ jbox }: { jbox: Jukebox }) {
       <header className="view-head">
         <h1 className="display">Favorites</h1>
         <p className="fineprint">
-          {favorites.length === 0 ? 'Nothing saved yet' : `${favorites.length} tracks · ${formatTotal(total)}`}
+          {favorites.length === 0 ? 'Nothing saved yet' : `${favorites.length} ${favorites.length === 1 ? 'track' : 'tracks'} · ${formatTotal(total)}`}
         </p>
         {favorites.length > 0 && (
           <div className="actions">

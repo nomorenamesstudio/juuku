@@ -1,4 +1,4 @@
-import { MiniPlayer } from './MiniPlayer';
+import { NowBar } from './MiniPlayer';
 import { HeartIcon, LibraryIcon, QueueIcon } from './icons';
 import { navigate, useRoute } from './router';
 import { useJukebox } from './useJukebox';
@@ -88,7 +88,7 @@ export default function App() {
 
         <main className="content">{view}</main>
 
-        {!isPlayer && count > 0 && <MiniPlayer jbox={jbox} />}
+        {!isPlayer && count > 0 && <NowBar jbox={jbox} />}
 
         {!isPlayer && (
           <nav className="tabbar" aria-label="Main">

@@ -13,7 +13,7 @@ export function QueueView({ jbox }: { jbox: Jukebox }) {
       <header className="view-head">
         <h1 className="display">Queue</h1>
         <p className="fineprint">
-          {entries.length === 0 ? 'Empty' : `${entries.length} tracks · ${formatTotal(total)}`}
+          {entries.length === 0 ? 'Empty' : `${entries.length} ${entries.length === 1 ? 'track' : 'tracks'} · ${formatTotal(total)}`}
           {status && status.currentIndex >= 0 ? ` · playing track ${status.currentIndex + 1}` : ''}
         </p>
         {entries.length > 0 && (

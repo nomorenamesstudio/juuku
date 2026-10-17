@@ -24,6 +24,8 @@ Navidrome's jukebox is not exposed by its own web UI. The only interface is Subs
 
 **The UI is a player, not a control panel.** Four routes (`#/library`, `#/album/:id`, `#/favorites`, `#/queue`) plus a full-screen `#/player` that collapses into a fixed mini player. Routes are hash-based so the phone's back gesture closes what it should, and the mini player is the only chrome that is always there. The queue is a view, not a permanent column.
 
+**One component set, two layouts.** The shell is the same markup at every size: the rail and the bottom transport deck appear at ≥900px, the tab bar and compact mini player below it, and `.bar-only` elements (favorite, shuffle, previous, volume, expand) only render on the wide bar. Views stay list-and-grid on phones and become tables with header rows where the width pays for it — that is CSS, not a second component tree.
+
 **Favorites are a Navidrome playlist, not the star flag.** Subsonic `star` is the lighter mechanism, but the brief asked for a favorites *playlist* — one that other clients and the server's own UI can see and play. So the API creates `Favorites` lazily, dedupes on add, and resolves removals to a playlist index. Cost: a favourite is a playlist write, and the client has to hold the playlist to know which hearts are filled.
 
 **Lyrics come from the server's own pipeline first.** Navidrome already reads embedded `LYRICS` tags and `.lrc` sidecars and exposes them through OpenSubsonic `getLyricsBySongId`; the sandbox tracks arrive with LRC timestamps, so sync is real, not guessed. Tracks without any get one LRCLIB lookup keyed by artist/title/album/duration, cached for a day — including the misses, so the API never retries in a loop.
