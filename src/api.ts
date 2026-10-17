@@ -27,6 +27,7 @@ export interface Artist {
   id: string;
   name: string;
   albumCount: number;
+  coverArt?: string;
 }
 
 export interface PlaybackStatus {

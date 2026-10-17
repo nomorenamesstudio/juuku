@@ -75,9 +75,18 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
               <ul className="plain-list">
                 {results.artists.map((artist) => (
                   <li key={artist.id}>
-                    <button className="link-row" onClick={() => navigate(`/artist/${artist.id}`)}>
-                      <span className="row-title">{artist.name}</span>
-                      <span className="row-sub">{artist.albumCount} albums</span>
+                    <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
+                      {artist.coverArt ? (
+                        <img className="artist-avatar" src={coverUrl(artist.coverArt, 96)} alt="" loading="lazy" />
+                      ) : (
+                        <span className="artist-avatar empty" aria-hidden>
+                          {artist.name.slice(0, 1)}
+                        </span>
+                      )}
+                      <span className="link-text">
+                        <span className="row-title">{artist.name}</span>
+                        <span className="row-sub">{artist.albumCount} albums</span>
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -156,10 +165,19 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
             <ul className="plain-list">
               {artists.map((artist) => (
                 <li key={artist.id}>
-                  <button className="link-row" onClick={() => navigate(`/artist/${artist.id}`)}>
-                    <span className="row-title">{artist.name}</span>
-                    <span className="row-sub">
-                      {artist.albumCount} {artist.albumCount === 1 ? 'album' : 'albums'}
+                  <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
+                    {artist.coverArt ? (
+                      <img className="artist-avatar" src={coverUrl(artist.coverArt, 96)} alt="" loading="lazy" />
+                    ) : (
+                      <span className="artist-avatar empty" aria-hidden>
+                        {artist.name.slice(0, 1)}
+                      </span>
+                    )}
+                    <span className="link-text">
+                      <span className="row-title">{artist.name}</span>
+                      <span className="row-sub">
+                        {artist.albumCount} {artist.albumCount === 1 ? 'album' : 'albums'}
+                      </span>
                     </span>
                   </button>
                 </li>

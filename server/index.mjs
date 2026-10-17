@@ -156,6 +156,7 @@ app.get('/api/search', wrap(async (req, res) => {
       id: artist.id,
       name: artist.name,
       albumCount: artist.albumCount,
+      coverArt: artist.coverArt,
     })),
   });
 }));
@@ -184,6 +185,7 @@ app.get('/api/artists', wrap(async (_req, res) => {
       id: artist.id,
       name: artist.name,
       albumCount: artist.albumCount,
+      coverArt: artist.coverArt,
     })),
   );
   res.json({ artists });
@@ -192,7 +194,7 @@ app.get('/api/artists', wrap(async (_req, res) => {
 app.get('/api/artists/:id', wrap(async (req, res) => {
   const response = await call('getArtist', { id: req.params.id });
   res.json({
-    artist: { id: response.artist.id, name: response.artist.name },
+    artist: { id: response.artist.id, name: response.artist.name, coverArt: response.artist.coverArt },
     albums: (response.artist.album ?? []).map(album),
   });
 }));

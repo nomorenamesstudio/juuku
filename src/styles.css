@@ -715,6 +715,23 @@ h1.display {
   object-fit: cover;
 }
 
+.link-row img.artist-avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--raise);
+}
+
+.artist-avatar.empty {
+  display: grid;
+  place-items: center;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
 .link-text {
   display: flex;
   flex-direction: column;
