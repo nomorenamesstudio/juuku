@@ -139,9 +139,11 @@ export const VolumeIcon = (props: Props) => (
   </Icon>
 );
 
-export const LyricsIcon = (props: Props) => (
+export const MicIcon = (props: Props) => (
   <Icon {...props}>
-    <path d="M4 5.5h16M4 10h10M4 14.5h16M4 19h9" />
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" />
+    <path d="M12 18v3" />
   </Icon>
 );
 

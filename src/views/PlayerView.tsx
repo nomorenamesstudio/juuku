@@ -4,7 +4,7 @@ import { formatTime } from '../format';
 import {
   ChevronDownIcon,
   HeartIcon,
-  LyricsIcon,
+  MicIcon,
   NextIcon,
   PauseIcon,
   PlayIcon,
@@ -149,7 +149,7 @@ export function PlayerView({
           aria-pressed={showLyrics}
           aria-label="Toggle lyrics"
         >
-          <LyricsIcon size={20} />
+          <MicIcon size={20} />
         </button>
         <button
           className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
@@ -183,7 +183,14 @@ export function PlayerView({
               ) : (
                 current.artist
               )}{' '}
-              <span className="sep">·</span> {current.album}
+              <span className="sep">·</span>{' '}
+              {current.albumId ? (
+                <button className="artist-link" onClick={() => navigate(`/album/${current.albumId}`)}>
+                  {current.album}
+                </button>
+              ) : (
+                current.album
+              )}
               {current.year ? <span className="year"> · {current.year}</span> : null}
             </p>
           </div>

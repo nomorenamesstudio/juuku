@@ -4,6 +4,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — lyrics toggle uses a microphone icon.
+- **Fix** — the phone mini player's progress line looked broken because it sat on the bar's rounded top edge and its thumb was invisible until hover (which never happens on touch): the bar is taller, the line is inset 14 px inside the rounded corner, shows a clear unfilled track, and is no longer a control on phones (seeking lives in the open player; the deck scrubber stays interactive on desktop).
+- **Fix** — the queue count badge overlapped the tab icon; it now sits clear of it with a background ring.
+- **Feature** — the album name in the player links to that album in the library.
+
 - **Feature** — the year sits next to the album title (album page) and after the album name in the player; artist names in both are links to the artist page.
 - **Change** — shuffle lives on the queue page only; the player transport and the deck drop it. The phone's transport is now prev / play / next, centred, and the lyrics toggle moved into the player header.
 - **Change** — the phone mini player no longer carries a queue button (the tab bar has one), so it is artwork, title and the two transport buttons.
