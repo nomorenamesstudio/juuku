@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Juuku">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="34%" r="68%">
+      <stop offset="0" stop-color="#2b2219"/>
+      <stop offset="1" stop-color="#14100b"/>
+    </radialGradient>
+    <linearGradient id="label" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7b769"/>
+      <stop offset="1" stop-color="#e08f33"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#glow)"/>
+
+  <!-- record bed, lifted off the tile so the disc reads as an object -->
+  <circle cx="256" cy="256" r="154" fill="#0c0906"/>
+  <circle cx="256" cy="256" r="154" fill="none" stroke="#f4ead9" stroke-opacity="0.14" stroke-width="2"/>
+  <g fill="none" stroke="#f4ead9" stroke-opacity="0.13" stroke-width="2.5">
+    <circle cx="256" cy="256" r="142"/>
+    <circle cx="256" cy="256" r="126"/>
+    <circle cx="256" cy="256" r="110"/>
+    <circle cx="256" cy="256" r="94"/>
+  </g>
+
+  <!-- amber label + spindle -->
+  <circle cx="256" cy="256" r="72" fill="url(#label)"/>
+  <circle cx="256" cy="256" r="12" fill="#14100b"/>
+
+  <!-- highlight: reads as the tonearm side of the record -->
+  <path d="M256 102a154 154 0 0 1 109 45" fill="none" stroke="#f4ead9" stroke-opacity="0.92"
+        stroke-width="15" stroke-linecap="round"/>
+</svg>

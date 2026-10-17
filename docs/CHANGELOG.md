@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — installable home-screen app: `manifest.webmanifest` (standalone, warm `#14100b` theme, 192/512/maskable-512/SVG icons), `apple-touch-icon.png` at 180, `apple-mobile-web-app-*` meta with `black-translucent` so the app draws under the status bar (the page carries `env(safe-area-inset-top)` for it), and a new record-and-amber-label icon derived from the wordmark's LED. Rendered from `public/icon.svg` at exact sizes, no transparency.
+
 - **Fix** — the search glyph flashed once and then vanished: it was an overlaid element sitting inside the field's own `backdrop-filter` layer, so the compositor dropped it after the first frame. It is the field's `background-image` now (a data-URI lucide magnifier), which no layer can paint over, and the native `search` decorations are suppressed so no second glyph appears on Safari/iOS.
 
 - **Change** — the pinned shade is a softer fade: 0.9 at the viewport edge tapering over 2.7rem (phone) / 2rem (desktop) instead of running almost solid, so the artwork stays visible underneath and the band reads as a gradient rather than a blackout. Cream on the darkened backdrop still measures 10.6:1 against the busiest cover behind it.

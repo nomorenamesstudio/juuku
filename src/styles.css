@@ -253,6 +253,8 @@ h1.display {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
+  /* installed on a phone the app draws under the status bar (black-translucent) */
+  padding-top: env(safe-area-inset-top);
 }
 
 .content {
