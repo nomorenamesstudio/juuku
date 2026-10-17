@@ -11,6 +11,8 @@ try {
 }
 
 const PORT = Number(process.env.PORT ?? 3101);
+// HOST=0.0.0.0 serves the built app to the LAN (see .env)
+const HOST = process.env.HOST ?? '127.0.0.1';
 const FAVORITES_PLAYLIST = 'Favorites';
 
 // Everything jukeboxControl accepts, minus `get`/`status` (those are reads).
@@ -307,7 +309,7 @@ if (existsSync(dist)) {
   app.get('/{*path}', (_req, res) => res.sendFile(join(dist, 'index.html')));
 }
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, HOST, () => {
   const { url, user } = serverInfo();
-  console.log(`juicebox api on http://127.0.0.1:${PORT} -> ${url} as ${user}`);
+  console.log(`juicebox api on http://${HOST}:${PORT} -> ${url} as ${user}`);
 });

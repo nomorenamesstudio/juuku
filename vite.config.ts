@@ -5,7 +5,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3100,
-    host: '127.0.0.1',
+    strictPort: true,
+    // LAN access for testing on a phone; the API stays on loopback and is proxied
+    host: '0.0.0.0',
     proxy: { '/api': 'http://127.0.0.1:3101' },
   },
 });

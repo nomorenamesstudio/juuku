@@ -10,6 +10,14 @@
 
 8080 is **not** free on this machine — the Ghosted dev site owns it. That is why the app sits on 3100 (the usual port convention here) and the API on 3101.
 
+## Testing from a phone (LAN)
+
+`npm run dev` binds Vite to `0.0.0.0:3100`, so on this machine the phone opens `http://10.10.10.20:3100/`. The API is proxied by Vite to `127.0.0.1:3101`, but this machine's `.env` also sets `HOST=0.0.0.0` for the API so the built app (`npm run build && npm start`) is reachable too.
+
+Verified through a real external hop (the Pi on the same LAN): `:3100` and `:3101/api/health` both answer 200, so firewalld already allows both ports. If a port is ever closed: `sudo firewall-cmd --add-port=3100/tcp` (add `--permanent` to survive a reload).
+
+There is **no authentication** in front of Juicebox, so on the LAN anyone can play, skip and rewrite the queue, and `/api/*` is open. Fine for a home network while this is a POC; not something to expose to the internet. The committed `.env.example` keeps `HOST=127.0.0.1` for that reason.
+
 ## The throwaway Navidrome
 
 Never point development at the Pi instance. `docker-compose.yml` runs a separate Navidrome with jukebox enabled:
