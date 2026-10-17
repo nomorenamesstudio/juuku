@@ -149,7 +149,7 @@ export function PlayerView({
           aria-pressed={showLyrics}
           aria-label="Toggle lyrics"
         >
-          <MicIcon size={20} />
+          <MicIcon size={22} />
         </button>
         <button
           className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}

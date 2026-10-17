@@ -55,18 +55,7 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
 
   return (
     <div className="nowbar">
-      <input
-        className="nowbar-scrub"
-        type="range"
-        min={0}
-        max={Math.max(duration, 1)}
-        step={1}
-        value={Math.min(position, duration || 1)}
-        onChange={(event) => onScrub(Number(event.target.value))}
-        aria-label="Playback position"
-        aria-valuetext={`${formatTime(position)} of ${formatTime(duration)}`}
-        style={{ ['--progress' as string]: `${progress * 100}%` }}
-      />
+      <div className="nowbar-row">
 
       <div className="nowbar-left">
         <button className="nowbar-open" onClick={onOpen ?? (() => navigate('/player'))} aria-label="Open the player">
@@ -129,7 +118,21 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
         <button className="icon-button bar-only" onClick={() => navigate('/player')} aria-label="Expand the player">
           <ChevronDownIcon size={18} style={{ transform: 'rotate(180deg)' }} />
         </button>
+        </div>
       </div>
+
+      <input
+        className="nowbar-scrub"
+        type="range"
+        min={0}
+        max={Math.max(duration, 1)}
+        step={1}
+        value={Math.min(position, duration || 1)}
+        onChange={(event) => onScrub(Number(event.target.value))}
+        aria-label="Playback position"
+        aria-valuetext={`${formatTime(position)} of ${formatTime(duration)}`}
+        style={{ ['--progress' as string]: `${progress * 100}%` }}
+      />
     </div>
   );
 }

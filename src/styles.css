@@ -669,9 +669,9 @@ h1.display {
   bottom: calc(4.1rem + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.75rem 0.45rem 0.4rem;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.3rem 0.45rem 0.3rem;
   background: rgba(28, 23, 18, 0.92);
   backdrop-filter: blur(18px);
   border: 1px solid var(--line);
@@ -680,13 +680,18 @@ h1.display {
   overflow: hidden;
 }
 
+.nowbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
 .nowbar-scrub {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 4px;
-  width: auto;
+  position: static;
+  width: 100%;
   height: 3px;
+  margin: 6px 0 0;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -1967,10 +1972,7 @@ h1.display {
     bottom: 0;
     height: 86px;
     padding: 0 1.5rem;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-    gap: 1rem;
+    display: block;
     border: 0;
     border-radius: 0;
     border-top: 1px solid var(--line);
@@ -1978,11 +1980,22 @@ h1.display {
     box-shadow: 0 -20px 40px -30px #000;
   }
 
+  .nowbar-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+  }
+
   .nowbar-scrub {
+    position: absolute;
     left: 0;
     right: 0;
     top: 0;
+    width: 100%;
     height: 16px;
+    margin: 0;
     pointer-events: auto;
     cursor: pointer;
   }
