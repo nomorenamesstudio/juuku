@@ -47,8 +47,10 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             ) : (
               album?.artist
             )}{' '}
-            · {songs.length} tracks ·{' '}
-            {formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))}
+            · <span className="fact">{songs.length} tracks</span> ·{' '}
+            <span className="fact">{
+              formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))
+            }</span>
           </p>
         </div>
       </header>

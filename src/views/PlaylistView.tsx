@@ -66,8 +66,17 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
         <div className="album-meta">
           <h1 className="display">{playlist?.name ?? '…'}</h1>
           <p className="album-facts">
-            {songs.length} {songs.length === 1 ? 'track' : 'tracks'}
-            {songs.length > 0 ? ` · ${formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))}` : ''}
+            <span className="fact">
+              {songs.length} {songs.length === 1 ? 'track' : 'tracks'}
+            </span>
+            {songs.length > 0 ? (
+              <>
+                {' · '}
+                <span className="fact">
+                  {formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))}
+                </span>
+              </>
+            ) : null}
           </p>
         </div>
       </header>

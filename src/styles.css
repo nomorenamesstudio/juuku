@@ -760,14 +760,16 @@ h1.display {
 
 .album-head {
   display: grid;
-  grid-template-columns: 122px 1fr;
-  gap: 1.1rem;
-  align-items: end;
+  /* one column on a phone: a long album title next to a 122px cover had nowhere to
+     go and pushed the facts and buttons around (see CHANGELOG 2026-10-17) */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
   padding: 0.6rem 0 1.5rem;
 }
 
 .album-art.large {
-  width: 122px;
+  width: min(52%, 190px);
   border-radius: 12px;
 }
 
@@ -812,13 +814,19 @@ h1.display {
 }
 
 .album-actions {
-  margin: -0.6rem 0 1.4rem;
+  margin: 0 0 1.4rem;
+}
+
+.album-facts .fact {
+  /* "2 hr 29 min" belongs on one line */
+  white-space: nowrap;
 }
 
 .album-facts {
   margin: 0.15rem 0 0.7rem;
   color: var(--dim);
   font-size: 0.8rem;
+  text-wrap: pretty;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2118,6 +2126,12 @@ h1.display {
     gap: 2rem;
     align-items: end;
     padding: 0.4rem 0 1.7rem;
+  }
+
+  .album-head {
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: end;
+    gap: 1.4rem;
   }
 
   .album-art.large {
