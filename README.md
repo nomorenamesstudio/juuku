@@ -1,5 +1,7 @@
 # Juuku <sub>ジューク</sub>
 
+![Juuku](docs/hero.jpg)
+
 *Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`.
 
 Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: browse the library, queue music, skip, pause, favorite and set the volume on the box that actually has the speakers, from any browser on the network.
