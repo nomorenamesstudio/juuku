@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { type Album, type Artist, type Song, coverUrl, getAlbums, getArtists, search } from '../api';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
@@ -13,6 +13,17 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ songs: Song[]; albums: Album[]; artists: Artist[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const sentinel = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+
+  // the search bar pins to the top once the title scrolls past it
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     getAlbums().then((payload) => {
@@ -53,6 +64,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
     <div className="view">
       <header className="view-head">
         <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
+      </header>
+
+      <div ref={sentinel} className="library-sentinel" aria-hidden="true" />
+      <div className={`library-bar${stuck ? ' stuck' : ''}`}>
         <div className="searchbar">
           <input
             type="search"
@@ -62,7 +77,17 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
             aria-label="Search the library"
           />
         </div>
-      </header>
+        {!results && (
+          <div className="segmented" role="tablist" aria-label="Browse">
+            <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
+              Albums
+            </button>
+            <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
+              Artists
+            </button>
+          </div>
+        )}
+      </div>
 
       {results ? (
         <div className="search-results">
@@ -132,15 +157,6 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
         </div>
       ) : (
         <>
-          <div className="segmented" role="tablist" aria-label="Browse">
-            <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
-              Albums
-            </button>
-            <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
-              Artists
-            </button>
-          </div>
-
           {tab === 'albums' ? (
             <>
               <div className="album-grid">
