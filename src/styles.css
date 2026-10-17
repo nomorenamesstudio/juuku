@@ -276,13 +276,37 @@ h1.display {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 1.6rem;
   letter-spacing: -0.01em;
 }
 
-.wordmark.small {
+.wordmark-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.wordmark-latin {
+  font-family: 'Instrument Serif', Georgia, serif;
   font-size: 1.6rem;
+}
+
+.wordmark-kana {
+  margin-top: 0.18rem;
+  font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  color: var(--dim);
+}
+
+.wordmark.small .wordmark-latin {
+  font-size: 1.35rem;
+}
+
+.wordmark.small .wordmark-kana {
+  font-size: 0.52rem;
+  letter-spacing: 0.3em;
 }
 
 .led {

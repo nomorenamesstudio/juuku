@@ -1,8 +1,10 @@
-# Juicebox
+# Juuku <sub>ジューク</sub>
+
+*Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`, and it keeps the old juicebox/jukebox pun in six letters.
 
 Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: browse the library, queue music, skip, pause, favorite and set the volume on the box that actually has the speakers, from any browser on the network.
 
-Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juicebox is that remote.
+Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juuku is that remote.
 
 ![Now playing, queue and library](docs/screenshot.png)
 
@@ -31,9 +33,9 @@ Open <http://127.0.0.1:3100>.
 
 ## How it talks to Navidrome
 
-Browser → Juicebox API → Subsonic `/rest/jukeboxControl` → Navidrome → `mpv` on that host.
+Browser → Juuku API → Subsonic `/rest/jukeboxControl` → Navidrome → `mpv` on that host.
 
-- Credentials stay server-side; the browser only sees Juicebox's own JSON.
+- Credentials stay server-side; the browser only sees Juuku's own JSON.
 - Auth is Subsonic salted token (`t=md5(password + salt)`), so the password never travels.
 - There is no push channel in the Subsonic API, so the UI polls `/api/state` once a second.
 - One queue, one device: Navidrome's jukebox has a single global playback queue. `Jukebox.AdminOnly` decides who may drive it.
@@ -48,8 +50,8 @@ Copy `.env.example` to `.env` and point it at the Navidrome you want to control:
 | --- | --- | --- |
 | `NAVIDROME_URL` | `http://127.0.0.1:4533` | Navidrome base URL |
 | `NAVIDROME_USER` | `admin` | User with jukebox permission |
-| `NAVIDROME_PASSWORD` | `juicebox` | That user's password (sandbox default) |
-| `PORT` | `3101` | Juicebox API port |
+| `NAVIDROME_PASSWORD` | `juuku` | That user's password (sandbox default) |
+| `PORT` | `3101` | Juuku API port |
 
 ## Layout
 

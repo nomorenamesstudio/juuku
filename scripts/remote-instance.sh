@@ -14,5 +14,5 @@ cd "$(dirname "$0")/.."
 PORT="${1:-3102}"
 [ -d dist ] || { echo "no dist/ - run npm run build first" >&2; exit 1; }
 
-echo "juicebox remote instance: $NAVIDROME_URL as $NAVIDROME_USER on :$PORT"
+echo "juuku remote instance: $NAVIDROME_URL as $NAVIDROME_USER on :$PORT"
 exec env PORT="$PORT" node server/index.mjs

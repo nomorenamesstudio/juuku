@@ -1,10 +1,12 @@
-# Docs
+# Juuku docs
 
-Entry point for everything about Juicebox.
+*Juuku* (`ジューク`) — the jukebox, shortened.
+
+Entry point for everything about Juuku.
 
 | Doc | What's in it |
 | --- | --- |
-| [API.md](API.md) | Juicebox's own HTTP surface and how each call maps to Subsonic |
+| [API.md](API.md) | Juuku's own HTTP surface and how each call maps to Subsonic |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Pieces, data flow, and the decisions behind them |
 | [SETUP.md](SETUP.md) | Ports, the throwaway Navidrome, credentials, environment traps |
 | [CHANGELOG.md](CHANGELOG.md) | Dated Feature / Fix / Break entries |

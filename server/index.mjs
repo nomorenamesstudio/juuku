@@ -273,7 +273,7 @@ async function lyricsFromLrclib(entry) {
   if (entry.duration) url.searchParams.set('duration', String(entry.duration));
   const res = await fetch(url, {
     signal: AbortSignal.timeout(8000),
-    headers: { 'User-Agent': 'juicebox/0.1 (local jukebox remote)' },
+    headers: { 'User-Agent': 'juuku/0.1 (local jukebox remote)' },
   });
   if (!res.ok) return null;
   const body = await res.json();
@@ -433,5 +433,5 @@ if (existsSync(dist)) {
 
 app.listen(PORT, HOST, () => {
   const { url, user } = serverInfo();
-  console.log(`juicebox api on http://${HOST}:${PORT} -> ${url} as ${user}`);
+  console.log(`juuku api on http://${HOST}:${PORT} -> ${url} as ${user}`);
 });

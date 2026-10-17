@@ -4,7 +4,7 @@
 browser (React, polls 1/s)
    │  JSON over /api
    ▼
-Juicebox API (Node/Express, :3101)   ← holds the Subsonic credentials
+Juuku API (Node/Express, :3101)   ← holds the Subsonic credentials
    │  Subsonic REST + salted token
    ▼
 Navidrome (:4533)  ── IPC ──▶  mpv  ──▶  speakers on the Navidrome host
@@ -40,7 +40,7 @@ Navidrome's jukebox is not exposed by its own web UI. The only interface is Subs
 
 - Volume is `gain` (0–1, mpv software volume), not a device mixer, so loudness is relative.
 - One queue for everyone: two phones controlling at once are fighting over the same playlist. Guest queueing needs product decisions (voting, rate limits), not more API.
-- `AdminOnly` is a Navidrome-side switch. A guest-friendly mode means `ND_JUKEBOX_ADMINONLY=false` and Navidrome users flagged for jukebox, not a Juicebox concept.
+- `AdminOnly` is a Navidrome-side switch. A guest-friendly mode means `ND_JUKEBOX_ADMINONLY=false` and Navidrome users flagged for jukebox, not a Juuku concept.
 - Polling at 1s means up to a second of lag on a second phone's view; acceptable for control, would not be for synchronized lyrics — the lyrics highlight is driven by the same 1s status, so it can be a beat behind.
 - Seeking is `skip` with `index = currentIndex` and an `offset`, because Subsonic has no seek endpoint. It restarts the track at that position rather than scrubbing the existing stream, which is invisible on the server but does reset mpv's buffer.
 - The favorites playlist is a shared, append-only list: two phones favoriting at once is last-write-wins on the read side, but dedupe keeps it from growing duplicates.

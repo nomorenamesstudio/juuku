@@ -1,6 +1,6 @@
 # API
 
-Juicebox exposes a small JSON API on `:3101`. The browser never talks to Navidrome directly — the server holds the credentials and translates to Subsonic.
+Juuku exposes a small JSON API on `:3101`. The browser never talks to Navidrome directly — the server holds the credentials and translates to Subsonic.
 
 All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "error": "message" }` with `400` (bad request), `401` (Navidrome rejected the credentials), `502` (Navidrome unreachable or refused) or `500`.
 

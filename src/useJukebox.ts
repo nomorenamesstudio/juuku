@@ -16,7 +16,7 @@ import {
 } from './api';
 
 const POLL_MS = 1000;
-const REPEAT_KEY = 'juicebox.repeat';
+const REPEAT_KEY = 'juuku.repeat';
 
 export type RepeatMode = 'off' | 'all' | 'one';
 

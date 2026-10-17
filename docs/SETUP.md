@@ -5,7 +5,7 @@
 | Port | What | Bound to |
 | --- | --- | --- |
 | 4533 | throwaway Navidrome (docker) | `127.0.0.1` |
-| 3101 | Juicebox API (and the built UI after `npm run build`) | `127.0.0.1` |
+| 3101 | Juuku API (and the built UI after `npm run build`) | `127.0.0.1` |
 | 3100 | Vite dev server (proxies `/api` → 3101) | `127.0.0.1` |
 
 8080 is **not** free on this machine — the Ghosted dev site owns it. That is why the app sits on 3100 (the usual port convention here) and the API on 3101.
@@ -16,34 +16,34 @@
 
 Verified through a real external hop (the Pi on the same LAN): `:3100` and `:3101/api/health` both answer 200, so firewalld already allows both ports. If a port is ever closed: `sudo firewall-cmd --add-port=3100/tcp` (add `--permanent` to survive a reload).
 
-There is **no authentication** in front of Juicebox, so on the LAN anyone can play, skip and rewrite the queue, and `/api/*` is open. Fine for a home network while this is a POC; not something to expose to the internet. The committed `.env.example` keeps `HOST=127.0.0.1` for that reason.
+There is **no authentication** in front of Juuku, so on the LAN anyone can play, skip and rewrite the queue, and `/api/*` is open. Fine for a home network while this is a POC; not something to expose to the internet. The committed `.env.example` keeps `HOST=127.0.0.1` for that reason.
 
 ## Pointing at another Navidrome (e.g. the main library)
 
 Read-only is fine: a server with jukebox mode off answers 501 for `jukeboxControl`, and the app shows no queue instead of failing. Credentials stay out of git:
 
 ```sh
-NAVIDROME_URL=http://10.10.10.10:4533 NAVIDROME_USER=juicebox NAVIDROME_PASSWORD=… \
+NAVIDROME_URL=http://10.10.10.10:4533 NAVIDROME_USER=juuku NAVIDROME_PASSWORD=… \
   ./scripts/remote-instance.sh 3102
 ```
 
-Environment variables win over `.env`, so the sandbox on `:3100` keeps running unchanged. On the Pi the `juicebox` user was created with `docker exec -it navidrome /app/navidrome user create --username juicebox --name Juicebox` (no password flag - it prompts twice, so it needs a TTY). Playback through that instance would need `Jukebox.Enabled`, `mpv` and an audio device on the Pi first.
+Environment variables win over `.env`, so the sandbox on `:3100` keeps running unchanged. On the Pi the `juuku` user was created with `docker exec -it navidrome /app/navidrome user create --username juuku --name Juuku` (no password flag - it prompts twice, so it needs a TTY). Playback through that instance would need `Jukebox.Enabled`, `mpv` and an audio device on the Pi first.
 
 ## The throwaway Navidrome
 
 Never point development at the Pi instance. `docker-compose.yml` runs a separate Navidrome with jukebox enabled:
 
-- container `juicebox-navidrome`, project `juicebox`
+- container `juuku-navidrome`, project `juuku`
 - `Jukebox.Enabled=true`, `MPVCmdTemplate` with `--ao=pulse` (real audio, see below)
 - `Jukebox.AdminOnly=true`
 - `mpv` is already inside the `navidrome/navidrome` image — nothing to install
-- volumes: `juicebox_navidrome-data` (`/data`) and `juicebox_navidrome-music` (`/music`)
+- volumes: `juuku_navidrome-data` (`/data`) and `juuku_navidrome-music` (`/music`)
 
 ```sh
 ./scripts/sandbox-up.sh
 ```
 
-The script starts the container, seeds the music volume from `sandbox/music` if empty, creates the first admin (`admin` / `juicebox` by default, via `/auth/createAdmin` — that endpoint only exists while the user table is empty), and forces a scan.
+The script starts the container, seeds the music volume from `sandbox/music` if empty, creates the first admin (`admin` / `juuku` by default, via `/auth/createAdmin` — that endpoint only exists while the user table is empty), and forces a scan.
 
 `sandbox/music` is gitignored: it holds two albums copied from the Pi library (Daft Punk — *Human After All*, Röyksopp — *Do It Again*, 15 tracks). Replace or extend them and re-run the script; `docker compose down -v` resets both volumes.
 
@@ -71,11 +71,11 @@ Consequences:
 ```
 NAVIDROME_URL=http://127.0.0.1:4533
 NAVIDROME_USER=admin
-NAVIDROME_PASSWORD=juicebox
+NAVIDROME_PASSWORD=juuku
 PORT=3101
 ```
 
-The sandbox password is not a secret — the container is bound to loopback and holds two albums. A real instance needs a real credential and, if it is ever exposed beyond the LAN, real auth in front of Juicebox itself.
+The sandbox password is not a secret — the container is bound to loopback and holds two albums. A real instance needs a real credential and, if it is ever exposed beyond the LAN, real auth in front of Juuku itself.
 
 ## Environment traps found while building this
 
@@ -87,10 +87,10 @@ The sandbox password is not a secret — the container is bound to loopback and 
 ## Verifying the jukebox without the UI
 
 ```sh
-PASS=juicebox; salt=$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')
+PASS=juuku; salt=$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')
 token=$(printf '%s%s' "$PASS" "$salt" | md5sum | cut -d' ' -f1)
-AUTH="u=admin&t=$token&s=$salt&v=1.16.1&c=Juicebox&f=json"
+AUTH="u=admin&t=$token&s=$salt&v=1.16.1&c=Juuku&f=json"
 curl -s "http://127.0.0.1:4533/rest/jukeboxControl?$AUTH&action=status"
 ```
 
-If jukebox is wired up, `docker logs juicebox-navidrome` says "Starting playback server" and "Using audio device: auto".
+If jukebox is wired up, `docker logs juuku-navidrome` says "Starting playback server" and "Using audio device: auto".

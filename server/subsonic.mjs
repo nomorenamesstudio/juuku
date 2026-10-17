@@ -1,12 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 
 const API_VERSION = '1.16.1';
-const CLIENT = 'Juicebox';
+const CLIENT = 'Juuku';
 
 const config = {
   url: (process.env.NAVIDROME_URL ?? 'http://127.0.0.1:4533').replace(/\/+$/, ''),
   user: process.env.NAVIDROME_USER ?? 'admin',
-  password: process.env.NAVIDROME_PASSWORD ?? 'juicebox',
+  password: process.env.NAVIDROME_PASSWORD ?? 'juuku',
 };
 
 export class ApiError extends Error {

@@ -98,7 +98,12 @@ export default function App() {
     <div className={`shell ${isPlayer ? 'shell-player' : ''} ${lyricsOpen ? 'lyrics-open' : ''}`}>
       <aside className="rail" aria-label="Main">
         <button className="wordmark" onClick={() => navigate('/library/albums')}>
-          juicebox
+          <span className="wordmark-stack">
+            <span className="wordmark-latin">juuku</span>
+            <span className="wordmark-kana" lang="ja">
+              ジューク
+            </span>
+          </span>
           <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
         </button>
 
@@ -142,7 +147,12 @@ export default function App() {
         {!isPlayer && (
           <div className="topbar">
             <button className="wordmark small" onClick={() => navigate('/library/albums')}>
-              juicebox
+              <span className="wordmark-stack">
+                <span className="wordmark-latin">juuku</span>
+                <span className="wordmark-kana" lang="ja">
+                  ジューク
+                </span>
+              </span>
               <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
             </button>
             <button className="icon-button" onClick={jbox.refresh} aria-label="Refresh state">

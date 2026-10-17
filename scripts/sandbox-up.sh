@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 BASE=${NAVIDROME_URL:-http://127.0.0.1:4533}
 USER=${NAVIDROME_USER:-admin}
-PASS=${NAVIDROME_PASSWORD:-juicebox}
+PASS=${NAVIDROME_PASSWORD:-juuku}
 
 docker compose up -d
 
@@ -14,9 +14,9 @@ for _ in $(seq 1 40); do
   sleep 0.5
 done
 
-if ! docker exec juicebox-navidrome sh -c '[ -n "$(ls -A /music 2>/dev/null)" ]'; then
+if ! docker exec juuku-navidrome sh -c '[ -n "$(ls -A /music 2>/dev/null)" ]'; then
   echo "seeding music volume..."
-  docker cp sandbox/music/. juicebox-navidrome:/music
+  docker cp sandbox/music/. juuku-navidrome:/music
 fi
 
 # First-run admin: /auth/createAdmin only exists while the user table is empty.
@@ -25,7 +25,7 @@ curl -sf -X POST "$BASE/auth/createAdmin" -H 'Content-Type: application/json' \
 
 salt=$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')
 token=$(printf '%s%s' "$PASS" "$salt" | md5sum | cut -d' ' -f1)
-AUTH="u=$USER&t=$token&s=$salt&v=1.16.1&c=Juicebox&f=json"
+AUTH="u=$USER&t=$token&s=$salt&v=1.16.1&c=Juuku&f=json"
 
 curl -sf "$BASE/rest/startScan?$AUTH" >/dev/null || true
 for _ in $(seq 1 60); do

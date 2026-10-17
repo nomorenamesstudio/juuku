@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — the project is **Juuku** (`ジューク`): package name, README, docs, script and container names, and the wordmark now sets the latin name over the kana in small letterspaced type. Chosen after checking the old name was a live registered trademark (Juicebox App, Inc.), taken on npm, on all three domains, and used by five other music projects; `juuku` is free on npm with no projects using it. The sandbox was rebuilt under the new compose project, so its volumes and admin password (`juuku`) are fresh.
+
 - **Fix** — the artist initial sat low in its circle: a lone cap never centres by line box in Instrument Serif (its ascent/descent dominate), so the fallback now uses the UI face, flex-centred with `line-height: 1`.
 
 - **Feature** — browse-only mode: a Navidrome without jukebox mode answers **501** ("This endpoint is not implemented") for `jukeboxControl`, not just "Jukebox is disabled". `/api/state` now returns an empty queue in that case, so the library, playlists and search work against any Navidrome without an error strip; `/api/health` reports `jukebox.enabled: false`.
