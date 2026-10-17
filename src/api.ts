@@ -2,12 +2,31 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
+  artistId?: string;
   album: string;
   albumId?: string;
   duration: number;
   track?: number;
+  disc?: number;
   coverArt?: string;
   year?: number;
+}
+
+export interface Album {
+  id: string;
+  name: string;
+  artist: string;
+  artistId?: string;
+  year?: number;
+  songCount: number;
+  duration?: number;
+  coverArt?: string;
+}
+
+export interface Artist {
+  id: string;
+  name: string;
+  albumCount: number;
 }
 
 export interface PlaybackStatus {
@@ -22,21 +41,23 @@ export interface State {
   entries: Song[];
 }
 
-export interface Album {
-  id: string;
-  name: string;
-  artist: string;
-  year?: number;
-  songCount: number;
-  coverArt?: string;
-}
-
 export interface Health {
   ok: boolean;
   url: string;
   user: string;
   navidrome: string;
   jukebox: PlaybackStatus | { error: string };
+}
+
+export interface Lyrics {
+  source: 'navidrome' | 'lrclib' | 'none';
+  synced: boolean;
+  lines: { time?: number; text: string }[];
+}
+
+export interface Favorites {
+  playlistId: string | null;
+  songs: Song[];
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -51,9 +72,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const getHealth = () => request<Health>('/api/health');
 export const getState = () => request<State>('/api/state');
-export const search = (q: string) => request<{ songs: Song[] }>(`/api/search?q=${encodeURIComponent(q)}`);
-export const getAlbums = (type = 'newest') => request<{ albums: Album[] }>(`/api/albums?type=${type}`);
-export const getAlbumSongs = (id: string) => request<{ songs: Song[] }>(`/api/albums/${id}`);
+export const getLyrics = (songId: string) => request<Lyrics>(`/api/lyrics/${songId}`);
+
+export const search = (q: string) =>
+  request<{ songs: Song[]; albums: Album[]; artists: Artist[] }>(`/api/search?q=${encodeURIComponent(q)}`);
+
+export const getAlbums = (offset = 0, size = 30, type = 'newest') =>
+  request<{ albums: Album[]; hasMore: boolean }>(`/api/albums?type=${type}&size=${size}&offset=${offset}`);
+
+export const getAlbum = (id: string) => request<{ album: Album; songs: Song[] }>(`/api/albums/${id}`);
+export const getArtists = () => request<{ artists: Artist[] }>('/api/artists');
+export const getArtist = (id: string) => request<{ artist: Artist; albums: Album[] }>(`/api/artists/${id}`);
+
+export const getFavorites = () => request<Favorites>('/api/favorites');
+export const addFavorite = (ids: string[]) =>
+  request<Favorites>('/api/favorites', { method: 'POST', body: JSON.stringify({ ids }) });
+export const removeFavorite = (id: string) =>
+  request<Favorites>(`/api/favorites/${encodeURIComponent(id)}`, { method: 'DELETE' });
 
 export type ControlAction = 'set' | 'start' | 'stop' | 'skip' | 'add' | 'clear' | 'remove' | 'shuffle' | 'setGain';
 
@@ -68,5 +103,9 @@ export interface ControlBody {
 export const control = (body: ControlBody) =>
   request<PlaybackStatus>('/api/control', { method: 'POST', body: JSON.stringify(body) });
 
-export const coverUrl = (id: string | undefined, size = 300) =>
+/** Replace the queue with these songs and start playing from the first. */
+export const playNow = (ids: string[]) =>
+  request<PlaybackStatus>('/api/play', { method: 'POST', body: JSON.stringify({ ids }) });
+
+export const coverUrl = (id: string | undefined, size = 400) =>
   id ? `/api/cover/${encodeURIComponent(id)}?size=${size}` : undefined;

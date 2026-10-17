@@ -1,15 +1,17 @@
 import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { parseLrc } from './lyrics.mjs';
 import { ApiError, binary, call, serverInfo } from './subsonic.mjs';
 
 try {
   process.loadEnvFile('.env');
 } catch {
-  // .env is optional; defaults below target the local sandbox.
+  // .env is optional; defaults target the local sandbox.
 }
 
 const PORT = Number(process.env.PORT ?? 3101);
+const FAVORITES_PLAYLIST = 'Favorites';
 
 // Everything jukeboxControl accepts, minus `get`/`status` (those are reads).
 const WRITE_ACTIONS = new Set(['set', 'start', 'stop', 'skip', 'add', 'clear', 'remove', 'shuffle', 'setGain']);
@@ -25,20 +27,31 @@ function fail(res, err) {
   res.status(status).json({ error: err.message ?? 'Unknown error' });
 }
 
-function badRequest(message) {
-  return new ApiError(400, message);
-}
+const badRequest = (message) => new ApiError(400, message);
 
 const song = (entry) => ({
   id: entry.id,
   title: entry.title,
   artist: entry.artist,
+  artistId: entry.artistId,
   album: entry.album,
   albumId: entry.albumId,
   duration: entry.duration,
   track: entry.track,
+  disc: entry.discNumber,
   coverArt: entry.coverArt,
   year: entry.year,
+});
+
+const album = (entry) => ({
+  id: entry.id,
+  name: entry.name,
+  artist: entry.artist,
+  artistId: entry.artistId,
+  year: entry.year,
+  songCount: entry.songCount,
+  duration: entry.duration,
+  coverArt: entry.coverArt,
 });
 
 const playlistOf = (response) => ({
@@ -58,7 +71,8 @@ const statusOf = (response) => ({
   position: response.jukeboxStatus.position,
 });
 
-/** Connection + capability probe. Fails loudly when jukebox mode is off. */
+// ---------------------------------------------------------------- connection
+
 app.get('/api/health', wrap(async (_req, res) => {
   const [ping, jukebox] = await Promise.all([
     call('ping'),
@@ -73,6 +87,8 @@ app.get('/api/health', wrap(async (_req, res) => {
   });
 }));
 
+// ------------------------------------------------------------------- playback
+
 /** Single poll target: queue + playback state in one round trip. */
 app.get('/api/state', wrap(async (_req, res) => {
   const response = await call('jukeboxControl', { action: 'get' });
@@ -83,43 +99,82 @@ app.post('/api/control', wrap(async (req, res) => {
   const { action, index, offset, ids, gain } = req.body ?? {};
   if (!WRITE_ACTIONS.has(action)) throw badRequest(`action must be one of ${[...WRITE_ACTIONS].join(', ')}`);
 
-  const params = { action };
-  if (action === 'skip' || action === 'remove') params.index = index;
-  if (action === 'skip' && offset !== undefined) params.offset = offset;
+  if ((action === 'skip' || action === 'remove') && !Number.isInteger(index)) {
+    throw badRequest(`${action} needs an integer index`);
+  }
   if ((action === 'set' || action === 'add') && !Array.isArray(ids)) throw badRequest('ids must be an array');
   if (action === 'setGain' && !(gain >= 0 && gain <= 1)) throw badRequest('gain must be between 0 and 1');
 
-  const response = await call('jukeboxControl', { action, index: params.index, offset: params.offset, id: ids, gain }, { repeat: ['id'] });
+  const response = await call(
+    'jukeboxControl',
+    { action, index, offset, id: ids, gain },
+    { repeat: ['id'] },
+  );
   res.json(statusOf(response));
 }));
 
+/** Play immediately: replace the queue, jump to its first track and start. */
+app.post('/api/play', wrap(async (req, res) => {
+  const { ids } = req.body ?? {};
+  if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
+  await call('jukeboxControl', { action: 'set', id: ids }, { repeat: ['id'] });
+  await call('jukeboxControl', { action: 'skip', index: 0 });
+  const response = await call('jukeboxControl', { action: 'start' });
+  res.json(statusOf(response));
+}));
+
+// -------------------------------------------------------------------- library
+
 app.get('/api/search', wrap(async (req, res) => {
   const q = String(req.query.q ?? '').trim();
-  if (!q) return res.json({ songs: [] });
-  const response = await call('search3', { query: q, songCount: 40, albumCount: 0, artistCount: 0 });
-  res.json({ songs: (response.searchResult3?.song ?? []).map(song) });
+  if (!q) return res.json({ songs: [], albums: [], artists: [] });
+  const response = await call('search3', { query: q, songCount: 40, albumCount: 20, artistCount: 20 });
+  const result = response.searchResult3 ?? {};
+  res.json({
+    songs: (result.song ?? []).map(song),
+    albums: (result.album ?? []).map(album),
+    artists: (result.artist ?? []).map((artist) => ({
+      id: artist.id,
+      name: artist.name,
+      albumCount: artist.albumCount,
+    })),
+  });
 }));
 
 app.get('/api/albums', wrap(async (req, res) => {
   const type = String(req.query.type ?? 'newest');
-  const response = await call('getAlbumList2', { type, size: Number(req.query.size ?? 30), offset: 0 });
-  res.json({
-    albums: (response.albumList2?.album ?? []).map((album) => ({
-      id: album.id,
-      name: album.name,
-      artist: album.artist,
-      year: album.year,
-      songCount: album.songCount,
-      coverArt: album.coverArt,
-    })),
-  });
+  const size = Math.min(Number(req.query.size ?? 30), 100);
+  const offset = Number(req.query.offset ?? 0);
+  const response = await call('getAlbumList2', { type, size, offset });
+  const albums = (response.albumList2?.album ?? []).map(album);
+  res.json({ albums, offset, hasMore: albums.length === size });
 }));
 
 app.get('/api/albums/:id', wrap(async (req, res) => {
   const response = await call('getAlbum', { id: req.params.id });
   res.json({
-    album: { id: response.album.id, name: response.album.name, artist: response.album.artist },
+    album: album(response.album),
     songs: (response.album.song ?? []).map(song),
+  });
+}));
+
+app.get('/api/artists', wrap(async (_req, res) => {
+  const response = await call('getArtists');
+  const artists = (response.artists?.index ?? []).flatMap((index) =>
+    (index.artist ?? []).map((artist) => ({
+      id: artist.id,
+      name: artist.name,
+      albumCount: artist.albumCount,
+    })),
+  );
+  res.json({ artists });
+}));
+
+app.get('/api/artists/:id', wrap(async (req, res) => {
+  const response = await call('getArtist', { id: req.params.id });
+  res.json({
+    artist: { id: response.artist.id, name: response.artist.name },
+    albums: (response.artist.album ?? []).map(album),
   });
 }));
 
@@ -128,6 +183,105 @@ app.get('/api/cover/:id', wrap(async (req, res) => {
   res.setHeader('Content-Type', contentType);
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.end(body);
+}));
+
+// --------------------------------------------------------------------- lyrics
+
+const lyricsCache = new Map();
+const LYRIC_TTL = 24 * 60 * 60 * 1000;
+
+async function lyricsFromLrclib(entry) {
+  const url = new URL('https://lrclib.net/api/get');
+  url.searchParams.set('artist_name', entry.artist ?? '');
+  url.searchParams.set('track_name', entry.title ?? '');
+  if (entry.album) url.searchParams.set('album_name', entry.album);
+  if (entry.duration) url.searchParams.set('duration', String(entry.duration));
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(8000),
+    headers: { 'User-Agent': 'juicebox/0.1 (local jukebox remote)' },
+  });
+  if (!res.ok) return null;
+  const body = await res.json();
+  const synced = body.syncedLyrics ? parseLrc(body.syncedLyrics) : null;
+  const plain = body.plainLyrics
+    ? body.plainLyrics.split(/\r?\n/).filter((line) => line.trim()).map((text) => ({ text: text.trim() }))
+    : null;
+  const lines = synced?.length ? synced : plain;
+  if (!lines?.length) return null;
+  return { source: 'lrclib', synced: Boolean(synced?.length), lines };
+}
+
+app.get('/api/lyrics/:id', wrap(async (req, res) => {
+  const id = req.params.id;
+  const cached = lyricsCache.get(id);
+  if (cached && cached.expires > Date.now()) return res.json(cached.value);
+
+  const response = await call('getLyricsBySongId', { id });
+  const blocks = response.lyricsList?.structuredLyrics ?? [];
+  const block =
+    blocks.find((candidate) => candidate.line?.some((line) => line.start !== undefined)) ?? blocks[0];
+
+  let payload = { source: 'none', synced: false, lines: [] };
+  if (block?.line?.length) {
+    payload = {
+      source: 'navidrome',
+      synced: block.line.some((line) => line.start !== undefined),
+      lines: block.line.map((line) => ({ time: line.start, text: line.value ?? '' })),
+    };
+  } else {
+    // Nothing embedded and no .lrc sidecar: ask LRCLIB once, cache the miss too.
+    const songResponse = await call('getSong', { id }).catch(() => null);
+    if (songResponse?.song) {
+      payload = (await lyricsFromLrclib(songResponse.song).catch(() => null)) ?? payload;
+    }
+  }
+
+  lyricsCache.set(id, { value: payload, expires: Date.now() + LYRIC_TTL });
+  res.json(payload);
+}));
+
+// ----------------------------------------------------------------- favourites
+
+async function findFavoritesPlaylist() {
+  const response = await call('getPlaylists');
+  return (response.playlists?.playlist ?? []).find((entry) => entry.name === FAVORITES_PLAYLIST) ?? null;
+}
+
+async function favoritesPayload() {
+  const playlist = await findFavoritesPlaylist();
+  if (!playlist) return { playlistId: null, songs: [] };
+  const response = await call('getPlaylist', { id: playlist.id });
+  return { playlistId: playlist.id, songs: (response.playlist.entry ?? []).map(song) };
+}
+
+app.get('/api/favorites', wrap(async (_req, res) => {
+  res.json(await favoritesPayload());
+}));
+
+app.post('/api/favorites', wrap(async (req, res) => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
+
+  const { playlistId, songs: existing } = await favoritesPayload();
+  const known = new Set(existing.map((entry) => entry.id));
+  const toAdd = ids.filter((id) => !known.has(id));
+  if (toAdd.length === 0) return res.json(await favoritesPayload());
+
+  if (!playlistId) {
+    await call('createPlaylist', { name: FAVORITES_PLAYLIST, songId: toAdd }, { repeat: ['songId'] });
+  } else {
+    await call('updatePlaylist', { playlistId, songIdToAdd: toAdd }, { repeat: ['songIdToAdd'] });
+  }
+  res.json(await favoritesPayload());
+}));
+
+app.delete('/api/favorites/:id', wrap(async (req, res) => {
+  const { playlistId, songs } = await favoritesPayload();
+  const index = songs.findIndex((entry) => entry.id === req.params.id);
+  if (playlistId && index >= 0) {
+    await call('updatePlaylist', { playlistId, songIndexToRemove: index });
+  }
+  res.json(await favoritesPayload());
 }));
 
 const dist = join(process.cwd(), 'dist');

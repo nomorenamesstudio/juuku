@@ -11,9 +11,16 @@ All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "err
 | GET | `/api/health` | Connection + capability probe (does the instance have jukebox on?) |
 | GET | `/api/state` | Whole remote state: queue plus playback status |
 | POST | `/api/control` | Every write action |
-| GET | `/api/search?q=` | Song search |
-| GET | `/api/albums?type=newest&size=30` | Album list (`newest`, `alphabeticalByName`, …) |
+| POST | `/api/play` | Replace the queue with these songs and start playing |
+| GET | `/api/search?q=` | Songs + albums + artists in one call |
+| GET | `/api/albums?type=newest&size=30&offset=0` | Album list, paged (`newest`, `alphabeticalByName`, …) |
 | GET | `/api/albums/:id` | Album plus its songs |
+| GET | `/api/artists` | All artists |
+| GET | `/api/artists/:id` | Artist plus their albums |
+| GET | `/api/lyrics/:id` | Synced or plain lyrics for a song |
+| GET | `/api/favorites` | The `Favorites` playlist as songs |
+| POST | `/api/favorites` | Add songs to it (`{ ids: string[] }`, deduped) |
+| DELETE | `/api/favorites/:songId` | Remove one song from it |
 | GET | `/api/cover/:id?size=300` | Cover art proxy (cached a day) |
 
 ### `GET /api/health`
@@ -65,6 +72,22 @@ Body: `{ action, index?, offset?, ids?, gain? }`, returns the new `status`.
 
 `get` and `status` are reads and live behind `GET /api/state` and `/api/health` instead of the write endpoint.
 
+### `POST /api/play`
+
+`{ "ids": ["…"] }` — `set` + `skip` to index 0 + `start`, in that order, returning the new status. One call so the UI cannot leave the jukebox in a half-changed state.
+
+### `GET /api/lyrics/:id`
+
+```json
+{ "source": "navidrome", "synced": true, "lines": [{ "time": 50560, "text": "We are human" }] }
+```
+
+`source` is `navidrome` (embedded tag or `.lrc` sidecar, via OpenSubsonic `getLyricsBySongId`), `lrclib` (fallback lookup by artist/title/album/duration), or `none`. `time` is milliseconds from the start of the track and is absent for unsynced lyrics. Both outcomes are cached for a day, misses included, so a lyrics-less track does not hammer LRCLIB.
+
+### `GET/POST/DELETE /api/favorites`
+
+The playlist is created lazily on the first favorite and named `Favorites`; the API dedupes on add and removes by song id (resolving the playlist index server-side). Responses are always the whole playlist: `{ playlistId, songs }`.
+
 ## Upstream mapping
 
 Everything maps 1:1 onto Subsonic's only jukebox endpoint, `GET /rest/jukeboxControl`, with `action` plus the same parameter names. Two Navidrome-specific notes:
@@ -73,4 +96,4 @@ Everything maps 1:1 onto Subsonic's only jukebox endpoint, `GET /rest/jukeboxCon
 - With `Jukebox.AdminOnly` (the default) only admin users may control it. Otherwise Navidrome refuses with "Jukebox is admin only".
 - Only one playback device exists in practice: `GetDeviceForUser` always returns the default device, so a queue is global, not per user.
 
-Also used: `ping` (health), `search3` (search), `getAlbumList2` / `getAlbum` (library browsing), `getCoverArt` (art proxy).
+Also used: `ping` (health), `search3` (search), `getAlbumList2` / `getAlbum` / `getArtists` / `getArtist` (library browsing), `getCoverArt` (art proxy), `getLyricsBySongId` (lyrics), `createPlaylist` / `updatePlaylist` / `getPlaylists` / `getPlaylist` (favorites).

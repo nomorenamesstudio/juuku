@@ -1,14 +1,20 @@
 # Juicebox
 
-Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: queue music, skip, pause and set the volume on the box that actually has the speakers, from any browser on the network.
+Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: browse the library, queue music, skip, pause, favorite and set the volume on the box that actually has the speakers, from any browser on the network.
 
 Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juicebox is that remote.
 
 ![Now playing, queue and library](docs/screenshot.png)
 
-## Status
+## What it does
 
-Proof of concept: the whole control surface works end to end against a real Navidrome + mpv jukebox. The UI is deliberately plain — it exists to prove the plumbing. Feature work comes next.
+- **Library** — album grid with paging, artist list, and one search across songs, albums and artists. Tapping a track queues it; ▶ plays it now.
+- **Player** — a full-screen player that minimizes to a bottom bar: artwork, scrubber (seeks inside the current track), transport, volume, favorite.
+- **Queue** — its own view, opened when you want it: skip to an entry, remove one, shuffle, or clear the lot.
+- **Favorites** — the heart writes to a `Favorites` playlist in Navidrome, so other clients see it too.
+- **Lyrics** — synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none.
+
+Works on a phone first and gets a sidebar on wide screens.
 
 ## Quick start
 
@@ -49,9 +55,12 @@ Copy `.env.example` to `.env` and point it at the Navidrome you want to control:
 
 ```
 server/          API + Subsonic client (plain ESM Node, no build step)
-src/             React UI (Vite + TS)
+src/             React UI (Vite + TS): views/, rows, player, mini player
+src/views/       Library, AlbumView, ArtistView, QueueView, FavoritesView, PlayerView
+public/fonts/    Bricolage Grotesque + Instrument Serif (SIL OFL, licenses alongside)
 sandbox/         throwaway music/data mount points for the dev instance
 scripts/         sandbox-up.sh — compose + seed music + create admin + scan
+                 audio-dev.sh — route the container's mpv to this machine's speakers
 docker-compose.yml   the throwaway Navidrome with jukebox enabled
 docs/            INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
 ```
