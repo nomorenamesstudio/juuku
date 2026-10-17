@@ -28,8 +28,10 @@ KANA = dict(path=ROOT / 'public/fonts/noto-sans-jp-kana.woff2', text='ジュー�
 # 2.2x so the fade never hits the viewBox edge
 LED = dict(size=8.0, gap=7.1875, center_y=18.703125, fill='#f0a24a', glow=1.6, pad=2.2)
 DOT_X = 52.375 + LED['gap'] + LED['size'] / 2
-# the viewBox has to fit the glow too, or its right side gets sliced straight
-WIDTH = DOT_X + LED['size'] * LED['pad']
+# equal padding on both sides: the glow needs room, and a symmetric box means
+# anything that centres the file gets an optically centred lockup
+PAD = LED['size'] * LED['pad']
+WIDTH = DOT_X + LED['size'] / 2 + PAD * 2
 HEIGHT = max(37.44, LED['center_y'] + LED['size'] * LED['pad'])
 
 
@@ -68,7 +70,7 @@ def build():
       <stop offset="1" stop-color="{LED["fill"]}" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <g transform="scale({SCALE})">
+  <g transform="translate({PAD * SCALE:.4f}, 0) scale({SCALE})">
 {group(LATIN)}
 {group(KANA)}
     <circle cx="{dot_x:.4f}" cy="{LED["center_y"]:.4f}" r="{LED["size"] * LED["glow"]:.4f}" fill="url(#led-glow)"/>

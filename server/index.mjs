@@ -33,11 +33,18 @@ const jukeboxOff = (err) => /jukebox is disabled|admin only|not implemented|\b50
 const JUKEBOX_OFF =
   'Navidrome has jukebox mode off, so it cannot play anything. Set ND_JUKEBOX_ENABLED=true on Navidrome (Jukebox.Enabled in navidrome.toml), restart it, and make sure the machine running Navidrome has mpv and an audio output.';
 
+// Navidrome only lets admins drive the jukebox, whatever the docs suggest.
+const JUKEBOX_NOT_ADMIN =
+  'Navidrome only lets admin accounts drive the jukebox, so the user Juuku signs in as (NAVIDROME_USER) needs to be an admin: navidrome user edit --username <user> --set-admin.';
+
 const wrap = (handler) => (req, res) => handler(req, res).catch((err) => fail(res, err));
 
 function fail(res, err) {
   const status = err instanceof ApiError ? err.status : 500;
-  // the common misconfiguration: say what to do instead of passing a bare code on
+  // the common misconfigurations: say what to do instead of passing a bare code on
+  if (/admin only/i.test(err?.message ?? '')) {
+    return res.status(501).json({ error: JUKEBOX_NOT_ADMIN });
+  }
   if (jukeboxOff(err)) {
     return res.status(501).json({ error: JUKEBOX_OFF });
   }
