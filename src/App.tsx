@@ -95,7 +95,11 @@ export default function App() {
 
   return (
     <TrackActionsProvider value={(songs, options) => setTrackActions({ songs, ...options })}>
-    <div className={`shell ${isPlayer ? 'shell-player' : ''} ${lyricsOpen ? 'lyrics-open' : ''}`}>
+    <div
+      className={`shell ${isPlayer ? 'shell-player' : ''} ${lyricsOpen ? 'lyrics-open' : ''} ${
+        count > 0 && !isPlayer ? 'has-deck' : ''
+      }`}
+    >
       <aside className="rail" aria-label="Main">
         <button className="wordmark" onClick={() => navigate('/library/albums')}>
           <span className="wordmark-stack">

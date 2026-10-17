@@ -197,6 +197,11 @@ h1.display {
   padding: 0;
 }
 
+/* the deck floats above the tab bar, so the page needs the extra room only then */
+.has-deck .content {
+  padding-bottom: 10.6rem;
+}
+
 .shell-player .nowbar {
   display: none;
 }
@@ -255,7 +260,7 @@ h1.display {
   width: 100%;
   max-width: 860px;
   margin: 0 auto;
-  padding: 0.5rem 1.15rem 9.5rem;
+  padding: 0.5rem 1.15rem 6.4rem;
 }
 
 .rail {
@@ -414,18 +419,21 @@ h1.display {
 
 .searchbar input {
   width: 100%;
-  background: var(--glass);
+  /* the glass belongs to the field, not to a band behind it: covers scroll past
+     and only the field frosts them, so there is no cut edge anywhere */
+  background: rgba(20, 16, 11, 0.8);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
   padding: 0.72rem 0.9rem;
   font-size: 0.94rem;
-  box-shadow: var(--glass-sheen), 0 10px 26px -22px #000;
+  box-shadow: var(--glass-sheen), 0 16px 34px -26px #000;
 }
 
 .searchbar input::placeholder {
-  color: var(--dim);
+  /* over a bright cover the dim tone dropped to ~2.5:1 behind the field */
+  color: var(--glass-text);
 }
 
 /* the library search + tabs pin to the top once the title scrolls away */
@@ -436,7 +444,8 @@ h1.display {
 
 .library-bar {
   position: sticky;
-  top: 0;
+  /* floats like the deck and tab bar instead of hugging the viewport edge */
+  top: 0.55rem;
   z-index: 6;
   padding: 0.3rem 0 0.8rem;
   transition: background-color var(--dur-2), box-shadow var(--dur-2);
@@ -447,23 +456,7 @@ h1.display {
 }
 
 
-.library-bar.stuck::before {
-  content: '';
-  position: absolute;
-  /* bleeds past the content padding so covers fade out rather than hit an edge */
-  inset: -0.3rem -1.15rem -1.4rem;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    var(--bg) 0%,
-    var(--bg) 42%,
-    rgba(20, 16, 11, 0.86) 68%,
-    rgba(20, 16, 11, 0) 100%
-  );
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-}
+
 
 .segmented {
   display: inline-flex;
@@ -896,7 +889,7 @@ h1.display {
   position: fixed;
   left: 0.65rem;
   right: 0.65rem;
-  bottom: calc(4.1rem + env(safe-area-inset-bottom));
+  bottom: calc(4.85rem + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -1071,7 +1064,7 @@ h1.display {
   position: fixed;
   left: 0.65rem;
   right: 0.65rem;
-  bottom: calc(4.1rem + env(safe-area-inset-bottom));
+  bottom: calc(4.85rem + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
   align-items: center;
@@ -1186,17 +1179,19 @@ h1.display {
 
 .tabbar {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: calc(0.65rem + env(safe-area-inset-bottom));
   z-index: 19;
   display: flex;
-  height: calc(3.9rem + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
+  height: 3.7rem;
+  border: 1px solid var(--glass-edge);
+  /* same radius as the deck it floats next to */
+  border-radius: 10px;
   background: var(--glass-strong);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border-top: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-sheen), 0 20px 44px -26px rgba(0, 0, 0, 0.92);
 }
 
 .tabbar button {
