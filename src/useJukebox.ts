@@ -58,7 +58,7 @@ export interface Jukebox {
   refresh: () => Promise<void>;
 }
 
-export function useJukebox(): Jukebox {
+export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukebox {
   const [state, setState] = useState<State | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [favorites, setFavorites] = useState<Song[]>([]);
@@ -137,6 +137,8 @@ export function useJukebox(): Jukebox {
   }, [handleQueueEnd]);
 
   useEffect(() => {
+    // while the login screen is up there is nothing to poll for, and every call is a 401
+    if (paused) return;
     getHealth().then(setHealth, (err: Error) => setError(err.message));
     getFavorites().then((payload) => setFavorites(payload.songs), () => {});
     refresh();
@@ -147,7 +149,7 @@ export function useJukebox(): Jukebox {
       window.clearInterval(timer);
       window.clearTimeout(toastTimer.current);
     };
-  }, [refresh]);
+  }, [refresh, paused]);
 
   const run = useCallback(
     async <T,>(action: () => Promise<T>, message?: string): Promise<T | undefined> => {

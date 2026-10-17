@@ -41,6 +41,7 @@ Configuration is environment only — nothing is baked into the image:
 | `NAVIDROME_USER` | a dedicated, non-admin Navidrome user |
 | `NAVIDROME_PASSWORD` | that user's password |
 | `HOST` / `PORT` | bind address and port inside the container (`0.0.0.0:3101`) |
+| `JUUKU_PASSWORD` | optional shared password; unset means no login at all |
 | `NODE_EXTRA_CA_CERTS` | optional, for a Navidrome behind a private CA |
 
 If Navidrome runs in another compose stack, attach Juuku to that stack's network
@@ -53,6 +54,11 @@ Tagged releases publish a multi-arch image (amd64 + arm64, so a Pi pulls nativel
 ```sh
 docker pull ghcr.io/nomorenamesstudio/juuku:latest
 ```
+
+Set `JUUKU_PASSWORD` and the app asks for it once per browser (a 30-day HttpOnly
+cookie, signed with a key derived from the password — change the password and
+every session ends). Failed attempts are throttled per address. Leaving it unset
+keeps the old behaviour: no login, LAN only.
 
 Read [SECURITY.md](../SECURITY.md) before exposing the port to anything beyond your
 own network — the app has no login by design.

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NowBar } from './MiniPlayer';
-import { ArtistIcon, HeartIcon, LibraryIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
+import { ArtistIcon, HeartIcon, LibraryIcon, LogOutIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
 import { TrackActions, TrackActionsProvider } from './TrackActions';
-import type { Song } from './api';
+import { LoginView } from './views/LoginView';
+import { type Session, getSession, signOut, type Song } from './api';
 import { navigate, useRoute } from './router';
 import { useCounts } from './useCounts';
 import { useJukebox } from './useJukebox';
@@ -31,10 +32,23 @@ const TABS = [
 ];
 
 export default function App() {
-  const jbox = useJukebox();
+  const [session, setSession] = useState<Session | null>(null);
+  // nothing polls until we know whether a password is needed
+  const paused = !session || (session.required && !session.authenticated);
+  const jbox = useJukebox({ paused });
   const { route } = useRoute();
   const [lyricsOpen, setLyricsOpen] = useState(false);
-  const counts = useCounts();
+  const counts = useCounts({ paused });
+
+  const loadSession = () => getSession().then(setSession, () => setSession({ required: false, authenticated: true }));
+
+  useEffect(() => {
+    void loadSession();
+    // a 401 anywhere means the cookie expired mid-use
+    const onUnauthorized = () => setSession({ required: true, authenticated: false });
+    window.addEventListener('juuku:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('juuku:unauthorized', onUnauthorized);
+  }, []);
   const [trackActions, setTrackActions] = useState<{
     songs: Song[];
     playlistId?: string;
@@ -95,6 +109,25 @@ export default function App() {
     }
   })();
 
+  // the shell must not mount before we know whether a password is needed, or its
+  // first fetches race the session check and 401
+  if (!session) {
+    return (
+      <main className="boot">
+        <span className="wordmark-stack">
+          <span className="wordmark-latin">juuku</span>
+          <span className="wordmark-kana" lang="ja">
+            ジューク
+          </span>
+        </span>
+      </main>
+    );
+  }
+
+  if (session.required && !session.authenticated) {
+    return <LoginView onSignedIn={() => void loadSession()} />;
+  }
+
   return (
     <TrackActionsProvider value={(songs, options) => setTrackActions({ songs, ...options })}>
     <div
@@ -152,6 +185,14 @@ export default function App() {
           ) : (
             'connecting…'
           )}
+          {session?.required && (
+            <button
+              className="rail-signout"
+              onClick={() => void signOut().then(() => setSession({ required: true, authenticated: false }))}
+            >
+              Sign out
+            </button>
+          )}
         </p>
       </aside>
 
@@ -170,6 +211,15 @@ export default function App() {
             <button className="icon-button" onClick={jbox.refresh} aria-label="Refresh state">
               <RefreshIcon size={18} />
             </button>
+            {session?.required && (
+              <button
+                className="icon-button"
+                onClick={() => void signOut().then(() => setSession({ required: true, authenticated: false }))}
+                aria-label="Sign out"
+              >
+                <LogOutIcon size={18} />
+              </button>
+            )}
           </div>
         )}
 

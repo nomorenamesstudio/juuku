@@ -81,9 +81,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error ?? `${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    // an expired session surfaces as a 401 on whatever the app calls next
+    if (res.status === 401) window.dispatchEvent(new Event('juuku:unauthorized'));
+    throw new Error(body.error ?? `${res.status} ${res.statusText}`);
+  }
   return body as T;
 }
+
+export interface Session {
+  required: boolean;
+  authenticated: boolean;
+}
+
+export const getSession = () => request<Session>('/api/session');
+
+export const signIn = (password: string) =>
+  request<{ ok: boolean }>('/api/login', { method: 'POST', body: JSON.stringify({ password }) });
+
+export const signOut = () => request<{ ok: boolean }>('/api/logout', { method: 'POST' });
 
 export const getHealth = () => request<Health>('/api/health');
 export const getState = () => request<State>('/api/state');

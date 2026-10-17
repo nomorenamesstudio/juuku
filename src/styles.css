@@ -1612,6 +1612,65 @@ h1.display {
   background: var(--muted);
 }
 
+/* ---------------------------------------------------------------- login */
+
+.boot {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  opacity: 0.75;
+}
+
+.login-view {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: calc(3rem + env(safe-area-inset-top)) 1.15rem 2rem;
+}
+
+.login-field input {
+  width: 100%;
+  background-color: rgba(20, 16, 11, 0.8);
+  border: 1px solid var(--glass-edge);
+  border-radius: 12px;
+  padding: 0.72rem 0.9rem;
+  font-size: 0.94rem;
+  box-shadow: var(--glass-sheen);
+}
+
+.login-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1.6rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.login-form .primary {
+  justify-content: center;
+}
+
+.rail-signout {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-decoration: underline;
+}
+
+.rail-signout:hover {
+  color: var(--cream);
+}
+
+.login-error {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--ember);
+}
+
 /* ------------------------------------------------------------ playlists */
 
 .playlist-new,

@@ -17,10 +17,12 @@ room, not like a website.
 
 - **LAN only.** The compose file publishes the port on the LAN and nothing else.
   Do not forward it from your router.
-- **No login.** The app ships without authentication on purpose: on a home
-  network it is the remote for the room, and a login on every screen would be
-  worse than the risk it removes. That trade holds *only* while the port stays
-  private.
+- **No login unless you ask for one.** With `JUUKU_PASSWORD` unset the app has no
+  authentication, on purpose: on a home network it is the remote for the room.
+  Set the variable and every `/api` route needs a session — a 30-day HttpOnly,
+  SameSite=Lax cookie signed with a key derived from that password, with a
+  timing-safe compare on sign-in and per-address throttling of failures. That
+  trade only holds while the port stays private either way.
 - **Dedicated Navidrome user.** Create a normal (non-admin) user for Juuku
   (`navidrome user create --username juuku`). It needs browse, play, playlist
   access — not admin, not another user's data.
@@ -49,14 +51,15 @@ it gives you the app from anywhere without publishing anything.
 
 ## Known gaps, stated plainly
 
-- **There is no application-level login.** A reverse proxy is the supported way
-  to protect it. Application auth (a shared password with a signed, HttpOnly
-  session cookie) is the intended next step before this is recommended to
-  strangers on the internet.
+- **Auth is one shared password, not accounts.** Everyone with it is the same
+  user; there is no per-person revocation short of changing the password.
 - **No CSRF token.** Every write is a `POST`/`DELETE` with a JSON body on the
-  same origin; a cross-site form cannot send `application/json`, which is what
-  keeps this safe today. Adding auth must keep it that way, or add a token.
-- **No rate limiting.** Fine on a LAN, not fine on the open internet.
+  same origin, a cross-site form cannot send `application/json`, and the session
+  cookie is `SameSite=Lax` — which together cover the classic attack. A proxy
+  that rewrites content could still break that assumption.
+- **Rate limiting covers sign-in only** (8 failures per address per 10 minutes,
+  in memory, so it resets on restart). The rest of the API has none: fine on a
+  LAN, not fine on the open internet.
 - **The Navidrome password is in the environment**, so it is visible to anyone
   who can `docker inspect` on the host. A password file
   (`NAVIDROME_PASSWORD_FILE`) is not implemented yet.

@@ -23,10 +23,10 @@ function load() {
   return inflight;
 }
 
-export function useCounts(): Counts | null {
+export function useCounts({ paused = false }: { paused?: boolean } = {}): Counts | null {
   const [counts, setCounts] = useState<Counts | null>(cached);
   useEffect(() => {
-    if (cached) return;
+    if (cached || paused) return;
     let alive = true;
     void load().then((value) => {
       if (alive) setCounts(value);
@@ -34,6 +34,6 @@ export function useCounts(): Counts | null {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [paused]);
   return counts;
 }

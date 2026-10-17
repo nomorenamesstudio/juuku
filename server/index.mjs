@@ -2,6 +2,7 @@ import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseLrc } from './lyrics.mjs';
+import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
 try {
@@ -14,6 +15,12 @@ const PORT = Number(process.env.PORT ?? 3101);
 // HOST=0.0.0.0 serves the built app to the LAN (see .env)
 const HOST = process.env.HOST ?? '127.0.0.1';
 const FAVORITES_PLAYLIST = 'Favorites';
+
+// Optional shared password (JUUKU_PASSWORD). Unset means no auth, which is the
+// LAN-only default documented in SECURITY.md.
+const auth = createAuth(process.env.JUUKU_PASSWORD ?? '');
+const throttle = createThrottle();
+const OPEN_ROUTES = new Set(['/live', '/session', '/login', '/logout']);
 
 // Everything jukeboxControl accepts, minus `get`/`status` (those are reads).
 const WRITE_ACTIONS = new Set(['set', 'start', 'stop', 'skip', 'add', 'clear', 'remove', 'shuffle', 'setGain']);
@@ -84,6 +91,48 @@ const statusOf = (response) => ({
 });
 
 // ---------------------------------------------------------------- connection
+
+// behind a reverse proxy req.secure has to see X-Forwarded-Proto
+app.set('trust proxy', 1);
+
+const authenticated = (req) => !auth.enabled || auth.valid(readCookie(req.headers.cookie, COOKIE));
+
+app.get('/api/session', (req, res) => {
+  res.json({ required: auth.enabled, authenticated: authenticated(req) });
+});
+
+app.post('/api/login', wrap(async (req, res) => {
+  if (!auth.enabled) return res.json({ ok: true });
+  const address = req.ip ?? 'unknown';
+  if (throttle.blocked(address)) {
+    throw new ApiError(429, 'Too many attempts - wait a few minutes');
+  }
+  if (!auth.verify(req.body?.password)) {
+    throttle.fail(address);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    throw new ApiError(401, 'Wrong password');
+  }
+  throttle.clear(address);
+  res.cookie(COOKIE, auth.issue(), {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: req.secure,
+    maxAge: MAX_AGE * 1000,
+  });
+  res.json({ ok: true });
+}));
+
+app.post('/api/logout', (req, res) => {
+  res.clearCookie(COOKIE, { path: '/' });
+  res.json({ ok: true });
+});
+
+// everything else under /api needs the session when a password is configured
+app.use('/api', (req, res, next) => {
+  if (OPEN_ROUTES.has(req.path) || authenticated(req)) return next();
+  res.status(401).json({ error: 'Sign in to control the jukebox' });
+});
 
 // liveness only: a container is healthy when it is serving, not when Navidrome is
 app.get('/api/live', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));

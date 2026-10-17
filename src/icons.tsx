@@ -20,6 +20,7 @@ import {
   Trash2,
   UserRound,
   X,
+  LogOut,
   Volume2,
   type LucideIcon,
 } from 'lucide-react';
@@ -81,5 +82,6 @@ export const VolumeIcon = icon(Volume2);
 export const MicIcon = icon(MicVocal);
 export const MoreIcon = icon(MoreHorizontal);
 export const CloseIcon = icon(X);
+export const LogOutIcon = icon(LogOut);
 export const RepeatIcon = icon(Repeat);
 export const RepeatOneIcon = icon(Repeat1);
