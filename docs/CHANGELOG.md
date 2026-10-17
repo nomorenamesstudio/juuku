@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — a Buy Me a Coffee link in the README and `.github/FUNDING.yml`, so GitHub renders the Sponsor button.
+
 - **Feature** — MIT licence, so the repo is actually open source rather than source-available.
 
 - **Feature** — a `test` workflow runs on every push and pull request: `npm test`, `npm run build`, then builds the image and waits for `/api/live` to answer, so the Dockerfile cannot rot unnoticed between releases.

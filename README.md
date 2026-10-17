@@ -98,6 +98,11 @@ docker-compose.yml   the throwaway Navidrome with jukebox enabled
 docs/            INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
 ```
 
+## Support
+
+Free, MIT, no telemetry, no accounts. If Juuku earns a place in your setup:
+[buymeacoffee.com/nomorenames](https://buymeacoffee.com/nomorenames).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
