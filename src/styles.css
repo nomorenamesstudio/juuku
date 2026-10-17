@@ -464,16 +464,16 @@ h1.display {
 .library-bar.stuck::before {
   content: '';
   position: absolute;
-  inset: -0.55rem -1.15rem -2.2rem;
+  inset: -0.55rem -1.15rem -2.7rem;
   z-index: -1;
   pointer-events: none;
   /* a fade, not a band: no backdrop-filter here, which is what produced the cut */
   background: linear-gradient(
     to bottom,
-    rgba(20, 16, 11, 1) 0%,
-    rgba(20, 16, 11, 0.9) 38%,
-    rgba(20, 16, 11, 0.72) 62%,
-    rgba(20, 16, 11, 0.34) 82%,
+    rgba(20, 16, 11, 0.9) 0%,
+    rgba(20, 16, 11, 0.84) 40%,
+    rgba(20, 16, 11, 0.58) 64%,
+    rgba(20, 16, 11, 0.26) 84%,
     rgba(20, 16, 11, 0) 100%
   );
 }
@@ -2251,15 +2251,15 @@ h1.display {
     content: '';
     position: absolute;
     /* the fade starts below the row, so the shrunken title never sits on artwork */
-    inset: 0 -1.15rem -1.5rem;
+    inset: 0 -1.15rem -2rem;
     z-index: -1;
     pointer-events: none;
     background: linear-gradient(
       to bottom,
-      rgba(20, 16, 11, 1) 0%,
-      rgba(20, 16, 11, 0.98) 55%,
-      rgba(20, 16, 11, 0.92) 74%,
-      rgba(20, 16, 11, 0.55) 90%,
+      rgba(20, 16, 11, 0.88) 0%,
+      rgba(20, 16, 11, 0.8) 48%,
+      rgba(20, 16, 11, 0.56) 72%,
+      rgba(20, 16, 11, 0.24) 89%,
       rgba(20, 16, 11, 0) 100%
     );
   }

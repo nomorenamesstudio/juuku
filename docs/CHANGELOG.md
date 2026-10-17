@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — the pinned shade is a softer fade: 0.9 at the viewport edge tapering over 2.7rem (phone) / 2rem (desktop) instead of running almost solid, so the artwork stays visible underneath and the band reads as a gradient rather than a blackout. Cream on the darkened backdrop still measures 10.6:1 against the busiest cover behind it.
+
 - **Feature** — count pills everywhere the browse switch appears: the phone tabs and the desktop rail both show albums/artists totals, from one cached fetch (a module-level hook shared by the rail and the view).
 - **Feature** — a search glyph inside the field.
 - **Change** — on desktop the title and the search share one sticky row, and the row shrinks when pinned (title 2.5rem → 1.5rem, field padding and font down too), taking 53px instead of 72px. The phone keeps its behaviour: title scrolls away, only the field pins.
