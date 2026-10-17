@@ -72,10 +72,16 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
         >
           <PlusIcon size={18} /> Add to queue
         </button>
-        <button className="secondary danger" disabled={!playlist} onClick={() => setConfirming(true)}>
-          <TrashIcon size={18} /> Delete
-        </button>
+        {!playlist?.protected && (
+          <button className="secondary danger" disabled={!playlist} onClick={() => setConfirming(true)}>
+            <TrashIcon size={18} /> Delete
+          </button>
+        )}
       </div>
+
+      {playlist?.protected && songs.length > 0 && (
+        <p className="fineprint">Filled by the heart button on any track, so this one can’t be deleted.</p>
+      )}
 
       {songs.length === 0 ? (
         <p className="empty">

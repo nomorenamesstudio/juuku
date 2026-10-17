@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — the `Favorites` playlist can’t be deleted: `/api/playlists/:id` answers 409 for it and the detail page hides the Delete action, with a one-liner explaining that the heart owns it. Other playlists delete as before.
+
 - **Feature** — deleting a playlist, with a real confirmation dialog ("the playlist goes, the tracks stay"), Cancel first, then a solid Delete. `DELETE /api/playlists/:id` calls Navidrome's `deletePlaylist` and returns the name for the toast.
 - **Fix** — that dialog first rendered mid-screen instead of anchored to the bottom: it lived inside `.view`, whose entry animation leaves a transform that hijacks `position: fixed` for descendants. Overlays are portalled to `document.body` now.
 

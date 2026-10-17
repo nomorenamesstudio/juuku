@@ -66,6 +66,8 @@ export interface Playlist {
   owner?: string;
   created?: string;
   changed?: string;
+  /** the Favorites playlist owned by the heart button */
+  protected?: boolean;
 }
 
 export interface Favorites {

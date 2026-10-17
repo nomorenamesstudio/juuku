@@ -312,6 +312,8 @@ const playlistMeta = (entry) => ({
   coverArt: entry.coverArt,
   created: entry.created,
   changed: entry.changed,
+  // the heart button owns this one; deleting it would orphan every favourite
+  protected: entry.name === FAVORITES_PLAYLIST,
 });
 
 app.get('/api/playlists', wrap(async (_req, res) => {
@@ -346,6 +348,9 @@ app.post('/api/playlists/:id/songs', wrap(async (req, res) => {
 app.delete('/api/playlists/:id', wrap(async (req, res) => {
   const response = await call('getPlaylist', { id: req.params.id }).catch(() => null);
   const name = response?.playlist?.name;
+  if (name === FAVORITES_PLAYLIST) {
+    throw new ApiError(409, `“${FAVORITES_PLAYLIST}” is where the heart saves tracks - it can’t be deleted`);
+  }
   await call('deletePlaylist', { id: req.params.id });
   res.json({ deleted: req.params.id, name });
 }));
