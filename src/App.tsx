@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { NowBar } from './MiniPlayer';
 import { ArtistIcon, HeartIcon, LibraryIcon, QueueIcon } from './icons';
 import { navigate, useRoute } from './router';
@@ -25,7 +26,16 @@ const TABS = [
 export default function App() {
   const jbox = useJukebox();
   const { route } = useRoute();
+  const [lyricsOpen, setLyricsOpen] = useState(false);
   const isPlayer = route.name === 'player';
+  // on phones the full-screen player owns the screen, except in lyrics mode where
+  // the mini player and tabs come back so you can still drive playback
+  const chrome = !isPlayer || lyricsOpen;
+
+  // leaving the player route should not leave lyrics mode armed for next time
+  useEffect(() => {
+    if (route.name !== 'player' && lyricsOpen) setLyricsOpen(false);
+  }, [route.name, lyricsOpen]);
   const count = jbox.entries.length;
 
   const section =
@@ -52,14 +62,20 @@ export default function App() {
       case 'queue':
         return <QueueView jbox={jbox} />;
       case 'player':
-        return <PlayerView jbox={jbox} />;
+        return (
+          <PlayerView
+            jbox={jbox}
+            lyricsOpen={lyricsOpen}
+            onLyricsOpenChange={setLyricsOpen}
+          />
+        );
       default:
         return <Library jbox={jbox} tab={route.tab} />;
     }
   })();
 
   return (
-    <div className={`shell ${isPlayer ? 'shell-player' : ''}`}>
+    <div className={`shell ${isPlayer ? 'shell-player' : ''} ${lyricsOpen ? 'lyrics-open' : ''}`}>
       <aside className="rail" aria-label="Main">
         <button className="wordmark" onClick={() => navigate('/library/albums')}>
           juicebox
@@ -113,9 +129,9 @@ export default function App() {
 
         <main className="content">{view}</main>
 
-        {count > 0 && <NowBar jbox={jbox} />}
+        {count > 0 && <NowBar jbox={jbox} onOpen={isPlayer && lyricsOpen ? () => setLyricsOpen(false) : undefined} />}
 
-        {!isPlayer && (
+        {chrome && (
           <nav className="tabbar" aria-label="Main">
             {TABS.map(({ path, label, icon: Icon }) => (
               <button

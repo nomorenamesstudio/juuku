@@ -67,9 +67,18 @@ function LyricsPane({ lyrics, activeLine }: { lyrics: Lyrics | null; activeLine:
   );
 }
 
-export function PlayerView({ jbox }: { jbox: Jukebox }) {
+export function PlayerView({
+  jbox,
+  lyricsOpen,
+  onLyricsOpenChange,
+}: {
+  jbox: Jukebox;
+  lyricsOpen: boolean;
+  onLyricsOpenChange: (open: boolean) => void;
+}) {
   const { current, status, entries } = jbox;
-  const [showLyrics, setShowLyrics] = useState(false);
+  const showLyrics = lyricsOpen;
+  const setShowLyrics = onLyricsOpenChange;
   const [trackDraft, setTrackDraft] = useState<number | null>(null);
   const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
   const trackTimer = useRef<number | undefined>(undefined);
@@ -98,7 +107,7 @@ export function PlayerView({ jbox }: { jbox: Jukebox }) {
 
   if (!current) {
     return (
-      <div className="view player">
+      <div className={`view player ${showLyrics ? 'lyrics-on' : ''}`}>
         <button className="back" onClick={() => window.history.back()}>
           <ChevronDownIcon size={18} /> Back
         </button>
@@ -126,7 +135,7 @@ export function PlayerView({ jbox }: { jbox: Jukebox }) {
   const gain = volumeDraft ?? status?.gain ?? 1;
 
   return (
-    <div className="view player">
+    <div className={`view player ${showLyrics ? 'lyrics-on' : ''}`}>
       <header className="player-top">
         <button className="icon-button player-minimize" onClick={() => window.history.back()} aria-label="Minimize player">
           <ChevronDownIcon size={22} />
@@ -216,7 +225,7 @@ export function PlayerView({ jbox }: { jbox: Jukebox }) {
             </button>
             <button
               className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
-              onClick={() => setShowLyrics((value) => !value)}
+              onClick={() => setShowLyrics(!showLyrics)}
               aria-pressed={showLyrics}
               aria-label="Toggle lyrics"
             >

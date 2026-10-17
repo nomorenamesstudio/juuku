@@ -133,6 +133,40 @@ h1.display {
   display: none;
 }
 
+/* lyrics mode keeps the phone's chrome: you can still play, skip and queue */
+.shell-player.lyrics-open .nowbar {
+  display: flex;
+}
+
+.shell-player.lyrics-open .content {
+  padding-bottom: calc(4.2rem + 4.1rem + env(safe-area-inset-bottom));
+}
+
+.player.lyrics-on {
+  /* the bar + tabs are back in this mode, so the lyrics get the rest of the screen */
+  height: calc(100dvh - 8.3rem - env(safe-area-inset-bottom));
+  min-height: 0;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.player.lyrics-on .lyrics {
+  max-height: 100%;
+  height: 100%;
+}
+
+.player.lyrics-on .player-stage {
+  flex: 1;
+  min-height: 0;
+}
+
+.player.lyrics-on .player-meta,
+.player.lyrics-on .scrub,
+.player.lyrics-on .transport,
+.player.lyrics-on .player-bottom {
+  display: none;
+}
+
 .page {
   display: flex;
   flex-direction: column;

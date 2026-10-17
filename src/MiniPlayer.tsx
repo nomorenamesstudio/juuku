@@ -16,7 +16,7 @@ import { navigate } from './router';
 import type { Jukebox } from './useJukebox';
 
 /** Bottom bar: compact mini player on phones, full transport bar on wide screens. */
-export function NowBar({ jbox }: { jbox: Jukebox }) {
+export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void }) {
   const { current, status, entries } = jbox;
   const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
   const [positionDraft, setPositionDraft] = useState<number | null>(null);
@@ -70,7 +70,7 @@ export function NowBar({ jbox }: { jbox: Jukebox }) {
       />
 
       <div className="nowbar-left">
-        <button className="nowbar-open" onClick={() => navigate('/player')} aria-label="Open the player">
+        <button className="nowbar-open" onClick={onOpen ?? (() => navigate('/player'))} aria-label="Open the player">
           <span className="nowbar-art">
             {current.coverArt ? <img src={coverUrl(current.coverArt, 160)} alt="" /> : null}
           </span>
