@@ -61,6 +61,10 @@ body,
   min-height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background:
@@ -1453,6 +1457,13 @@ h1.display {
   .eq.on i {
     animation: none;
     height: 70%;
+  }
+}
+
+/* iOS Safari zooms any focused field under 16px - keep the search at 16 on phones */
+@media (max-width: 899px) {
+  .searchbar input {
+    font-size: 16px;
   }
 }
 
