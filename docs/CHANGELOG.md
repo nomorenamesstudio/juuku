@@ -4,6 +4,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — browse-only mode: a Navidrome without jukebox mode answers **501** ("This endpoint is not implemented") for `jukeboxControl`, not just "Jukebox is disabled". `/api/state` now returns an empty queue in that case, so the library, playlists and search work against any Navidrome without an error strip; `/api/health` reports `jukebox.enabled: false`.
+- **Feature** — `scripts/remote-instance.sh`: serves the built app against another Navidrome on a second port, credentials from the environment, so the local sandbox stays untouched.
+- **Fix** — artist rows without any art showed a blank circle: the initial fallback lost its size when the avatar rule was narrowed to `img`. It is 44 px with the first letter again.
+- **Verified** — pointed at the main library (266 albums, 73 artists): first grid 112 ms, album detail 17 ms, cover 137 ms, search 28 ms, paging to offset 240 works, no console errors.
+
 - **Change** — the `Favorites` playlist can’t be deleted: `/api/playlists/:id` answers 409 for it and the detail page hides the Delete action, with a one-liner explaining that the heart owns it. Other playlists delete as before.
 
 - **Feature** — deleting a playlist, with a real confirmation dialog ("the playlist goes, the tracks stay"), Cancel first, then a solid Delete. `DELETE /api/playlists/:id` calls Navidrome's `deletePlaylist` and returns the name for the toast.

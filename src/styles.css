@@ -735,11 +735,17 @@ h1.display {
 }
 
 .artist-avatar.empty {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--raise);
   display: grid;
   place-items: center;
   font-family: 'Instrument Serif', Georgia, serif;
   font-size: 1.1rem;
   color: var(--muted);
+  text-transform: uppercase;
 }
 
 .link-text {

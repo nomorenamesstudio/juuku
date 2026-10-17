@@ -18,6 +18,17 @@ Verified through a real external hop (the Pi on the same LAN): `:3100` and `:310
 
 There is **no authentication** in front of Juicebox, so on the LAN anyone can play, skip and rewrite the queue, and `/api/*` is open. Fine for a home network while this is a POC; not something to expose to the internet. The committed `.env.example` keeps `HOST=127.0.0.1` for that reason.
 
+## Pointing at another Navidrome (e.g. the main library)
+
+Read-only is fine: a server with jukebox mode off answers 501 for `jukeboxControl`, and the app shows no queue instead of failing. Credentials stay out of git:
+
+```sh
+NAVIDROME_URL=http://10.10.10.10:4533 NAVIDROME_USER=juicebox NAVIDROME_PASSWORD=… \
+  ./scripts/remote-instance.sh 3102
+```
+
+Environment variables win over `.env`, so the sandbox on `:3100` keeps running unchanged. On the Pi the `juicebox` user was created with `docker exec -it navidrome /app/navidrome user create --username juicebox --name Juicebox` (no password flag - it prompts twice, so it needs a TTY). Playback through that instance would need `Jukebox.Enabled`, `mpv` and an audio device on the Pi first.
+
 ## The throwaway Navidrome
 
 Never point development at the Pi instance. `docker-compose.yml` runs a separate Navidrome with jukebox enabled:

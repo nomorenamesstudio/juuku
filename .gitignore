@@ -5,3 +5,4 @@ sandbox/music/
 sandbox/data/
 .tmp/
 tsconfig.tsbuildinfo
+.env.remote

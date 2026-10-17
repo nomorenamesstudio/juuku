@@ -56,6 +56,16 @@ const album = (entry) => ({
   coverArt: entry.coverArt,
 });
 
+/** Servers without jukebox mode (the main library, for browsing) fail every queue call. */
+// Navidrome with jukebox mode off does not even mount the route: it answers 501
+// "This endpoint is not implemented", and with AdminOnly it refuses per user.
+const jukeboxOff = (err) => /jukebox is disabled|admin only|not implemented|\b501\b/i.test(err?.message ?? '');
+
+const emptyState = () => ({
+  status: { currentIndex: -1, playing: false, gain: 1, position: 0 },
+  entries: [],
+});
+
 const playlistOf = (response) => ({
   status: {
     currentIndex: response.currentIndex,
@@ -76,12 +86,13 @@ const statusOf = (response) => ({
 // ---------------------------------------------------------------- connection
 
 app.get('/api/health', wrap(async (_req, res) => {
-  const [ping, jukebox] = await Promise.all([
-    call('ping'),
-    call('jukeboxControl', { action: 'status' }).then(statusOf, (err) => ({ error: err.message })),
-  ]);
+  const ping = await call('ping');
+  const jukebox = await call('jukeboxControl', { action: 'status' }).then(
+    (response) => ({ enabled: true, ...statusOf(response) }),
+    (err) => ({ enabled: false, error: err.message }),
+  );
   res.json({
-    ok: jukebox.error === undefined,
+    ok: true,
     ...serverInfo(),
     navidrome: (ping.serverVersion ?? ping.version).split(' ')[0],
     apiVersion: ping.version,
@@ -93,8 +104,12 @@ app.get('/api/health', wrap(async (_req, res) => {
 
 /** Single poll target: queue + playback state in one round trip. */
 app.get('/api/state', wrap(async (_req, res) => {
-  const response = await call('jukeboxControl', { action: 'get' });
-  res.json(playlistOf(response.jukeboxPlaylist));
+  const response = await call('jukeboxControl', { action: 'get' }).catch((err) => {
+    // browsing a library whose server has jukebox mode off is fine; just show no queue
+    if (jukeboxOff(err)) return null;
+    throw err;
+  });
+  res.json(response ? playlistOf(response.jukeboxPlaylist) : emptyState());
 }));
 
 app.post('/api/control', wrap(async (req, res) => {
