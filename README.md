@@ -98,6 +98,10 @@ docker-compose.yml   the throwaway Navidrome with jukebox enabled
 docs/            INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
 ```
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ## Built with AI
 
 Hand-written and AI-enhanced. The specification, decisions and review are mine; the implementation was drafted with DeepSeek V4.1 Flash in DeepSeek Harness. The commit history and [docs/CHANGELOG.md](docs/CHANGELOG.md) show what landed when.
