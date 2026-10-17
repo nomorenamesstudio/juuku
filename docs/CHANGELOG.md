@@ -4,6 +4,7 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — the album year moved onto the facts line (`Various Artists · 2012 · 14 tracks · 24 min`) instead of sitting under the title, where it landed on a line of its own whenever the title wrapped.
 - **Fix** — long album titles broke the mobile hero: a 70-character title had ~215px next to a 122px cover and pushed the facts and the buttons around. On phones the hero is one column now (cover, then title, then facts, then actions), the cover is bigger, and the track count and duration are unbreakable units so "2 hr 29 min" never leaves "min" alone. Desktop keeps the cover beside the title at 200px. Verified with the longest titles in the library at 320px and 390px: no horizontal overflow, facts on one line.
 
 - **Docs** — SETUP explains installing Juuku as a PWA on a phone: it works from a plain LAN address today, HTTPS is what unlocks secure-context features (service workers, push), and `tailscale serve` provides a certificate over MagicDNS without publishing anything — `funnel` is the one to avoid.

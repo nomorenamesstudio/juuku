@@ -37,7 +37,6 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
         <div className="album-meta">
           <div className="album-title">
             <h1 className="display">{album?.name ?? '…'}</h1>
-            {album?.year ? <span className="year">{album.year}</span> : null}
           </div>
           <p className="album-facts">
             {album?.artistId ? (
@@ -47,6 +46,11 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             ) : (
               album?.artist
             )}{' '}
+            {album?.year ? (
+              <>
+                · <span className="fact">{album.year}</span>{' '}
+              </>
+            ) : null}
             · <span className="fact">{songs.length} tracks</span> ·{' '}
             <span className="fact">{
               formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))
