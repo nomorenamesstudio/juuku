@@ -113,6 +113,28 @@ and every API call is relative to the document rather than the host root. Nothin
 in the server knows about the prefix — the proxy removes it. See
 `docs/ARCHITECTURE.md` before adding an absolute URL back.
 
+### Installing it as a PWA, and why HTTPS is worth it
+
+Juuku ships a manifest and an `apple-touch-icon`, so **Share → Add to Home Screen**
+in Safari gives you a standalone app with the record icon. That works over a plain
+`http://` LAN address — nothing in the current app needs a secure context.
+
+HTTPS does matter the moment you want more than that: service workers, push
+notifications and the permission-gated APIs are only available in a
+[secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Secure_Contexts)
+(HTTPS, or `localhost`), and on iOS 16.4+ web push additionally requires the app to
+be installed on the home screen. `tailscale serve` gives you a real certificate over
+MagicDNS with nothing exposed to the public internet — tailnet only:
+
+```sh
+sudo tailscale serve --bg --set-path /juuku http://127.0.0.1:3101
+# open https://<machine>.<your-tailnet>.ts.net/juuku/ in Safari, then Add to Home Screen
+```
+
+Do **not** reach for `tailscale funnel` for this: `serve` is tailnet-only, `funnel`
+publishes to the internet, and there is no login in front of Juuku unless you set
+`JUUKU_PASSWORD`.
+
 ## Pointing at another Navidrome (a real library)
 
 Read-only is fine: a server with jukebox mode off answers 501 for `jukeboxControl`, and the app shows no queue instead of failing. Credentials stay out of git:

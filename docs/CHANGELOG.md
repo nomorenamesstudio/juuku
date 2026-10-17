@@ -4,6 +4,8 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Docs** — SETUP explains installing Juuku as a PWA on a phone: it works from a plain LAN address today, HTTPS is what unlocks secure-context features (service workers, push), and `tailscale serve` provides a certificate over MagicDNS without publishing anything — `funnel` is the one to avoid.
+
 - **Feature** — a Buy Me a Coffee link in the README and `.github/FUNDING.yml`, so GitHub renders the Sponsor button.
 
 - **Feature** — MIT licence, so the repo is actually open source rather than source-available.
