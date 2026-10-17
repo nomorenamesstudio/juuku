@@ -26,12 +26,17 @@ export function LoginView({ onSignedIn }: { onSignedIn: () => void }) {
   return (
     <main className="view login-view">
       <header className="view-head">
-        <p className="wordmark-stack login-mark">
-          <span className="wordmark-latin">juuku</span>
-          <span className="wordmark-kana" lang="ja">
-            ジューク
+        <div className="wordmark login-mark">
+          <span className="wordmark-stack">
+            <span className="wordmark-latin">juuku</span>
+            <span className="wordmark-kana" lang="ja">
+              ジューク
+            </span>
           </span>
-        </p>
+          {/* the LED glows here on purpose: there is no connection to report yet,
+              and a dead dot on the door would just look broken */}
+          <span className="led good" />
+        </div>
         <h1 className="display">Sign in</h1>
         <p className="fineprint">This jukebox asks for its password before it takes orders.</p>
       </header>
