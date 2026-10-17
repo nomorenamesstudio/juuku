@@ -292,7 +292,9 @@ h1.display {
 }
 
 .wordmark-kana {
-  margin-top: 0.18rem;
+  /* tucked under the latin name, indented clear of the j's descender */
+  margin-top: 0.02rem;
+  margin-left: 0.5rem;
   font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
   font-size: 0.58rem;
   font-weight: 500;
@@ -305,6 +307,7 @@ h1.display {
 }
 
 .wordmark.small .wordmark-kana {
+  margin-left: 0.4rem;
   font-size: 0.52rem;
   letter-spacing: 0.3em;
 }
