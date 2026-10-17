@@ -19,7 +19,9 @@ docker run -d --name juuku -p 3101:3101 --read-only --cap-drop ALL \
 ```
 
 Then open `http://<host>:3101` on the phone. `deploy/compose.yml` is the fuller
-version (read-only rootfs, no capabilities, healthcheck).
+version (read-only rootfs, no capabilities, healthcheck), and
+[docs/SETUP.md](docs/SETUP.md) covers the rest, including
+[running it behind a path prefix](docs/SETUP.md#behind-a-path-prefix-tailscale-a-reverse-proxy-subpath).
 
 ### Settings
 
@@ -47,7 +49,8 @@ website.
 - **Favorites** — the heart writes to a `Favorites` playlist in Navidrome, so other clients see it too.
 - **Lyrics** — synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none.
 
-Works on a phone first and gets a sidebar on wide screens.
+Works on a phone first and gets a sidebar on wide screens, and installs to a home
+screen as a PWA — [that needs HTTPS, which is easy on a private network](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).
 
 ## Quick start
 
@@ -58,7 +61,9 @@ npm install
 npm run dev                 # api :3101 + web :3100
 ```
 
-Open <http://127.0.0.1:3100>.
+Open <http://127.0.0.1:3100>. The sandbox needs albums first: drop a few into
+`sandbox/music`, then run `./scripts/sandbox-up.sh` again. Everything else — Docker,
+a phone on the LAN, credentials — is in [docs/SETUP.md](docs/SETUP.md).
 
 `npm run dev` runs two processes: the API server (`server/`, holds the Subsonic credentials) and Vite. `npm run build && npm start` serves the built app and the API from `:3101` alone.
 
@@ -72,6 +77,18 @@ Browser → Juuku API → Subsonic `/rest/jukeboxControl` → Navidrome → `mpv
 - One queue, one device: Navidrome's jukebox has a single global playback queue. `Jukebox.AdminOnly` decides who may drive it.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the decisions and [docs/API.md](docs/API.md) for the exposed surface.
+
+## Docs
+
+| | |
+|---|---|
+| [Setup](docs/SETUP.md) | sandbox, Docker, phone testing, credentials, traps |
+| [Setup → path prefix](docs/SETUP.md#behind-a-path-prefix-tailscale-a-reverse-proxy-subpath) | serving it at `/juuku` behind `tailscale serve` or any proxy subpath |
+| [Setup → PWA](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it) | home-screen install, and why HTTPS unlocks the rest |
+| [Architecture](docs/ARCHITECTURE.md) | how jukebox polling, repeat and the queue model work |
+| [API](docs/API.md) | the HTTP surface the UI talks to |
+| [Security](SECURITY.md) | threat model, the no-login default, reverse-proxy recipe |
+| [Changelog](docs/CHANGELOG.md) | dated entries |
 
 ## Configuration
 
