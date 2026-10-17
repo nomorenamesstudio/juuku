@@ -50,20 +50,21 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             · {songs.length} tracks ·{' '}
             {formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))}
           </p>
-          <div className="actions">
-            <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs)}>
-              <PlayIcon size={18} /> Play album
-            </button>
-            <button
-              className="secondary"
-              disabled={jbox.busy || songs.length === 0}
-              onClick={() => jbox.addToQueue(songs, `Queued ${album?.name}`)}
-            >
-              <PlusIcon size={18} /> Add to queue
-            </button>
-          </div>
         </div>
       </header>
+
+      <div className="actions album-actions">
+        <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs)}>
+          <PlayIcon size={18} /> Play album
+        </button>
+        <button
+          className="secondary"
+          disabled={jbox.busy || songs.length === 0}
+          onClick={() => jbox.addToQueue(songs, `Queued ${album?.name}`)}
+        >
+          <PlusIcon size={18} /> Add to queue
+        </button>
+      </div>
 
       <div className="track-table">
         <div className="track-head" aria-hidden>

@@ -137,7 +137,13 @@ export default function App() {
           {view}
         </main>
 
-        {count > 0 && <NowBar jbox={jbox} onOpen={isPlayer && lyricsOpen ? () => setLyricsOpen(false) : undefined} />}
+        {count > 0 && (
+          <NowBar
+            jbox={jbox}
+            expanded={isPlayer}
+            onOpen={isPlayer && lyricsOpen ? () => setLyricsOpen(false) : undefined}
+          />
+        )}
 
         {chrome && (
           <nav className="tabbar" aria-label="Main">

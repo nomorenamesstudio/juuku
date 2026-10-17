@@ -11,11 +11,11 @@ import {
   QueueIcon,
   VolumeIcon,
 } from './icons';
-import { navigate } from './router';
+import { goBack, navigate } from './router';
 import type { Jukebox } from './useJukebox';
 
 /** Bottom bar: compact mini player on phones, full transport bar on wide screens. */
-export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void }) {
+export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () => void; expanded?: boolean }) {
   const { current, status, entries } = jbox;
   const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
   const [positionDraft, setPositionDraft] = useState<number | null>(null);
@@ -115,8 +115,12 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
         <button className="icon-button bar-only" onClick={() => navigate('/queue')} aria-label="Open the queue">
           <QueueIcon size={18} />
         </button>
-        <button className="icon-button bar-only" onClick={() => navigate('/player')} aria-label="Expand the player">
-          <ChevronDownIcon size={18} style={{ transform: 'rotate(180deg)' }} />
+        <button
+          className="icon-button bar-only"
+          onClick={() => (expanded ? goBack() : navigate('/player'))}
+          aria-label={expanded ? 'Collapse the player' : 'Expand the player'}
+        >
+          <ChevronDownIcon size={18} style={expanded ? undefined : { transform: 'rotate(180deg)' }} />
         </button>
         </div>
       </div>

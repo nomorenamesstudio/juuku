@@ -200,9 +200,6 @@ export function PlayerView({
       <div className="player-inner">
       <span className="player-grabber" aria-hidden />
       <header className="player-top">
-        <button className="icon-button player-minimize" onClick={() => window.history.back()} aria-label="Minimize player">
-          <ChevronDownIcon size={18} />
-        </button>
         <span className="player-context">
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
         </span>
