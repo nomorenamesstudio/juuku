@@ -4,7 +4,7 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
-- **Change** — README hero: no tagline, a smaller lockup, and the logo asset now has a symmetric box so centring it centres the ink (measured: ink centre 399/400 and 204.5/205).
+- **Change** — README hero: no tagline, smaller, and the lockup is now the app's own wordmark scaled with a transform instead of a generated SVG. The outline export could not reproduce the browser's kerning, so the kana sat a few percent off no matter how the anchors were measured; `public/logo.svg` and its build script are gone rather than left as a near-duplicate that drifts.
 - **Fix** — `Jukebox is admin only (code 50)` was being reported as "jukebox mode off". The two cases are now separate messages, and `docs/SETUP.md` / `SECURITY.md` say plainly that the Navidrome account has to be an admin, with the CLI commands to create and promote it.
 - **Verified** — jukebox mode on the homelab Pi: `/api/play` queues and starts, position advances, the AMS-24 sits in ALSA `state: RUNNING` under mpv, and skip, pause/resume and `setGain` all answer 200 through the deployed app.
 
