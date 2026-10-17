@@ -91,6 +91,23 @@ keeps the old behaviour: no login, LAN only.
 Read [SECURITY.md](../SECURITY.md) before exposing the port to anything beyond your
 own network — the app has no login by design.
 
+## Behind a path prefix (Tailscale, a reverse proxy subpath)
+
+Juuku works mounted at `/juuku` instead of the root, which is how it is served on
+the homelab: `tailscale serve` on the Pi mounts a path to the container port and
+strips it before proxying, exactly like the `roefik` dashboard next to it.
+
+```sh
+sudo tailscale serve --bg --set-path /juuku http://127.0.0.1:3101
+# -> https://<machine>.<tailnet>.ts.net/juuku/
+```
+
+That works because the build is prefix-agnostic: `vite` emits relative asset URLs,
+`index.html` links and `manifest.webmanifest` resolve against their own location,
+and every API call is relative to the document rather than the host root. Nothing
+in the server knows about the prefix — the proxy removes it. See
+`docs/ARCHITECTURE.md` before adding an absolute URL back.
+
 ## Pointing at another Navidrome (e.g. the main library)
 
 Read-only is fine: a server with jukebox mode off answers 501 for `jukeboxControl`, and the app shows no queue instead of failing. Credentials stay out of git:

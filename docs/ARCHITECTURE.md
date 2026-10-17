@@ -56,3 +56,17 @@ OFL, because system fallbacks gave a different face on every device), and the LE
 dot. Anything that needs it bigger — the README hero — clones that markup and
 scales it with a transform, rather than redrawing it: an outline export cannot
 reproduce the browser's kerning and drifted by a few percent on the kana.
+
+## URLs are relative on purpose
+
+The app is served at `/` on the LAN and at `/juuku` behind `tailscale serve`, which
+strips the mount path before proxying (the same trick the `roefik` dashboard uses).
+Everything on the client side is therefore relative:
+
+- `vite` builds with `base: './'` (dev keeps `/`), so assets are `./assets/…`
+- `index.html` links and `manifest.webmanifest` (`start_url`, `scope`, icons) are
+  relative, so the manifest resolves next to itself
+- API calls go to `api/…`, not `/api/…`, and are resolved against the document
+
+One absolute URL anywhere breaks the prefixed deployment while still working on the
+LAN, which makes it an easy mistake to ship.
