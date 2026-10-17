@@ -28,10 +28,19 @@ const WRITE_ACTIONS = new Set(['set', 'start', 'stop', 'skip', 'add', 'clear', '
 const app = express();
 app.use(express.json());
 
+const jukeboxOff = (err) => /jukebox is disabled|admin only|not implemented|\b501\b/i.test(err?.message ?? '');
+
+const JUKEBOX_OFF =
+  'Navidrome has jukebox mode off, so it cannot play anything. Set ND_JUKEBOX_ENABLED=true on Navidrome (Jukebox.Enabled in navidrome.toml), restart it, and make sure the machine running Navidrome has mpv and an audio output.';
+
 const wrap = (handler) => (req, res) => handler(req, res).catch((err) => fail(res, err));
 
 function fail(res, err) {
   const status = err instanceof ApiError ? err.status : 500;
+  // the common misconfiguration: say what to do instead of passing a bare code on
+  if (jukeboxOff(err)) {
+    return res.status(501).json({ error: JUKEBOX_OFF });
+  }
   if (status >= 500) console.error(err);
   res.status(status).json({ error: err.message ?? 'Unknown error' });
 }
@@ -66,7 +75,7 @@ const album = (entry) => ({
 /** Servers without jukebox mode (the main library, for browsing) fail every queue call. */
 // Navidrome with jukebox mode off does not even mount the route: it answers 501
 // "This endpoint is not implemented", and with AdminOnly it refuses per user.
-const jukeboxOff = (err) => /jukebox is disabled|admin only|not implemented|\b501\b/i.test(err?.message ?? '');
+
 
 const emptyState = () => ({
   status: { currentIndex: -1, playing: false, gain: 1, position: 0 },

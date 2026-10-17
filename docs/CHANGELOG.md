@@ -4,6 +4,9 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Fix** — a Navidrome with jukebox mode off now answers 501 with what to do ("set ND_JUKEBOX_ENABLED=true … and make sure it has mpv and an audio output") instead of passing the upstream code on as a 502.
+- **Fix** — the error strip no longer disappears before it can be read: the one-second poll used to clear it, so a failed action flashed a message and vanished. It stays until Dismiss (or until an action succeeds).
+
 - **Fix** — the kana in the wordmark fell back to whatever Japanese face the device had (none of the self-hosted fonts carry kana), so the lockup looked different on every machine and could not be scaled faithfully. `ジューク` is now a 2.3 KB Noto Sans JP subset (OFL, self-hosted) used by the app and by the logo.
 - **Feature** — `public/logo.svg`: the lockup as outlines, generated from those same fonts by `scripts/build-logo.py`, with the measured sizes and baselines at the top. The README hero is now that SVG scaled, instead of hand-set type that drifted from the app.
 

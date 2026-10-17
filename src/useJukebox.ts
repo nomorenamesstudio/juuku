@@ -37,6 +37,7 @@ export interface Jukebox {
   favorites: Song[];
   favoriteIds: Set<string>;
   error: string | null;
+  dismissError: () => void;
   busy: boolean;
   toast: string | null;
   notify: (message: string) => void;
@@ -128,8 +129,9 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
         duration: next.entries[next.status.currentIndex]?.duration ?? 0,
         lastIndex: next.entries.length - 1,
       };
+      // deliberately not clearing `error` here: a successful poll used to erase the
+      // message from a failed action before anyone could read it
       setState(next);
-      setError(null);
       if (previous) void handleQueueEnd(next, previous);
     } catch (err) {
       setError((err as Error).message);
@@ -316,6 +318,7 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     favorites,
     favoriteIds: new Set(favorites.map((song) => song.id)),
     error,
+    dismissError: () => setError(null),
     busy,
     toast,
     notify,

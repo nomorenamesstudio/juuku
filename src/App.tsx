@@ -260,7 +260,7 @@ export default function App() {
       {jbox.error && (
         <div className="error-strip" role="alert">
           {jbox.error}
-          <button onClick={jbox.refresh}>Retry</button>
+          <button onClick={jbox.dismissError}>Dismiss</button>
         </div>
       )}
 
