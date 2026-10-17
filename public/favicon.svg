@@ -3,4 +3,5 @@
   <circle cx="32" cy="32" r="19" fill="none" stroke="#f0a24a" stroke-width="4"/>
   <circle cx="32" cy="32" r="4" fill="#f0a24a"/>
   <path d="M32 13a19 19 0 0 1 19 19" stroke="#f4ead9" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <circle cx="55" cy="10" r="5" fill="#f0a24a"/>
 </svg>

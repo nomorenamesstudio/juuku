@@ -1638,9 +1638,9 @@ h1.display {
 }
 
 .login-mark {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  /* shrink to the text so the inner right alignment of the stack has an edge,
+     instead of the mark stretching and hugging the page margin */
+  width: fit-content;
   margin-bottom: 1.6rem;
 }
 

@@ -8,6 +8,10 @@
       <stop offset="0" stop-color="#f7b769"/>
       <stop offset="1" stop-color="#e08f33"/>
     </linearGradient>
+    <radialGradient id="glowDot" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f0a24a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#f0a24a" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
   <rect width="512" height="512" fill="url(#glow)"/>
@@ -29,4 +33,8 @@
   <!-- highlight: reads as the tonearm side of the record -->
   <path d="M256 102a154 154 0 0 1 109 45" fill="none" stroke="#f4ead9" stroke-opacity="0.92"
         stroke-width="15" stroke-linecap="round"/>
+
+  <!-- the LED from the wordmark: the little dot that says the box is on -->
+  <circle cx="392" cy="120" r="46" fill="url(#glowDot)"/>
+  <circle cx="392" cy="120" r="22" fill="url(#label)"/>
 </svg>

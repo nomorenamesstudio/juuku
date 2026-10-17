@@ -4,6 +4,9 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Change** — the app icon carries the amber LED dot from the wordmark, with a soft glow, in the square, maskable and favicon variants.
+- **Fix** — the sign-in screen's lockup had the kana hanging off to the left of the name and the block pinned to the page margin: it now uses the same right-aligned stack as the rest of the app, shrunk to its content.
+
 - **Feature** — optional shared-password login (`JUUKU_PASSWORD`, off by default so LAN use stays frictionless). Sessions are a signed expiry stamp in an HttpOnly, SameSite=Lax cookie (no server-side store; changing the password ends every session), the compare is timing-safe, failures are throttled per address, and the shell does not mount — nor poll — until the session is known. `server/auth.mjs` carries three tests for the token, expiry, cookie parsing and the throttle.
 - **Change** — the API answers `/api/session`, `/api/login` and `/api/logout`; everything else under `/api` requires the session when a password is configured.
 
