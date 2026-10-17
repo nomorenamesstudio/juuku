@@ -149,7 +149,7 @@ export function PlayerView({
           aria-pressed={showLyrics}
           aria-label="Toggle lyrics"
         >
-          <MicIcon size={18} />
+          <MicIcon size={16} />
         </button>
         <button
           className={`icon-button fav ${jbox.favoriteIds.has(current.id) ? 'is-fav' : ''}`}
@@ -157,7 +157,7 @@ export function PlayerView({
           aria-pressed={jbox.favoriteIds.has(current.id)}
           aria-label="Favorite this track"
         >
-          <HeartIcon size={20} filled={jbox.favoriteIds.has(current.id)} />
+          <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
         </button>
       </header>
 
@@ -228,7 +228,7 @@ export function PlayerView({
               disabled={jbox.busy}
               aria-label={status?.playing ? 'Pause' : 'Play'}
             >
-              {status?.playing ? <PauseIcon size={26} /> : <PlayIcon size={26} />}
+              {status?.playing ? <PauseIcon size={26} filled /> : <PlayIcon size={26} filled />}
             </button>
             <button
               className="icon-button"
@@ -242,7 +242,7 @@ export function PlayerView({
 
           <div className="player-bottom">
             <label className="volume-inline">
-              <VolumeIcon size={16} />
+              <VolumeIcon size={18} />
               <input
                 type="range"
                 min={0}

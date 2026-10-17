@@ -71,10 +71,10 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
           <span>Title</span>
           <span className="track-head-time">Time</span>
           <span className="track-head-icon">
-            <HeartIcon size={14} />
+            <HeartIcon size={16} />
           </span>
           <span className="track-head-icon">
-            <PlusIcon size={14} />
+            <PlusIcon size={16} />
           </span>
         </div>
       <ul className="rows album-tracks">

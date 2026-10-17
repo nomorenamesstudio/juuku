@@ -52,10 +52,10 @@ export function SongRow({
         aria-pressed={favorite}
         aria-label={favorite ? `Remove ${song.title} from favorites` : `Favorite ${song.title}`}
       >
-        <HeartIcon filled={favorite} size={16} />
+        <HeartIcon filled={favorite} size={18} />
       </button>
       <button className="row-icon" onClick={onAdd} aria-label={`Add ${song.title} to queue`}>
-        <PlusIcon size={16} />
+        <PlusIcon size={18} />
       </button>
     </li>
   );
@@ -81,7 +81,7 @@ export function QueueRow({ song, index, active, playing, onSkip, onRemove }: Que
       </button>
       <span className="row-time">{formatTime(song.duration)}</span>
       <button className="row-icon" onClick={onRemove} aria-label={`Remove ${song.title} from queue`}>
-        <PlusIcon size={16} style={{ transform: 'rotate(45deg)' }} />
+        <PlusIcon size={18} style={{ transform: 'rotate(45deg)' }} />
       </button>
     </li>
   );

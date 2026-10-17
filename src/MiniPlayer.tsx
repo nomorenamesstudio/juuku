@@ -77,7 +77,7 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
           <PrevIcon size={18} />
         </button>
         <button className="nowbar-play" onClick={jbox.togglePlay} disabled={jbox.busy} aria-label={status.playing ? 'Pause' : 'Play'}>
-          {status.playing ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
+          {status.playing ? <PauseIcon size={20} filled /> : <PlayIcon size={20} filled />}
         </button>
         <button
           className="icon-button"
@@ -99,7 +99,7 @@ export function NowBar({ jbox, onOpen }: { jbox: Jukebox; onOpen?: () => void })
           <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
         </button>
         <label className="nowbar-volume bar-only">
-          <VolumeIcon size={16} />
+          <VolumeIcon size={18} />
           <input
             type="range"
             min={0}

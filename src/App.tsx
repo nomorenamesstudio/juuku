@@ -122,7 +122,7 @@ export default function App() {
               <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
             </button>
             <button className="icon-button" onClick={jbox.refresh} aria-label="Refresh state">
-              <RefreshIcon size={20} />
+              <RefreshIcon size={18} />
             </button>
           </div>
         )}

@@ -53,7 +53,7 @@ export function FavoritesView({ jbox }: { jbox: Jukebox }) {
       )}
 
       <p className="fineprint tail">
-        <HeartIcon size={14} filled /> marks tracks in the Navidrome playlist — remove one and it disappears from every
+        <HeartIcon size={16} filled /> marks tracks in the Navidrome playlist — remove one and it disappears from every
         client.
       </p>
     </div>
