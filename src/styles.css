@@ -34,6 +34,15 @@
   --amber: #f0a24a;
   --ember: #c9583f;
   --radius: 18px;
+  /* ice glass: translucent surfaces over blurred, slightly saturated backdrop */
+  --glass: rgba(28, 23, 18, 0.52);
+  --glass-strong: rgba(22, 18, 14, 0.82);
+  /* text sitting on glass needs its own tone: over a bright cover the app's dim
+     and muted would fall under 4.5:1 (measured 3.6-3.8 over white) */
+  --glass-text: #c8b8a0;
+  --glass-edge: rgba(244, 234, 217, 0.09);
+  --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --glass-blur: blur(24px) saturate(1.45);
   /* motion */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
@@ -405,11 +414,14 @@ h1.display {
 
 .searchbar input {
   width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
   border-radius: 12px;
   padding: 0.72rem 0.9rem;
   font-size: 0.94rem;
+  box-shadow: var(--glass-sheen), 0 10px 26px -22px #000;
 }
 
 .searchbar input::placeholder {
@@ -435,11 +447,22 @@ h1.display {
 }
 
 
-.library-bar.stuck {
-  /* nearly opaque: at 0.9 the covers underneath stay legible and fight the field */
-  background: rgba(20, 16, 11, 0.97);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 1px 0 var(--line);
+.library-bar.stuck::before {
+  content: '';
+  position: absolute;
+  /* bleeds past the content padding so covers fade out rather than hit an edge */
+  inset: -0.3rem -1.15rem -1.4rem;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--bg) 0%,
+    var(--bg) 42%,
+    rgba(20, 16, 11, 0.86) 68%,
+    rgba(20, 16, 11, 0) 100%
+  );
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
 .segmented {
@@ -879,11 +902,12 @@ h1.display {
   flex-direction: column;
   gap: 0;
   padding: 0.3rem 0.45rem 0.4rem;
-  background: rgba(28, 23, 18, 0.92);
-  backdrop-filter: blur(18px);
-  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
   border-radius: 10px;
-  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--glass-sheen), 0 18px 44px -26px rgba(0, 0, 0, 0.92);
   overflow: hidden;
 }
 
@@ -1006,14 +1030,14 @@ h1.display {
 
 .nowbar-sub {
   font-size: 0.75rem;
-  color: var(--dim);
+  color: var(--glass-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .nowbar-time {
-  color: var(--muted);
+  color: var(--glass-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1169,9 +1193,10 @@ h1.display {
   display: flex;
   height: calc(3.9rem + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: rgba(20, 16, 11, 0.94);
-  backdrop-filter: blur(18px);
-  border-top: 1px solid var(--line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-edge);
 }
 
 .tabbar button {
@@ -1182,7 +1207,7 @@ h1.display {
   justify-content: center;
   gap: 0.12rem;
   font-size: 0.75rem;
-  color: var(--dim);
+  color: var(--glass-text);
   position: relative;
 }
 
@@ -1649,6 +1674,17 @@ h1.display {
 @keyframes fade-in {
   from {
     opacity: 0;
+  }
+}
+
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .searchbar input {
+    background: var(--panel);
+  }
+
+  .nowbar,
+  .tabbar {
+    background: rgba(20, 16, 11, 0.97);
   }
 }
 

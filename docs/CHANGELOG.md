@@ -4,6 +4,9 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — ice glass: the search field, the now-playing deck and the tab bar are translucent surfaces with a blurred, slightly saturated backdrop and a hairline top sheen instead of flat panels. Text that sits on glass moved to its own tone (`--glass-text`), because over a bright cover the regular `--dim` and `--muted` measured 3.6–3.8:1 — the deck's sub line and the tab labels now measure 4.98–5.18:1 against a pure white backdrop, cream 8.1–8.4:1. A `@supports` fallback keeps the surfaces opaque where `backdrop-filter` is missing.
+- **Change** — the pinned library search drops its filled band for a gradient that fades the covers out under it, so nothing reads as a hard-edged toolbar.
+
 - **Feature** — the library search pins to the top once the page title scrolls away, so a long library can be searched from anywhere in the list. It fades in a near-opaque blurred band only while stuck, driven by an `IntersectionObserver` on a one-pixel sentinel, so at rest it still reads as part of the header. The search covers songs, albums and artists, so the Albums/Artists switch stays in the flow and scrolls away. On desktop the field is capped at 34rem instead of spanning 1000px.
 
 - **Fix** — readability pass, measured rather than guessed: root type 15px → 16px, `--dim` was `#6f5f4c` at **3.08:1** (below AA) and is now `#9a8870` (5.5 / 5.2 / 4.8 over bg, panel, raised), `--muted` lifted to `#b6a68c` (7.0–8.0:1). Every informational label under 12px was raised (now-playing sub and time 11.3 → 12, tab labels 10.8 → 12, badge 10.2 → 11.5). The wordmark went 21.6 → 25.6px on phones (24 → 28px in the rail) and its kana 7.8 → 10.4px at weight 600.
