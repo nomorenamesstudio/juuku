@@ -4,6 +4,7 @@ import { ArtistIcon, HeartIcon, LibraryIcon, PlaylistIcon, QueueIcon, RefreshIco
 import { TrackActions, TrackActionsProvider } from './TrackActions';
 import type { Song } from './api';
 import { navigate, useRoute } from './router';
+import { useCounts } from './useCounts';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
 import { ArtistView } from './views/ArtistView';
@@ -33,6 +34,7 @@ export default function App() {
   const jbox = useJukebox();
   const { route } = useRoute();
   const [lyricsOpen, setLyricsOpen] = useState(false);
+  const counts = useCounts();
   const [trackActions, setTrackActions] = useState<{
     songs: Song[];
     playlistId?: string;
@@ -123,6 +125,12 @@ export default function App() {
                 >
                   <Icon size={18} />
                   {label}
+                  {path === '/library/albums' && counts?.albums != null && (
+                    <span className="count-pill">{counts.albums}</span>
+                  )}
+                  {path === '/library/artists' && counts && counts.artists.length > 0 && (
+                    <span className="count-pill">{counts.artists.length}</span>
+                  )}
                   {path === '/queue' && count > 0 && (
                     <span className="badge" key={count}>
                       {count}

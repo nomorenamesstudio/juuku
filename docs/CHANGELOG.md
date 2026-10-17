@@ -4,6 +4,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 
 ## 2026-10-17
 
+- **Feature** — count pills everywhere the browse switch appears: the phone tabs and the desktop rail both show albums/artists totals, from one cached fetch (a module-level hook shared by the rail and the view).
+- **Feature** — a search glyph inside the field.
+- **Change** — on desktop the title and the search share one sticky row, and the row shrinks when pinned (title 2.5rem → 1.5rem, field padding and font down too), taking 53px instead of 72px. The phone keeps its behaviour: title scrolls away, only the field pins.
+- **Fix** — the *first* attempt at that row left the title grey and washed out: the phone bar's gradient is absolutely positioned, and with the bar made static on desktop it escaped to the sticky head and painted over the title. It is now disabled at that breakpoint, with the row carrying its own fade.
+
 - **Feature** — the library's Albums/Artists switch carries count pills. The album number comes from `GET /api/counts`, which reads Navidrome's own `X-Total-Count` (Subsonic never reports totals) and is cached for five minutes; it returns `null` on a non-Navidrome server, and the pill simply does not render. The artist number is the length of the list the tab actually shows — Navidrome's native artist total counts every credit row (827 on the main library against 73 browsable artists), so it would have been a lie next to a list of 73.
 
 - **Change** — the pinned search is a floating glass pill now: the band behind it is gone, so covers scroll past and only the field frosts them (no cut edge), and it floats 0.55rem from the top instead of hugging the viewport. Its own tint went to 0.8 alpha because at 0.52 the placeholder over a bright cover measured ~2.5:1; the placeholder uses `--glass-text` for the same reason.

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { type Album, type Artist, type Song, coverUrl, getAlbums, getArtists, getCounts, search } from '../api';
+import { type Album, type Artist, type Song, coverUrl, getAlbums, search } from '../api';
+import { SearchIcon } from '../icons';
+import { useCounts } from '../useCounts';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
@@ -9,8 +11,7 @@ type Tab = 'albums' | 'artists';
 export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [albumTotal, setAlbumTotal] = useState<number | null>(null);
+  const counts = useCounts();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ songs: Song[]; albums: Album[]; artists: Artist[] } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,12 +35,6 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   }, []);
 
   useEffect(() => {
-    getCounts().then((payload) => setAlbumTotal(payload.albums), () => setAlbumTotal(null));
-    // the artist tab shows this exact list, so the pill counts it too
-    getArtists().then((payload) => setArtists(payload.artists));
-  }, []);
-
-  useEffect(() => {
     const text = query.trim();
     if (!text) {
       setResults(null);
@@ -50,6 +45,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
     }, 250);
     return () => window.clearTimeout(timer);
   }, [query]);
+
+  // the hook's list is the one the artist tab renders, so its length is the pill
+  const artists = counts?.artists ?? [];
+  const albumTotal = counts?.albums ?? null;
 
   const loadMore = async () => {
     setLoading(true);
@@ -64,20 +63,22 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
 
   return (
     <div className="view">
-      <header className="view-head">
-        <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
-      </header>
-
       <div ref={sentinel} className="library-sentinel" aria-hidden="true" />
-      <div className={`library-bar${stuck ? ' stuck' : ''}`}>
-        <div className="searchbar">
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Songs, albums, artists"
-            aria-label="Search the library"
-          />
+      <div className={`library-head${stuck ? ' stuck' : ''}`}>
+        <header className="view-head">
+          <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
+        </header>
+        <div className={`library-bar${stuck ? ' stuck' : ''}`}>
+          <div className="searchbar">
+            <SearchIcon size={18} />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Songs, albums, artists"
+              aria-label="Search the library"
+            />
+          </div>
         </div>
       </div>
 

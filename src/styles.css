@@ -417,6 +417,19 @@ h1.display {
   color: var(--cream);
 }
 
+.searchbar {
+  position: relative;
+}
+
+.searchbar > svg {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--muted);
+  pointer-events: none;
+}
+
 .searchbar input {
   width: 100%;
   /* the glass belongs to the field, not to a band behind it: covers scroll past
@@ -426,7 +439,8 @@ h1.display {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
-  padding: 0.72rem 0.9rem;
+  /* left padding clears the search glyph; the shorthand above would reset it */
+  padding: 0.72rem 0.9rem 0.72rem 2.7rem;
   font-size: 0.94rem;
   box-shadow: var(--glass-sheen), 0 16px 34px -26px #000;
 }
@@ -440,6 +454,11 @@ h1.display {
 .library-sentinel {
   height: 1px;
   margin-bottom: -1px;
+}
+
+.library-head {
+  /* no box on phones, so .library-bar keeps sticking to the whole page */
+  display: contents;
 }
 
 .library-bar.stuck::before {
@@ -1888,6 +1907,10 @@ h1.display {
     margin-left: auto;
   }
 
+  .rail-nav .count-pill {
+    margin-left: auto;
+  }
+
   .rail-note {
     margin-top: auto;
     font-size: 0.75rem;
@@ -2177,9 +2200,68 @@ h1.display {
     padding: 1rem 1rem 1.1rem;
   }
 
-  .library-bar .searchbar {
-    /* full-width was a 1000px field on a wide screen */
-    max-width: 34rem;
+  .library-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
+    align-items: end;
+    gap: 0 1.2rem;
+    position: sticky;
+    top: 0;
+    z-index: 7;
+    padding: 0.75rem 0 0.7rem;
+  }
+
+  .library-head .view-head {
+    padding: 0;
+  }
+
+  /* the bar is no longer the sticky element on desktop; the row is. Its gradient
+     is absolutely positioned, so left in place it would escape this static parent
+     and paint over the title. */
+  .library-head .library-bar {
+    position: static;
+    padding: 0 0 0.15rem;
+  }
+
+  .library-head .library-bar::before {
+    display: none;
+  }
+
+  .library-head .display {
+    transition: font-size var(--dur-2) var(--ease);
+    font-size: 2.5rem;
+  }
+
+  /* the pinned row shrinks instead of eating a quarter of the screen */
+  .library-head.stuck {
+    padding: 0.5rem 0 0.45rem;
+  }
+
+  .library-head.stuck .display {
+    font-size: 1.5rem;
+  }
+
+  .library-head.stuck .searchbar input {
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+    font-size: 0.88rem;
+  }
+
+  .library-head.stuck::before {
+    content: '';
+    position: absolute;
+    /* the fade starts below the row, so the shrunken title never sits on artwork */
+    inset: 0 -1.15rem -1.5rem;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(20, 16, 11, 1) 0%,
+      rgba(20, 16, 11, 0.98) 55%,
+      rgba(20, 16, 11, 0.92) 74%,
+      rgba(20, 16, 11, 0.55) 90%,
+      rgba(20, 16, 11, 0) 100%
+    );
   }
 
   .player {
