@@ -20,7 +20,9 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
     <div className="view settings-view">
       <header className="view-head">
         <h1 className="display">Settings</h1>
-        <p className="fineprint">Saved to your Navidrome account, so they follow you between devices</p>
+        <p className="fineprint">
+          Saved on this server for your account — every device that points here shares them
+        </p>
       </header>
 
       <section className="settings-block" aria-labelledby="settings-lyrics">
