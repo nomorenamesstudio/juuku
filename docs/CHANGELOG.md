@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.6 — 2026-10-18
+
+- **Fix** — lyrics are no longer borrowed across versions. A title carrying a version marker in brackets or after a dash (`remix`, `rmx`, `dub`, `edit`, `bootleg`, `rework`, `model`, `version`, `mix`, `live`, `acoustic`, `instrumental`, `karaoke`, `demo`, `reprise`) is not hunted on LRCLIB at all: remixes usually have no lyrics of their own, and LRCLIB keeps the original's words under the new title, so *Silent Alarm Remixed* was showing the words and timings of *Silent Alarm*. Embedded lyrics and `.lrc` sidecars still come through untouched — only the hunt is off. The plain fallback also got stricter: it now requires the same title (a remaster counts, a remix does not) and 3s of length instead of 5s.
+
 ## v0.3.5 — 2026-10-18
 
 - **Fix** — a track switch that fails to start its player no longer leaves a silent queue: when the index advances but playback does not begin (position ≤2s, not playing), the client sends one `start` — at most every 15s. Measured cause: Navidrome kills the outgoing `mpv` and starts the next one immediately, and on a raw ALSA device the newcomer dies at audio init because the card is still held (`exit 4`, then `connection refused` on the socket).

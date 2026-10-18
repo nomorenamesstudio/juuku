@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { cleanArtist, cleanTitle, parseLrc, pickCandidate } from './lyrics.mjs';
+import { cleanArtist, cleanTitle, parseLrc, pickCandidate, versionMarked } from './lyrics.mjs';
 
 // The player highlights a line by comparing these timestamps against the
 // jukebox position, so a wrong unit or a dropped minute desyncs every lyric view
@@ -53,4 +53,21 @@ test('pickCandidate marks an off-length result as untrustworthy for timing', () 
   const best = pickCandidate(results, 401, 5);
   assert.equal(best.timingTrusted, false, 'a remix of another length must not sync');
   assert.equal(pickCandidate([], 60), null);
+});
+
+// A remix album once showed the original track's words against a different
+// recording. The clean title drops the marker, so the search would happily match
+// the original; only an identical title may supply lyrics for a version.
+test('pickCandidate refuses the original when another version is expected', () => {
+  const results = [{ trackName: 'Like Eating Grass', duration: 240, syncedLyrics: '[00:01]x' }];
+  assert.equal(pickCandidate(results, 240, 3, { expectTitle: 'Like Eating Grass (CSS remix)' }), null);
+  assert.ok(pickCandidate(results, 240, 3, { expectTitle: 'Like Eating Grass (Remastered)' }));
+});
+
+test('versionMarked only treats bracketed or dashed suffixes as versions', () => {
+  assert.equal(versionMarked('Like Eating Grass (CSS remix)'), true);
+  assert.equal(versionMarked('Song - Live'), true);
+  assert.equal(versionMarked('Live Forever'), false);
+  assert.equal(versionMarked('One Month Off [Remastered]'), false);
+  assert.equal(versionMarked('Silence'), false);
 });

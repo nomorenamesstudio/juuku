@@ -2,7 +2,7 @@ import express from 'express';
 import { existsSync } from 'node:fs';
 import { sep } from 'node:path';
 import { join } from 'node:path';
-import { cleanArtist, cleanTitle, parseLrc, pickCandidate } from './lyrics.mjs';
+import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMarked } from './lyrics.mjs';
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
@@ -430,6 +430,9 @@ async function lrclibJson(url) {
 async function lyricsFromLrclib(entry) {
   const title = cleanTitle(entry.title);
   const artist = cleanArtist(entry.artist);
+  // a remix, edit or live take usually has no lyrics of its own, and the original's
+  // words and timings do not fit it: require the same title instead of hunting
+  const versioned = versionMarked(entry.title);
 
   const exact = new URL('https://lrclib.net/api/get');
   exact.searchParams.set('artist_name', entry.artist ?? '');
@@ -437,16 +440,28 @@ async function lyricsFromLrclib(entry) {
   if (entry.album) exact.searchParams.set('album_name', entry.album);
   if (entry.duration) exact.searchParams.set('duration', String(entry.duration));
   const hit = await lrclibJson(exact).catch(() => null);
-  const direct = hit ? lyricsFromLrclibBody(hit) : null;
+  // the exact endpoint is no safer than the search for a version: LRCLIB answered a
+  // remix title with the original's words, so the returned title has to be ours
+  const direct =
+    hit && (!versioned || sameTitle(hit.trackName ?? hit.title ?? '', entry.title))
+      ? lyricsFromLrclibBody(hit)
+      : null;
   if (direct) return direct;
 
-  for (const query of [{ track: title, artist }, { track: title }]) {
+  const searches = versioned
+    ? [{ track: entry.title, artist, expectTitle: entry.title, tolerance: 3 }]
+    : [
+        { track: title, artist, expectTitle: title, tolerance: 3 },
+        { track: title, expectTitle: title, tolerance: 3 },
+      ];
+
+  for (const query of searches) {
     if (!query.track) continue;
     const search = new URL('https://lrclib.net/api/search');
     search.searchParams.set('track_name', query.track);
     if (query.artist) search.searchParams.set('artist_name', query.artist);
     const results = await lrclibJson(search).catch(() => null);
-    const best = pickCandidate(results, entry.duration);
+    const best = pickCandidate(results, entry.duration, query.tolerance, { expectTitle: query.expectTitle });
     if (best) {
       // only trust the timestamps when the lengths agree; otherwise take the words
       // unsynced rather than scroll them against the wrong recording
@@ -478,7 +493,10 @@ app.get('/api/lyrics/:id', wrap(async (req, res) => {
   } else {
     // Nothing embedded and no .lrc sidecar: ask LRCLIB once, cache the miss too.
     const songResponse = await call('getSong', { id }).catch(() => null);
-    if (songResponse?.song) {
+    // A remix or live take usually has no lyrics of its own, and LRCLIB keeps the
+    // original's words under its title, so versions are not hunted at all.
+    const huntable = songResponse?.song && !versionMarked(songResponse.song.title);
+    if (huntable) {
       payload = (await lyricsFromLrclib(songResponse.song).catch(() => null)) ?? payload;
     }
   }
