@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.1 — 2026-10-18
+
+- **Fix** — the lyrics pane no longer shows a scrollbar: it auto-scrolls with the song, so the bar appearing and vanishing under the thumb was noise. Scrolling itself still works, and nothing moved (`clientWidth === offsetWidth`).
+
 ## v0.3.0 — 2026-10-17
 
 - **Feature** — a Settings page: the lyric timing lead (slider, 0–2000ms, saved per device in `localStorage`, default 400ms) and the lyrics font (sans or serif, same size and leading, only the family changes). It also reports the Navidrome URL and version, the account, the jukebox state, the app version, the studio credit and the GitHub link. On phones the topbar cog opens it and turns into a close button; on wide screens it lives at the foot of the sidebar.

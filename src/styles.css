@@ -1623,6 +1623,10 @@ h1.display {
 }
 
 .lyrics {
+  /* the pane auto-scrolls with the song, so a scrollbar appearing and vanishing
+     under the thumb was pure noise; scrolling itself still works */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   align-self: stretch;
   flex: 1;
   max-height: none;
@@ -1652,6 +1656,11 @@ h1.display {
 
 .lyric.timed.on {
   color: var(--cream);
+}
+
+.lyrics::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .lyrics-note {
