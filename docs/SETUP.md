@@ -70,11 +70,26 @@ own playlists. Use a dedicated account either way, and keep its password in
 
 Navidrome also needs `mpv` (the official image ships it) and the sound card. In
 compose that means `ND_JUKEBOX_ENABLED=true`, `devices: ["/dev/snd:/dev/snd"]` and
-the host `audio` group via `group_add`. Leave `Jukebox.Default` alone: it is a
-*symbolic* name from `Jukebox.Devices`, which cannot be set from the environment,
-so the default (`auto`) is the right choice for a single output. Get the device
-names with `docker run --rm --device /dev/snd --entrypoint mpv <image>
---audio-device=help` if you ever need them.
+the host `audio` group via `group_add`. `Jukebox.Default` is a *symbolic* name from
+`Jukebox.Devices`, which cannot be set from the environment, so it stays `auto`.
+
+**Pin the output anyway.** Navidrome runs one `mpv` per track through a template,
+and the default is `mpv --audio-device=%d …` with `%d` = `auto` — ALSA then picks,
+and on a box with more than one card it can land on an HDMI sink. An HDMI output
+that is off or renegotiating blocks `mpv` inside an audio write: the process stays
+alive, its IPC socket stops answering, and because Navidrome's client has no read
+deadline every `jukeboxControl` call hangs until Navidrome restarts (the API then
+looks "unreachable" while plain endpoints like `ping` stay fast). Pin the device in
+the template instead:
+
+```yaml
+# amend to your device; list them with:
+#   docker run --rm --device /dev/snd --entrypoint mpv <image> --audio-device=help
+- ND_MPVCMDTEMPLATE=mpv --audio-device=alsa/default:CARD=YOURDAC --no-audio-display %f --input-ipc-server=%s
+```
+
+If a player is already wedged, `docker exec navidrome kill -9 <mpv pid>` and clear
+`/tmp/mpv-ctrl-*.socket`; that drops the queue, so re-queue and start again.
 
 If Navidrome runs in another compose stack, attach Juuku to that stack's network
 and use the service name as the host (`http://navidrome:4533`); the commented

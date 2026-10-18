@@ -41,7 +41,15 @@ export async function call(endpoint, params = {}, options = {}) {
   try {
     res = await fetch(url, { signal: AbortSignal.timeout(options.timeout ?? 10000) });
   } catch (err) {
-    throw new ApiError(502, `Navidrome unreachable at ${config.url}: ${err.message}`);
+    // a timeout is not a dead server: Navidrome stays reachable while its jukebox
+    // player (mpv) hangs and every jukeboxControl call waits on it
+    const timedOut = err?.name === 'TimeoutError' || String(err?.message).includes('aborted due to timeout');
+    throw new ApiError(
+      502,
+      timedOut
+        ? `Navidrome did not answer within ${Math.round((options.timeout ?? 10000) / 1000)}s — its jukebox player looks stuck`
+        : `Navidrome unreachable at ${config.url}: ${err.message}`,
+    );
   }
   const text = await res.text();
   let body;

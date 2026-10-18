@@ -7,6 +7,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.4 — 2026-10-18
+
+- **Change** — one upstream jukebox read at a time: `/api/state` shares a single `jukeboxControl get` for 900ms and single-flights concurrent polls, invalidated by any action. Three devices polling every second used to be three Navidrome calls a second, and a stuck player turned that into a wall of timeouts.
+- **Fix** — a timeout no longer claims the server is unreachable: it reads "Navidrome did not answer within 10s — its jukebox player looks stuck". A wedged `mpv` is not a dead server (plain endpoints keep answering).
+- **Fix** — `/api/health` probes the jukebox with a 3s budget, so a stuck player cannot hold the startup check for ten seconds while the UI says "connecting…".
+
 ## v0.3.3 — 2026-10-18
 
 - **Fix** — library album titles are one line with an ellipsis (they were clamped to two, which made the grid rows uneven), and the title sits tight to the artist line: 9px under the cover, 2px between the two lines instead of the old `0.5rem` gap everywhere.

@@ -156,7 +156,9 @@ app.get('/api/live', (_req, res) => res.json({ ok: true, uptime: Math.round(proc
 
 app.get('/api/health', wrap(async (_req, res) => {
   const ping = await call('ping');
-  const jukebox = await call('jukeboxControl', { action: 'status' }).then(
+  // a short budget here: when the player is stuck this probe used to hold the whole
+  // health check for ten seconds, which is exactly when the UI needs an answer
+  const jukebox = await call('jukeboxControl', { action: 'status' }, { timeout: 3000 }).then(
     (response) => ({ enabled: true, ...statusOf(response) }),
     (err) => ({ enabled: false, error: err.message }),
   );
@@ -172,13 +174,44 @@ app.get('/api/health', wrap(async (_req, res) => {
 // ------------------------------------------------------------------- playback
 
 /** Single poll target: queue + playback state in one round trip. */
+/**
+ * One upstream jukebox read at a time, shared for a moment: three devices polling
+ * every second were three Navidrome calls a second, and a stuck player multiplied
+ * every one of them into a timeout.
+ */
+const stateCache = { at: 0, payload: null, inflight: null };
+const STATE_TTL_MS = 900;
+
+function invalidateState() {
+  stateCache.at = 0;
+  stateCache.payload = null;
+}
+
+function readState() {
+  if (stateCache.payload && Date.now() - stateCache.at < STATE_TTL_MS) {
+    return Promise.resolve(stateCache.payload);
+  }
+  if (stateCache.inflight) return stateCache.inflight;
+  stateCache.inflight = call('jukeboxControl', { action: 'get' })
+    .catch((err) => {
+      // browsing a library whose server has jukebox mode off is fine; just show no queue
+      if (jukeboxOff(err)) return null;
+      throw err;
+    })
+    .then((response) => {
+      const payload = response ? playlistOf(response.jukeboxPlaylist) : emptyState();
+      stateCache.payload = payload;
+      stateCache.at = Date.now();
+      return payload;
+    })
+    .finally(() => {
+      stateCache.inflight = null;
+    });
+  return stateCache.inflight;
+}
+
 app.get('/api/state', wrap(async (_req, res) => {
-  const response = await call('jukeboxControl', { action: 'get' }).catch((err) => {
-    // browsing a library whose server has jukebox mode off is fine; just show no queue
-    if (jukeboxOff(err)) return null;
-    throw err;
-  });
-  res.json(response ? playlistOf(response.jukeboxPlaylist) : emptyState());
+  res.json(await readState());
 }));
 
 app.post('/api/control', wrap(async (req, res) => {
@@ -196,6 +229,8 @@ app.post('/api/control', wrap(async (req, res) => {
     { action, index, offset, id: ids, gain },
     { repeat: ['id'] },
   );
+  // the next poll must not serve the state from before this action
+  invalidateState();
   res.json(statusOf(response));
 }));
 
