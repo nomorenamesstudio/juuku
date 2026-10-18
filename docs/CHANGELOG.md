@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.5 — 2026-10-18
+
+- **Fix** — a track switch that fails to start its player no longer leaves a silent queue: when the index advances but playback does not begin (position ≤2s, not playing), the client sends one `start` — at most every 15s. Measured cause: Navidrome kills the outgoing `mpv` and starts the next one immediately, and on a raw ALSA device the newcomer dies at audio init because the card is still held (`exit 4`, then `connection refused` on the socket).
+
 ## v0.3.4 — 2026-10-18
 
 - **Change** — one upstream jukebox read at a time: `/api/state` shares a single `jukeboxControl get` for 900ms and single-flights concurrent polls, invalidated by any action. Three devices polling every second used to be three Navidrome calls a second, and a stuck player turned that into a wall of timeouts.
