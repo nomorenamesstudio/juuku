@@ -7,6 +7,21 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.4.0 — 2026-10-18
+
+- **Feature** — Search is its own page: a field that focuses itself, the same three result groups (artists, albums, songs), and **Recent** — the ten things you actually opened, newest first, per device in `localStorage`. An entry is the entity itself (artwork, name, `Artist` or `Album · artist`) and tapping it goes straight there instead of re-running the query; `×` removes it, `Clear` empties the list. Typing never writes to it, so prefixes like "A, Ap, Aph" leave nothing behind.
+- **Change** — the nav trades Favorites for Search: `Library / Playlists / Search / Queue` on the tab bar, same order in the sidebar's Yours group. The Favorites page still exists at `/favorites`, reachable from the sidebar's route list no longer — the household's **Favorites playlist** is pinned first on the Playlists page instead, marked with a heart.
+- **Feature** — preferences live on the server, per Navidrome account, in one JSON file (`JUUKU_DATA_DIR/prefs.json`, mounted as `./data` in the shipped compose): lyrics settings, the recent search list, the library sort. They survive a redeploy and follow a person from phone to desktop; `localStorage` stays as the instant copy, so the first paint is already correct. `PUT /api/prefs` accepts only the keys the client owns and clamps their shapes (tested). The file is keyed by account, which is where per-user logins will hang.
+- **Feature** — `Last played` works without scrobbling anything: Navidrome keeps no play history for jukebox playback, so juuku remembers the albums that played, newest first (40 of them, in memory — it resets with the container). The list is fed by the same poll, comparing against the last *observed* state so an action's cache invalidation cannot swallow a transition.
+- **Fix** — the stalled-switch nudge only fires when playback *was* running: before, a deliberate pause from another device read as a stall and two clients fought each other with start/stop every few seconds (visible in Navidrome's log).
+- **Feature** — the library sorts: `Alphabetical`, `Last added`, `Last played`, `Last released`, in a dropdown beside the Albums/Artists switch (choice kept per device). Last released maps to Navidrome's `byYear` with the range walked from this year down, because the API has no release order and returns the range in the direction it is given. Last played comes from juuku's own list of albums that played, since Navidrome's play history never sees jukebox playback.
+- **Fix** — one spacing rhythm under every page title, measured on the rendered pages: 9px from the title to whatever follows it (subtitle, browse switch, search field, buttons), 22px from those controls to the content (album grid, rows, lists), and 14px from the search field to its results. Before, albums sat 11px, search 21px, the others 6px, covers touched the switch, and desktop stacked a 16px flex gap on top.
+- **Fix** — one title size across the app: Albums and Artists were 30.4px against 33.6px everywhere else, and every page's first block now starts at 0px below the head (the search field carried 3.2px).
+- **Fix** — the recent-search rows no longer wear a rounded hairline: the separator belonged to a `border-bottom` on a 10px-radius row, so it curved around the corners and read as a shadow. The line is on the row now, square from edge to edge.
+- **Change** — the Albums/Artists switch sits on its own row under the title again, and the library head shares the standard spacing: title at the same offset and the same bottom padding as playlists, search and queue.
+- **Fix** — the Search tab shows as active while you are on it.
+- **Fix** — the search field is 16px on phones, the threshold below which iOS zooms the whole page on focus.
+
 ## v0.3.9 — 2026-10-18
 
 - **Feature** — the queue counts down: the badge shows the tracks still ahead of the current one, and entries that already played stay in the list at 42% opacity (70% on hover, still removable) with the current row keeping its amber marker. Both come from `currentIndex`, so restarting the list through Repeat all or a fresh play restores the full count and full opacity by itself.

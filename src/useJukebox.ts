@@ -74,6 +74,7 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   const repeatRef = useRef(repeat);
   const lastSnapshot = useRef<Snapshot | null>(null);
   const lastNudge = useRef(0);
+  const lastNudgedIndex = useRef(-1);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -98,16 +99,24 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   const handleQueueEnd = useCallback(async (next: State, prev: Snapshot) => {
     const mode = repeatRef.current;
 
-    // A track switch can fail to start its player (the old one had not released the
-    // sound card yet), which leaves the queue silent at a new index. Nudge it once.
+    /**
+     * A track switch can fail to start its player (the old one had not released the
+     * sound card yet), which leaves the queue silent at a new index. Nudge it once —
+     * but only when playback *was* running: without that, a deliberate pause from
+     * another device reads as a stall and two clients end up fighting (start, stop,
+     * start…) every few seconds.
+     */
     const stalled =
+      prev.playing &&
       next.status.currentIndex !== prev.index &&
       !next.status.playing &&
       next.status.position <= 2 &&
       next.entries.length > 0 &&
+      lastNudgedIndex.current !== next.status.currentIndex &&
       Date.now() - lastNudge.current > 15000;
     if (stalled) {
       lastNudge.current = Date.now();
+      lastNudgedIndex.current = next.status.currentIndex;
       try {
         await control({ action: 'start' });
         lastSnapshot.current = null;

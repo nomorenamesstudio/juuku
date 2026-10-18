@@ -1,42 +1,42 @@
-import { useEffect, useRef, useState } from 'react';
-import { ChevronDownIcon, CloseIcon, RefreshIcon } from '../icons';
-import { type Album, type Artist, type Song, coverUrl, getAlbums, search } from '../api';
+import { useEffect, useState } from 'react';
+import { ChevronDownIcon, RefreshIcon } from '../icons';
+import { type Album, type AlbumSort, coverUrl, getAlbums } from '../api';
 import { Cover } from '../Cover';
 import { useCounts } from '../useCounts';
+import { readPref, writePref } from '../prefs';
 import { navigate } from '../router';
-import { SongRow } from '../rows';
-import type { Jukebox } from '../useJukebox';
 
 type Tab = 'albums' | 'artists';
 
+const SORTS = [
+  { type: 'alphabeticalByName', label: 'Alphabetical' },
+  { type: 'newest', label: 'Last added' },
+  { type: 'recent', label: 'Last played' },
+  { type: 'byYear', label: 'Last released' },
+] as const;
+
+const SORT_KEY = 'juuku.library.sort';
+
+function readSort(): AlbumSort {
+  const stored = readPref<string>(SORT_KEY, 'newest');
+  return (SORTS.find((sort) => sort.type === stored)?.type ?? 'newest') as AlbumSort;
+}
+
 // surviving the unmount between tab switches: refetching on every visit made the
 // grid paint empty first, which reads as a reload on a phone
-let albumCache: { albums: Album[]; hasMore: boolean } | null = null;
+let albumCache: { albums: Album[]; hasMore: boolean; sort: AlbumSort } | null = null;
 
-export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
-  const [albums, setAlbums] = useState<Album[]>(albumCache?.albums ?? []);
-  const [hasMore, setHasMore] = useState(albumCache?.hasMore ?? false);
+export function Library({ tab }: { tab: Tab }) {
+  const [sort, setSort] = useState<AlbumSort>(readSort);
+  const [albums, setAlbums] = useState<Album[]>(albumCache?.sort === readSort() ? albumCache.albums : []);
+  const [hasMore, setHasMore] = useState(albumCache?.sort === readSort() ? albumCache.hasMore : false);
   const counts = useCounts();
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{ songs: Song[]; albums: Album[]; artists: Artist[] } | null>(null);
   const [loading, setLoading] = useState(false);
-  const sentinel = useRef<HTMLDivElement>(null);
-  const input = useRef<HTMLInputElement>(null);
-  const [stuck, setStuck] = useState(false);
-
-  // the search bar pins to the top once the title scrolls past it
-  useEffect(() => {
-    const el = sentinel.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting));
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     let alive = true;
-    getAlbums().then((payload) => {
-      albumCache = { albums: payload.albums, hasMore: payload.hasMore };
+    getAlbums(0, 30, sort).then((payload) => {
+      albumCache = { albums: payload.albums, hasMore: payload.hasMore, sort };
       if (!alive) return;
       setAlbums(payload.albums);
       setHasMore(payload.hasMore);
@@ -44,24 +44,15 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [sort]);
 
-  useEffect(() => {
-    const text = query.trim();
-    if (!text) {
-      setResults(null);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      search(text).then((payload) => {
-        // an artist with no albums has nothing to open
-        setResults({ ...payload, artists: payload.artists.filter((artist) => (artist.albumCount ?? 0) > 0) });
-        // results replace a grid that may be scrolled far down, so land on the first row
-        window.scrollTo({ top: 0 });
-      }, () => setResults(null));
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [query]);
+  const changeSort = (next: AlbumSort) => {
+    writePref(SORT_KEY, next);
+    albumCache = null;
+    setAlbums([]);
+    setHasMore(false);
+    setSort(next);
+  };
 
   // the hook's list is the one the artist tab renders, so its length is the pill
   const artists = counts?.artists ?? [];
@@ -70,10 +61,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
   const loadMore = async () => {
     setLoading(true);
     try {
-      const payload = await getAlbums(albums.length);
+      const payload = await getAlbums(albums.length, 30, sort);
       setAlbums((prev) => {
         const next = [...prev, ...payload.albums];
-        albumCache = { albums: next, hasMore: payload.hasMore };
+        albumCache = { albums: next, hasMore: payload.hasMore, sort };
         return next;
       });
       setHasMore(payload.hasMore);
@@ -84,11 +75,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
 
   return (
     <div className="view">
-      <div ref={sentinel} className="library-sentinel" aria-hidden="true" />
-      <div className={`library-head${stuck ? ' stuck' : ''}`}>
+      <div className="library-head">
         <header className="view-head">
           <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
-          {!results && (
+          <div className="library-controls">
             <div className="segmented" role="tablist" aria-label="Browse">
               <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
                 Albums
@@ -99,149 +89,75 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                 {artists.length > 0 && <span className="count-pill">{artists.length}</span>}
               </button>
             </div>
-          )}
-        </header>
-        <div className={`library-bar${stuck ? ' stuck' : ''}`}>
-          <div className="searchbar">
-            <input
-              ref={input}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Songs, albums, artists"
-              aria-label="Search the library"
-            />
-            {query && (
-              <button
-                className="search-clear"
-                onClick={() => {
-                  setQuery('');
-                  input.current?.focus();
-                }}
-                aria-label="Clear search"
-              >
-                <CloseIcon size={16} />
-              </button>
+            {tab === 'albums' && (
+              <label className="sort-select">
+                <span className="visually-hidden">Sort albums</span>
+                <select value={sort} onChange={(event) => changeSort(event.target.value as AlbumSort)}>
+                  {SORTS.map((option) => (
+                    <option key={option.type} value={option.type}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon size={15} aria-hidden />
+              </label>
             )}
           </div>
-        </div>
+        </header>
       </div>
 
-      {results ? (
-        <div className="search-results">
-          {results.songs.length === 0 && results.albums.length === 0 && results.artists.length === 0 && (
-            <p className="empty">Nothing matches “{query}”.</p>
-          )}
-          {results.artists.length > 0 && (
-            <section>
-              <h2 className="section-label">Artists</h2>
-              <ul className="plain-list">
-                {results.artists.map((artist) => (
-                  <li key={artist.id}>
-                    <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
-                      {artist.coverArt ? (
-                        <Cover className="artist-avatar" src={coverUrl(artist.coverArt, 96)} />
-                      ) : (
-                        <span className="artist-avatar empty" aria-hidden>
-                          {artist.name.slice(0, 1)}
-                        </span>
-                      )}
-                      <span className="link-text">
-                        <span className="row-title">{artist.name}</span>
-                        <span className="row-sub">{artist.albumCount} albums</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          {results.albums.length > 0 && (
-            <section>
-              <h2 className="section-label">Albums</h2>
-              <ul className="plain-list">
-                {results.albums.map((album) => (
-                  <li key={album.id}>
-                    <button className="link-row with-art" onClick={() => navigate(`/album/${album.id}`)}>
-                      {album.coverArt && <Cover src={coverUrl(album.coverArt, 120)} />}
-                      <span className="link-text">
-                        <span className="row-title">{album.name}</span>
-                        <span className="row-sub">{album.artist}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          {results.songs.length > 0 && (
-            <section>
-              <h2 className="section-label">Songs</h2>
-              <ul className="rows">
-                {results.songs.map((song) => (
-                  <SongRow
-                    key={song.id}
-                    song={song}
-                    favorite={jbox.favoriteIds.has(song.id)}
-                    active={jbox.current?.id === song.id}
-                    playing={jbox.status?.playing}
-                    onPlay={() => jbox.playNow([song])}
-                    onFavorite={() => jbox.toggleFavorite(song)}
-                  />
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
-      ) : (
+    {tab === 'albums' ? (
         <>
-          {tab === 'albums' ? (
-            <>
-              <div className="album-grid">
-                {albums.map((album) => (
-                  <button key={album.id} className="album-card" onClick={() => navigate(`/album/${album.id}`)}>
-                    <span className="album-art">
-                      {album.coverArt ? <Cover src={coverUrl(album.coverArt, 300)} /> : null}
-                    </span>
-                    <span className="album-name">{album.name}</span>
-                    <span className="album-artist">
-                      <span className="album-artist-name">{album.artist}</span>
-                      {album.year ? <span className="album-year">· {album.year}</span> : null}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {hasMore && (
-                <button className="more" onClick={loadMore} disabled={loading}>
-                  {loading ? <RefreshIcon size={16} className="spin" /> : <ChevronDownIcon size={16} />}
-                  {loading ? 'Loading…' : 'Load more albums'}
-                </button>
-              )}
-            </>
-          ) : (
-            <ul className="plain-list">
-              {artists.map((artist) => (
-                <li key={artist.id}>
-                  <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
-                    {artist.coverArt ? (
-                      <Cover className="artist-avatar" src={coverUrl(artist.coverArt, 96)} />
-                    ) : (
-                      <span className="artist-avatar empty" aria-hidden>
-                        {artist.name.slice(0, 1)}
-                      </span>
-                    )}
-                    <span className="link-text">
-                      <span className="row-title">{artist.name}</span>
-                      <span className="row-sub">
-                        {artist.albumCount} {artist.albumCount === 1 ? 'album' : 'albums'}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {albums.length === 0 && (
+            <p className="empty">
+              {sort === 'recent'
+                ? 'Nothing played through Navidrome yet — jukebox playback is not scrobbled, so this list stays empty.'
+                : 'No albums here yet.'}
+            </p>
+          )}
+          <div className="album-grid">
+            {albums.map((album) => (
+              <button key={album.id} className="album-card" onClick={() => navigate(`/album/${album.id}`)}>
+                <span className="album-art">
+                  {album.coverArt ? <Cover src={coverUrl(album.coverArt, 300)} /> : null}
+                </span>
+                <span className="album-name">{album.name}</span>
+                <span className="album-artist">
+                  <span className="album-artist-name">{album.artist}</span>
+                  {album.year ? <span className="album-year">· {album.year}</span> : null}
+                </span>
+              </button>
+            ))}
+          </div>
+          {hasMore && (
+            <button className="more" onClick={loadMore} disabled={loading}>
+              {loading ? <RefreshIcon size={16} className="spin" /> : <ChevronDownIcon size={16} />}
+              {loading ? 'Loading…' : 'Load more albums'}
+            </button>
           )}
         </>
+      ) : (
+        <ul className="plain-list">
+          {artists.map((artist) => (
+            <li key={artist.id}>
+              <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
+                {artist.coverArt ? (
+                  <Cover className="artist-avatar" src={coverUrl(artist.coverArt, 96)} />
+                ) : (
+                  <span className="artist-avatar empty" aria-hidden>
+                    {artist.name.slice(0, 1)}
+                  </span>
+                )}
+                <span className="link-text">
+                  <span className="row-title">{artist.name}</span>
+                  <span className="row-sub">
+                    {artist.albumCount} {artist.albumCount === 1 ? 'album' : 'albums'}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -403,8 +403,26 @@ h1.display {
 .view-head {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-  padding: 0.9rem 0.15rem 1.3rem;
+  gap: 0;
+  padding: 0.9rem 0.15rem 0;
+}
+
+/**
+ * Under the title: one rhythm on every page — a subtitle, the browse switch, the
+ * search field, a row of buttons all start the same 0.55rem below it. Content
+ * blocks get their own, roomier gap so covers never sit on the controls.
+ */
+.view .view-head > * + *,
+.view .view-head + .search-field {
+  margin-top: 0.55rem;
+}
+
+.view .view-head + .album-grid,
+.view .view-head + .rows,
+.view .view-head + .plain-list,
+.library-head + .album-grid,
+.library-head + .plain-list {
+  margin-top: 1.4rem;
 }
 
 /* artist: "play all" sits on the title line, the album count stays under it */
@@ -427,11 +445,10 @@ h1.display {
   min-width: 0;
 }
 
-/* .view-head .fineprint pulls itself up by 0.5rem to close the head's gap; here the
-   gap is gone, so beat that rule's specificity */
+/* the artist head keeps its facts tight under the title */
 .artist-head .view-head .fineprint,
 .view-head.artist-head .fineprint {
-  margin-top: 0;
+  margin-top: 0.55rem;
 }
 
 .artist-head .secondary.compact {
@@ -440,25 +457,10 @@ h1.display {
   font-size: 0.8rem;
 }
 
-/* library: the browse switch sits beside the title, right aligned */
+/* library: title first, then the switch and the sort on their own row */
 .library-head .view-head {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-}
-
-.library-head .display {
-  font-size: 1.9rem;
-}
-
-/* the title row and the field are one unit: no room for a paragraph gap */
-.library-head .view-head {
-  padding-bottom: 0.35rem;
-}
-
-.library-bar {
-  padding-top: 0.2rem;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .library-head .segmented {
@@ -487,7 +489,8 @@ h1.display {
 }
 
 .view-head .fineprint {
-  margin-top: -0.5rem;
+  /* spacing comes from the head's single rule, so nothing pulls itself up */
+  margin-top: 0.55rem;
 }
 
 .back {
@@ -557,29 +560,8 @@ h1.display {
   color: var(--glass-text);
 }
 
-/* the library search + tabs pin to the top once the title scrolls away */
-.library-sentinel {
-  height: 1px;
-  margin-bottom: -1px;
-}
-
 .library-head {
-  /* no box on phones, so .library-bar keeps sticking to the whole page */
   display: contents;
-}
-
-.library-bar {
-  position: sticky;
-  /* sticky offsets are measured against the viewport, so the status-bar allowance
-     belongs here: the field clears the dynamic island in the installed app */
-  top: calc(env(safe-area-inset-top) + 0.35rem);
-  z-index: 6;
-  padding: 0.3rem 0 0.8rem;
-  transition: background-color var(--dur-2), box-shadow var(--dur-2);
-}
-
-.library-bar .searchbar {
-  width: 100%;
 }
 
 
@@ -633,7 +615,7 @@ h1.display {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.2rem;
+  margin-top: 0;
 }
 
 .primary,
@@ -2286,7 +2268,7 @@ h1.display {
   }
 }
 
-/* iOS Safari zooms any focused field under 16px - keep the search at 16 on phones */
+/* iOS Safari zooms any focused field under 16px - keep them at 16 on phones */
 @media (max-width: 899px) {
   .searchbar input,
   .playlist-new input,
@@ -2436,13 +2418,14 @@ h1.display {
     align-items: flex-end;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 1rem;
+    /* spacing comes from the single rule below, on phones and here alike */
+    gap: 0;
   }
 
   .view-head .fineprint {
     order: 3;
     width: 100%;
-    margin-top: -0.4rem;
+    margin-top: 0.55rem;
   }
 
   .searchbar {
@@ -2738,54 +2721,12 @@ h1.display {
     padding: 0;
   }
 
-  /* the bar is no longer the sticky element on desktop; the row is. Its gradient
-     is absolutely positioned, so left in place it would escape this static parent
-     and paint over the title. */
-  .library-head .library-bar {
-    position: static;
-    padding: 0 0 0.15rem;
-  }
-
-  .library-head .library-bar::before {
-    display: none;
-  }
-
   .library-head .display {
     transition: font-size var(--dur-2) var(--ease);
     font-size: 2.5rem;
   }
 
-  /* the pinned row shrinks instead of eating a quarter of the screen */
-  .library-head.stuck {
-    padding: 0.5rem 0 0.45rem;
-  }
 
-  .library-head.stuck .display {
-    font-size: 1.5rem;
-  }
-
-  .library-head.stuck .searchbar input {
-    padding-top: 0.42rem;
-    padding-bottom: 0.42rem;
-    font-size: 0.88rem;
-  }
-
-  .library-head.stuck::before {
-    content: '';
-    position: absolute;
-    /* the fade starts below the row, so the shrunken title never sits on artwork */
-    inset: 0 -1.15rem -2rem;
-    z-index: -1;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      rgba(20, 16, 11, 0.88) 0%,
-      rgba(20, 16, 11, 0.8) 48%,
-      rgba(20, 16, 11, 0.56) 72%,
-      rgba(20, 16, 11, 0.24) 89%,
-      rgba(20, 16, 11, 0) 100%
-    );
-  }
 
   .player {
     max-width: 1120px;
@@ -3069,4 +3010,147 @@ h1.display {
 
 .settings-credit {
   margin: 0.2rem 0 0.7rem;
+}
+
+/* --------------------------------------------------------------- search page */
+
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3rem;
+  margin: 0 0 0.9rem;
+  padding: 0 0.55rem 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(20, 16, 11, 0.93);
+  color: var(--dim);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--cream);
+  /* 16px or iOS zooms the page when the field takes focus */
+  font-size: 1rem;
+  outline: none;
+  appearance: none;
+}
+
+.search-field input::placeholder {
+  color: var(--dim);
+}
+
+.search-field input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-field + .search-results > section:first-child > .section-label,
+.search-field + section > .section-head,
+.search-field + .search-results > section:first-child > .section-head {
+  margin-top: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* a recent entry is the thing itself, like a search result, not the words typed */
+.history-row {
+  border-bottom: 1px solid rgba(53, 42, 31, 0.6);
+}
+
+.history-row:last-child {
+  border-bottom: 0;
+}
+
+.history-row .link-row {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+  border-radius: 10px;
+}
+
+.history-row .row-icon {
+  flex: none;
+}
+
+/* the pinned Favorites playlist wears a small heart */
+.row-pin {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  color: var(--amber);
+  vertical-align: -1px;
+}
+
+/* ---- library controls: the Albums/Artists switch and the sort share one row ---- */
+
+.library-head .view-head {
+  flex-wrap: wrap;
+}
+
+.library-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-basis: 100%;
+}
+
+.library-controls .segmented {
+  margin-bottom: 0;
+}
+
+.sort-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.sort-select select {
+  appearance: none;
+  /* matches the Albums/Artists switch beside it: same height, same type size */
+  height: 2.375rem;
+  padding: 0 2rem 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.sort-select svg {
+  position: absolute;
+  right: 0.6rem;
+  pointer-events: none;
+  color: var(--muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px
+  ;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

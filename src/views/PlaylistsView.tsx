@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { coverUrl } from '../api';
 import { formatTotal } from '../format';
-import { PlusIcon } from '../icons';
+import { HeartIcon, PlusIcon } from '../icons';
 import { navigate } from '../router';
 import { usePlaylists } from '../usePlaylists';
 
+/** the household convention: the playlist called Favorites is pinned above the rest */
+const isFavorites = (name: string) => name.trim().toLowerCase() === 'favorites';
+
 export function PlaylistsView() {
   const { playlists, loading, create } = usePlaylists();
+  const ordered = [...playlists].sort((a, b) => Number(isFavorites(b.name)) - Number(isFavorites(a.name)));
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -55,7 +59,7 @@ export function PlaylistsView() {
       )}
 
       <ul className="plain-list">
-        {playlists.map((playlist) => (
+        {ordered.map((playlist) => (
           <li key={playlist.id}>
             <button className="link-row with-art" onClick={() => navigate(`/playlist/${playlist.id}`)}>
               {playlist.coverArt ? (
@@ -64,7 +68,14 @@ export function PlaylistsView() {
                 <span className="playlist-art-fallback" aria-hidden />
               )}
               <span className="link-text">
-                <span className="row-title">{playlist.name}</span>
+                <span className="row-title">
+                  {playlist.name}
+                  {isFavorites(playlist.name) && (
+                    <span className="row-pin" aria-label="pinned first">
+                      <HeartIcon size={13} />
+                    </span>
+                  )}
+                </span>
                 <span className="row-sub">
                   {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'}
                   {playlist.duration ? ` · ${formatTotal(playlist.duration)}` : ''}

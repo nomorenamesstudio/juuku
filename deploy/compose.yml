@@ -1,5 +1,6 @@
 # Juuku, deployed. Copy this file and .env.example next to it, fill in .env, run
-# `docker compose up -d`. Nothing here writes to disk, so the rootfs stays read-only.
+# `docker compose up -d`. The rootfs stays read-only; the one writable path is the
+# ./data volume, which holds the per-account preferences.
 services:
   juuku:
     image: ghcr.io/nomorenamesstudio/juuku:latest
@@ -12,12 +13,16 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 3101
+      # preferences (lyrics settings, recent searches, sort, last played) live here
+      JUUKU_DATA_DIR: /data
     ports:
       # LAN only on purpose: the API can drive the jukebox and has no login.
       # Reach it through your reverse proxy (see docs/SECURITY.md) if it ever
       # needs to be reachable from outside.
       - "3101:3101"
     read_only: true
+    volumes:
+      - ./data:/data
     tmpfs:
       - /tmp
     cap_drop:

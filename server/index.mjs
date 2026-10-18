@@ -4,6 +4,7 @@ import { sep } from 'node:path';
 import { join } from 'node:path';
 import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMarked } from './lyrics.mjs';
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
+import { getProfile, putProfile } from './store.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
 try {
@@ -180,6 +181,32 @@ app.get('/api/health', wrap(async (_req, res) => {
  * every one of them into a timeout.
  */
 const stateCache = { at: 0, payload: null, inflight: null };
+let lastObserved = null;
+
+/** Albums that played, newest first — the source of the "last played" sort. */
+const RECENT_ALBUMS_MAX = 40;
+const recentAlbums = [];
+
+function noteAlbum(previous, next) {
+  const index = previous?.status?.currentIndex ?? -1;
+  const entry = previous?.entries?.[index];
+  if (!entry?.albumId || !previous.status.playing) return;
+  const changed = !next || next.status.currentIndex !== index || !next.status.playing;
+  if (!changed) return;
+  const at = recentAlbums.indexOf(entry.albumId);
+  if (at !== -1) recentAlbums.splice(at, 1);
+  recentAlbums.unshift(entry.albumId);
+  recentAlbums.length = Math.min(recentAlbums.length, RECENT_ALBUMS_MAX);
+}
+
+/** The albums played here, in order, as full album records. */
+async function recentlyPlayed(size, offset) {
+  const ids = recentAlbums.slice(offset, offset + size);
+  const albums = await Promise.all(
+    ids.map((id) => call('getAlbum', { id }).then((response) => album(response.album), () => null)),
+  );
+  return albums.filter(Boolean);
+}
 const STATE_TTL_MS = 900;
 
 function invalidateState() {
@@ -200,6 +227,10 @@ function readState() {
     })
     .then((response) => {
       const payload = response ? playlistOf(response.jukeboxPlaylist) : emptyState();
+      // Navidrome keeps no play history for jukebox playback, so the albums that
+      // actually played are remembered here instead of scrobbling every track.
+      noteAlbum(lastObserved, payload);
+      lastObserved = payload;
       stateCache.payload = payload;
       stateCache.at = Date.now();
       return payload;
@@ -212,6 +243,15 @@ function readState() {
 
 app.get('/api/state', wrap(async (_req, res) => {
   res.json(await readState());
+}));
+
+// preferences belong to the Navidrome account, not to one browser
+app.get('/api/prefs', wrap(async (_req, res) => {
+  res.json({ prefs: await getProfile(serverInfo().user) });
+}));
+
+app.put('/api/prefs', wrap(async (req, res) => {
+  res.json({ prefs: await putProfile(serverInfo().user, req.body?.prefs ?? {}) });
 }));
 
 app.post('/api/control', wrap(async (req, res) => {
@@ -323,7 +363,14 @@ app.get('/api/albums', wrap(async (req, res) => {
   const type = String(req.query.type ?? 'newest');
   const size = Math.min(Number(req.query.size ?? 30), 100);
   const offset = Number(req.query.offset ?? 0);
-  const response = await call('getAlbumList2', { type, size, offset });
+  // Navidrome has no release-date order, and byYear walks the range in the direction
+  // it is given: newest year first means asking for this year down to 1900
+  const years = type === 'byYear' ? { fromYear: new Date().getFullYear(), toYear: 1900 } : {};
+  if (type === 'recent') {
+    const albums = await recentlyPlayed(size, offset);
+    return res.json({ albums, offset, hasMore: albums.length === size });
+  }
+  const response = await call('getAlbumList2', { type, size, offset, ...years });
   const albums = (response.albumList2?.album ?? []).map(album);
   res.json({ albums, offset, hasMore: albums.length === size });
 }));

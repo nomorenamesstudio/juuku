@@ -1,17 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { NowBar } from './MiniPlayer';
-import { ArtistIcon, ChevronLeftIcon, CloseIcon, HeartIcon, LibraryIcon, LogOutIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
+import {
+  ArtistIcon,
+  ChevronLeftIcon,
+  CloseIcon,
+  LibraryIcon,
+  LogOutIcon,
+  PlaylistIcon,
+  QueueIcon,
+  RefreshIcon,
+  SearchIcon,
+  SettingsIcon,
+} from './icons';
 import { TrackActions, TrackActionsProvider } from './TrackActions';
 import { LoginView } from './views/LoginView';
 import { type Session, getSession, signOut, type Song } from './api';
 import { goBack, navigate, useRoute } from './router';
 import { type Settings, applySettings, loadSettings } from './settings';
+import { hydratePrefs } from './prefs';
 import { useCounts } from './useCounts';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
 import { ArtistView } from './views/ArtistView';
+import { SearchView } from './views/SearchView';
 import { SettingsView } from './views/SettingsView';
-import { SettingsIcon } from './icons';
 import { FavoritesView } from './views/FavoritesView';
 import { Library } from './views/Library';
 import { PlayerView } from './views/PlayerView';
@@ -23,14 +35,14 @@ const RAIL = [
   { path: '/library/albums', label: 'Albums', group: 'Browse', icon: LibraryIcon },
   { path: '/library/artists', label: 'Artists', group: 'Browse', icon: ArtistIcon },
   { path: '/playlists', label: 'Playlists', group: 'Yours', icon: PlaylistIcon },
-  { path: '/favorites', label: 'Favorites', group: 'Yours', icon: HeartIcon },
+  { path: '/search', label: 'Search', group: 'Yours', icon: SearchIcon },
   { path: '/queue', label: 'Queue', group: 'Yours', icon: QueueIcon },
 ];
 
 const TABS = [
   { path: '/library/albums', label: 'Library', icon: LibraryIcon },
   { path: '/playlists', label: 'Playlists', icon: PlaylistIcon },
-  { path: '/favorites', label: 'Favorites', icon: HeartIcon },
+  { path: '/search', label: 'Search', icon: SearchIcon },
   { path: '/queue', label: 'Queue', icon: QueueIcon },
 ];
 
@@ -173,6 +185,21 @@ export default function App() {
   const jbox = useJukebox({ paused });
   const [lyricsOpen, setLyricsOpen] = useState(false);
   const [settings, setSettings] = useState<Settings>(loadSettings);
+  // the account's preferences arrive before the shell paints, so nothing flashes
+  // a device-local value that the account overrides
+  const [prefsReady, setPrefsReady] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void hydratePrefs().then(() => {
+      if (!alive) return;
+      setSettings(loadSettings());
+      setPrefsReady(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const counts = useCounts({ paused });
 
   const loadSession = () => getSession().then(setSession, () => setSession({ required: false, authenticated: true }));
@@ -220,9 +247,11 @@ export default function App() {
             ? 'favorites'
             : route.name === 'queue'
               ? 'queue'
-              : route.name === 'settings'
-                ? 'settings'
-                : 'albums';
+              : route.name === 'search'
+                ? 'search'
+                : route.name === 'settings'
+                  ? 'settings'
+                  : 'albums';
 
   const isLibrary = route.name === 'library';
   // the library's tab has to survive while its view is hidden
@@ -245,6 +274,8 @@ export default function App() {
         return <PlaylistView id={route.id} jbox={jbox} />;
       case 'queue':
         return <QueueView jbox={jbox} />;
+      case 'search':
+        return <SearchView jbox={jbox} />;
       case 'settings':
         return <SettingsView settings={settings} onChange={setSettings} />;
       case 'player':
@@ -266,13 +297,13 @@ export default function App() {
     // kept in the layout but invisible: display:none makes iOS throw away the
     // decoded covers, so coming back re-decodes them and the grid flashes
     <div className={`library-slot ${isLibrary ? '' : 'is-hidden'}`} aria-hidden={!isLibrary}>
-      <Library jbox={jbox} tab={libraryTab.current} />
+      <Library tab={libraryTab.current} />
     </div>
   );
 
   // the shell must not mount before we know whether a password is needed, or its
   // first fetches race the session check and 401
-  if (!session) {
+  if (!session || !prefsReady) {
     return (
       <main className="boot">
         <span className="wordmark-stack">

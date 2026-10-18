@@ -9,6 +9,7 @@ export type Route =
   | { name: 'playlist'; id: string }
   | { name: 'queue' }
   | { name: 'player' }
+  | { name: 'search' }
   | { name: 'settings' };
 
 function parse(hash: string): Route {
@@ -31,6 +32,8 @@ function parse(hash: string): Route {
       return { name: 'queue' };
     case 'player':
       return { name: 'player' };
+    case 'search':
+      return { name: 'search' };
     case 'settings':
       return { name: 'settings' };
     default:
@@ -78,6 +81,7 @@ const LABELS: Record<Route['name'], string> = {
   playlist: 'Playlist',
   queue: 'Queue',
   player: 'Player',
+  search: 'Search',
   settings: 'Settings',
 };
 

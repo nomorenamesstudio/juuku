@@ -22,6 +22,8 @@ All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "err
 | GET | `/api/albums/:id` | Album plus its songs |
 | GET | `/api/artists` | All artists |
 | GET | `/api/artists/:id` | Artist plus their albums |
+| GET | `/api/prefs` | This account's preferences (lyrics settings, recent searches, library sort) |
+| PUT | `/api/prefs` | Merge preferences; unknown keys and wrong shapes are dropped |
 | GET | `/api/lyrics/:id` | Synced or plain lyrics for a song |
 | GET | `/api/favorites` | The `Favorites` playlist as songs |
 | POST | `/api/favorites` | Add songs to it (`{ ids: string[] }`, deduped) |

@@ -111,7 +111,9 @@ export const getLyrics = (songId: string, lookup = false) =>
 export const search = (q: string) =>
   request<{ songs: Song[]; albums: Album[]; artists: Artist[] }>(`api/search?q=${encodeURIComponent(q)}`);
 
-export const getAlbums = (offset = 0, size = 30, type = 'newest') =>
+export type AlbumSort = 'alphabeticalByName' | 'newest' | 'recent' | 'byYear';
+
+export const getAlbums = (offset = 0, size = 30, type: AlbumSort = 'newest') =>
   request<{ albums: Album[]; hasMore: boolean }>(`api/albums?type=${type}&size=${size}&offset=${offset}`);
 
 export const getAlbum = (id: string) => request<{ album: Album; songs: Song[] }>(`api/albums/${id}`);

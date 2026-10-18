@@ -8,6 +8,8 @@ export interface Settings {
   lyricsLookup: boolean;
 }
 
+import { readPref, writePref } from './prefs';
+
 const KEY = 'juuku.settings';
 
 /** per device: timing depends on the network path, the font on taste */
@@ -15,9 +17,8 @@ export const DEFAULT_SETTINGS: Settings = { lyricLeadMs: 400, lyricFont: 'sans',
 
 export function loadSettings(): Settings {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw) as Partial<Settings>;
+    const parsed = readPref<Partial<Settings> | null>(KEY, null);
+    if (!parsed) return DEFAULT_SETTINGS;
     return {
       lyricLeadMs: Number.isFinite(parsed.lyricLeadMs) ? Math.min(1500, Math.max(0, Number(parsed.lyricLeadMs))) : DEFAULT_SETTINGS.lyricLeadMs,
       lyricFont: parsed.lyricFont === 'serif' ? 'serif' : 'sans',
@@ -33,10 +34,6 @@ export function applySettings(settings: Settings) {
 }
 
 export function saveSettings(settings: Settings) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(settings));
-  } catch {
-    // private mode or a full quota: the session still uses the value it holds
-  }
+  writePref(KEY, settings);
   applySettings(settings);
 }

@@ -103,6 +103,13 @@ ARM server pulls natively):
 docker pull ghcr.io/nomorenamesstudio/juuku:latest
 ```
 
+Preferences are kept per Navidrome account in one JSON file, so they survive a
+redeploy and follow a person from phone to desktop: lyrics settings, the recent
+search list, the library sort and the albums that played. Put a volume on
+`JUUKU_DATA_DIR` (the shipped compose mounts `./data`) or the file goes away with
+the container. The store is `{"version":1,"profiles":{"<account>":{...}}}`, which
+is also where per-account logins will land.
+
 Set `JUUKU_PASSWORD` and the app asks for it once per browser (a 30-day HttpOnly
 cookie, signed with a key derived from the password — change the password and
 every session ends). Failed attempts are throttled per address. Leaving it unset

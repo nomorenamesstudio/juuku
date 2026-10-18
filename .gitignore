@@ -7,3 +7,6 @@ sandbox/data/
 tsconfig.tsbuildinfo
 .env.remote
 .git-token
+
+# per-account preferences written at runtime
+.data/
