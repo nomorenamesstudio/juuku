@@ -7,6 +7,22 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.4.4 — 2026-10-18
+
+- **Fix** — the app version in Settings was stuck at 0.4.0: the last three releases bumped the changelog and the tag but not `package.json`, which is where `__APP_VERSION__` is baked from. A test now fails when the changelog's newest heading and `package.json` disagree, so the gate catches it instead of a person reading a stale number.
+
+## v0.4.3 — 2026-10-18
+
+- **Fix** — the Settings subtitle says where preferences actually live: on the juuku server, per account, shared by every device pointed at it. They are not stored inside Navidrome — the previous copy implied that.
+
+## v0.4.2 — 2026-10-18
+
+- **Fix** — the Settings page stopped claiming "Saved on this device only", left over from before preferences moved server-side.
+
+## v0.4.1 — 2026-10-18
+
+- **Docs** — the preferences directory has to be writable by the user inside the container (the image runs as `node`, uid 1000): either `chown 1000:1000 data` or run the service as the directory owner with `user: "<uid>:<gid>"`. Unwritable, the app still runs and preferences stay local to each browser.
+
 ## v0.4.0 — 2026-10-18
 
 - **Feature** — Search is its own page: a field that focuses itself, the same three result groups (artists, albums, songs), and **Recent** — the ten things you actually opened, newest first, per device in `localStorage`. An entry is the entity itself (artwork, name, `Artist` or `Album · artist`) and tapping it goes straight there instead of re-running the query; `×` removes it, `Clear` empties the list. Typing never writes to it, so prefixes like "A, Ap, Aph" leave nothing behind.
