@@ -254,7 +254,7 @@ app.put('/api/prefs', wrap(async (req, res) => {
   res.json({ prefs: await putProfile(serverInfo().user, req.body?.prefs ?? {}) });
 }));
 
-app.post('/api/control', wrap(async (req, res) => {
+app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
   const { action, index, offset, ids, gain } = req.body ?? {};
   if (!WRITE_ACTIONS.has(action)) throw badRequest(`action must be one of ${[...WRITE_ACTIONS].join(', ')}`);
 
@@ -269,17 +269,17 @@ app.post('/api/control', wrap(async (req, res) => {
     { action, index, offset, id: ids, gain },
     { repeat: ['id'] },
   );
-  // the next poll must not serve the state from before this action
-  invalidateState();
-  res.json(statusOf(response));
-}));
+    // the next poll must not serve the state from before this action
+    invalidateState();
+    res.json(statusOf(response));
+  })));
 
 /**
  * Queue the songs right after the current one. `set` resets playback to index 0 and
  * stops it, so the current track is re-skipped (with the position it had reached)
  * and resumed afterwards - otherwise "play next" would jump to the start.
  */
-app.post('/api/queue/next', wrap(async (req, res) => {
+app.post('/api/queue/next', wrap(async (req, res) => serialWrite(async () => {
   const ids = req.body?.ids;
   if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
 
@@ -311,7 +311,7 @@ app.post('/api/queue/next', wrap(async (req, res) => {
 
   const response = await call('jukeboxControl', { action: 'status' });
   res.json(statusOf(response));
-}));
+})));
 
 /**
  * `set` returns before the new queue is live, so a `skip` sent straight after it
@@ -328,8 +328,21 @@ async function waitForQueue(ids, timeoutMs = 2500) {
   return false;
 }
 
+/**
+ * One jukebox write at a time. Navidrome switches tracks without a lock, so two
+ * overlapping actions (a skip from one device and a start from another, say) can
+ * each spawn an mpv and play two tracks at once.
+ */
+let writeChain = Promise.resolve();
+
+function serialWrite(task) {
+  const run = writeChain.then(task, task);
+  writeChain = run.catch(() => {});
+  return run;
+}
+
 /** Play immediately: replace the queue, jump to a track and start. */
-app.post('/api/play', wrap(async (req, res) => {
+app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   const { ids, index = 0 } = req.body ?? {};
   if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
   if (!Number.isInteger(index) || index < 0 || index >= ids.length) throw badRequest('index must be inside ids');
@@ -338,7 +351,7 @@ app.post('/api/play', wrap(async (req, res) => {
   await call('jukeboxControl', { action: 'skip', index });
   const response = await call('jukeboxControl', { action: 'start' });
   res.json(statusOf(response));
-}));
+})));
 
 // -------------------------------------------------------------------- library
 

@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.4.5 — 2026-10-18
+
+- **Fix** — two tracks could play at once. Navidrome switches tracks without a lock, so two overlapping jukebox actions (a skip from one device, a start from another) each spawned an mpv — and since the shared dmix device lets both open the card, both were audible. Jukebox writes are now serialized in juuku's server (one at a time), and the client no longer sends a redundant `start` right after a skip: `skip` already resumes playback itself.
+- **Fix** — `package.json` and the changelog disagreed after 0.4.1–0.4.3 shipped with the old version string; a test now fails when the newest changelog heading and `package.json` differ.
+
 ## v0.4.4 — 2026-10-18
 
 - **Fix** — the app version in Settings was stuck at 0.4.0: the last three releases bumped the changelog and the tag but not `package.json`, which is where `__APP_VERSION__` is baked from. A test now fails when the changelog's newest heading and `package.json` disagree, so the gate catches it instead of a person reading a stale number.

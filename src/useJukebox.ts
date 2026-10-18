@@ -132,11 +132,17 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     const finished = stopped && next.status.position <= 1 && prev.position > 2;
     const advanced = prev.playing && next.status.playing && next.status.currentIndex > prev.index;
 
+    /**
+     * A skip already resumes playback in Navidrome (it pauses, switches, then starts
+     * again). Sending `start` on top of it raced the switch and produced a *second*
+     * mpv — two tracks at once — so the follow-up only goes out when playback had
+     * stopped and the skip alone would not restart it.
+     */
     try {
       if (mode === 'one' && (finished || (advanced && prev.position >= prev.duration - 5))) {
         const index = finished ? Math.max(next.status.currentIndex, 0) : prev.index;
         await control({ action: 'skip', index, offset: 0 });
-        await control({ action: 'start' });
+        if (finished) await control({ action: 'start' });
         lastSnapshot.current = null;
       } else if (mode === 'all' && finished && prev.index >= prev.lastIndex) {
         await control({ action: 'skip', index: 0, offset: 0 });
