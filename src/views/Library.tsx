@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CloseIcon } from '../icons';
+import { ChevronDownIcon, CloseIcon, RefreshIcon } from '../icons';
 import { type Album, type Artist, type Song, coverUrl, getAlbums, search } from '../api';
 import { Cover } from '../Cover';
 import { useCounts } from '../useCounts';
@@ -56,6 +56,8 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
       search(text).then((payload) => {
         // an artist with no albums has nothing to open
         setResults({ ...payload, artists: payload.artists.filter((artist) => (artist.albumCount ?? 0) > 0) });
+        // results replace a grid that may be scrolled far down, so land on the first row
+        window.scrollTo({ top: 0 });
       }, () => setResults(null));
     }, 250);
     return () => window.clearTimeout(timer);
@@ -211,6 +213,7 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
               </div>
               {hasMore && (
                 <button className="more" onClick={loadMore} disabled={loading}>
+                  {loading ? <RefreshIcon size={16} className="spin" /> : <ChevronDownIcon size={16} />}
                   {loading ? 'Loading…' : 'Load more albums'}
                 </button>
               )}

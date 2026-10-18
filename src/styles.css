@@ -801,7 +801,10 @@ h1.display {
 }
 
 .more {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   width: 100%;
   margin: 1.6rem 0 0;
   padding: 0.75rem;
@@ -809,6 +812,17 @@ h1.display {
   border-radius: 12px;
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+/* the load-more spinner turns while a page of albums is on its way */
+.more .spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .album-view {
@@ -2875,12 +2889,6 @@ h1.display {
   color: var(--cream);
 }
 
-.settings-label .fineprint {
-  max-width: 34ch;
-  font-size: 0.76rem;
-  line-height: 1.45;
-}
-
 .settings-value {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2996,14 +3004,20 @@ h1.display {
   color: var(--cream);
 }
 
-/* the explanation is two lines, not a narrow column */
+/* an explanation uses all the width it is given and only wraps when it must */
 .settings-label .fineprint {
-  max-width: 46ch;
   font-size: 0.76rem;
   line-height: 1.45;
 }
 
 /* the value rides beside the slider so the pair reads as one control */
+/* a row's explanation sits on its own line, so it can use the whole column */
+.settings-note {
+  margin: -0.1rem 0 1.3rem;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
 .settings-slider-row {
   display: flex;
   align-items: center;

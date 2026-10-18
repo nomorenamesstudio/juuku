@@ -53,13 +53,7 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
         </div>
 
         <div className="settings-row">
-          <span className="settings-label">
-            Look up lyrics online
-            <span className="fineprint">
-              Off, the app shows only the lyrics inside the file. On, it asks LRCLIB when a file has none — and
-              LRCLIB guesses: remixes and instrumentals often come back with another recording's words.
-            </span>
-          </span>
+          <span className="settings-label">Look up lyrics online</span>
           <div className="segmented compact" role="tablist" aria-label="Online lyrics lookup">
             {([false, true] as const).map((on) => (
               <button
@@ -73,6 +67,11 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
             ))}
           </div>
         </div>
+
+        <p className="fineprint settings-note">
+          Off, the app shows only the lyrics inside the file. On, it asks LRCLIB when a file has none — and LRCLIB
+          guesses: remixes and instrumentals often come back with another recording's words.
+        </p>
 
         <div className="settings-row">
           <span className="settings-label">Font</span>

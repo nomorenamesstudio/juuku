@@ -7,9 +7,17 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.8 — 2026-10-18
+
+- **Fix** — a search scrolls the page back to the top when its results land, instead of leaving you in the middle of the new list.
+- **Change** — "Load more albums" carries a chevron, and that slot turns into a spinner while the next page is on its way.
+- **Change** — the settings explanation sits on its own line full width (`353/353px` on a phone, `576/576px` on desktop) instead of wrapping at `46ch`.
+
 ## v0.3.7 — 2026-10-18
 
 - **Feature** — library album cards carry the year beside the artist (`Ratatat · 2004`); the artist truncates and the year never does.
+- **Change** — "Load more albums" carries a chevron, and the same slot turns into a spinner while the next page is on its way.
+- **Fix** — a search scrolls the page back to the top when its results land, instead of showing the middle of the new list.
 - **Change** — the online lyrics lookup is off by default and lives in Settings. It guesses: it gave Ratatat's *Wildcat* (instrumental) another recording's words and filed junk under near-matching titles. Off, the app shows only what the file carries — embedded tags and `.lrc` sidecars. The server hunts only when asked (`?lookup=1`), and version-marked titles are still never hunted.
 
 ## v0.3.6 — 2026-10-18
