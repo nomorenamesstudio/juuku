@@ -72,20 +72,20 @@ function usePullToDismiss(onDismiss: () => void) {
   };
 }
 
-function useLyrics(songId: string | undefined) {
+function useLyrics(songId: string | undefined, lookup: boolean) {
   const [lyrics, setLyrics] = useState<Lyrics | null>(null);
   useEffect(() => {
     setLyrics(null);
     if (!songId) return;
     let live = true;
-    getLyrics(songId).then(
+    getLyrics(songId, lookup).then(
       (payload) => live && setLyrics(payload),
       () => live && setLyrics({ source: 'none', synced: false, lines: [] }),
     );
     return () => {
       live = false;
     };
-  }, [songId]);
+  }, [songId, lookup]);
   return lyrics;
 }
 
@@ -230,11 +230,13 @@ export function PlayerView({
   jbox,
   lyricsOpen,
   lyricLeadMs,
+  lyricsLookup,
   onLyricsOpenChange,
 }: {
   jbox: Jukebox;
   lyricsOpen: boolean;
   lyricLeadMs: number;
+  lyricsLookup: boolean;
   onLyricsOpenChange: (open: boolean) => void;
 }) {
   const { current, status, entries } = jbox;
@@ -242,7 +244,7 @@ export function PlayerView({
   const setShowLyrics = onLyricsOpenChange;
   const [trackDraft, setTrackDraft] = useState<number | null>(null);
   const trackTimer = useRef<number | undefined>(undefined);
-  const lyrics = useLyrics(current?.id);
+  const lyrics = useLyrics(current?.id, lyricsLookup);
   // known-empty means no `.lrc`, no tag and no LRCLIB match; while it loads we do
   // not know yet, and inside lyrics mode the toggle stays usable so you can leave
   const lyricsMissing = lyrics !== null && lyrics.lines.length === 0;

@@ -91,7 +91,7 @@ Body: `{ action, index?, offset?, ids?, gain? }`, returns the new `status`.
 { "source": "navidrome", "synced": true, "lines": [{ "time": 50560, "text": "We are human" }] }
 ```
 
-`source` is `navidrome` (embedded tag or `.lrc` sidecar, via OpenSubsonic `getLyricsBySongId`), `lrclib` (fallback lookup by artist/title/album/duration), or `none`. Titles that name another version — a bracketed or dashed `remix`, `edit`, `live`, `acoustic`, `instrumental`, `version` and the like — are never looked up: LRCLIB files the original's words under those titles, and a remix runs on a different timeline. Embedded lyrics are still served for them. `time` is milliseconds from the start of the track and is absent for unsynced lyrics. Both outcomes are cached for a day, misses included, so a lyrics-less track does not hammer LRCLIB.
+`source` is `navidrome` (embedded tag or `.lrc` sidecar, via OpenSubsonic `getLyricsBySongId`), `lrclib` (opt-in lookup by artist/title/album/duration, `?lookup=1`), or `none`. Without `lookup=1` a file that carries no lyrics returns `none` — the lookup guesses, so it is a per-device setting (off by default). Titles that name another version — a bracketed or dashed `remix`, `edit`, `live`, `acoustic`, `instrumental`, `version` and the like — are never looked up: LRCLIB files the original's words under those titles, and a remix runs on a different timeline. Embedded lyrics are still served for them. `time` is milliseconds from the start of the track and is absent for unsynced lyrics. Both outcomes are cached for a day, misses included, so a lyrics-less track does not hammer LRCLIB.
 
 ### `GET/POST/DELETE /api/favorites`
 

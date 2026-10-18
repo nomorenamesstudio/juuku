@@ -490,11 +490,11 @@ app.get('/api/lyrics/:id', wrap(async (req, res) => {
       synced: block.line.some((line) => line.start !== undefined),
       lines: block.line.map((line) => ({ time: line.start, text: line.value ?? '' })),
     };
-  } else {
-    // Nothing embedded and no .lrc sidecar: ask LRCLIB once, cache the miss too.
+  } else if (req.query.lookup === '1') {
+    // Opt-in only (Settings): LRCLIB guesses. It hands the original's words to a
+    // remix, gives instrumental tracks somebody else's lyrics, and files junk under
+    // titles that look close, so a file without lyrics shows none by default.
     const songResponse = await call('getSong', { id }).catch(() => null);
-    // A remix or live take usually has no lyrics of its own, and LRCLIB keeps the
-    // original's words under its title, so versions are not hunted at all.
     const huntable = songResponse?.song && !versionMarked(songResponse.song.title);
     if (huntable) {
       payload = (await lyricsFromLrclib(songResponse.song).catch(() => null)) ?? payload;

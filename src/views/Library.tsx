@@ -202,7 +202,10 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                       {album.coverArt ? <Cover src={coverUrl(album.coverArt, 300)} /> : null}
                     </span>
                     <span className="album-name">{album.name}</span>
-                    <span className="album-artist">{album.artist}</span>
+                    <span className="album-artist">
+                      <span className="album-artist-name">{album.artist}</span>
+                      {album.year ? <span className="album-year">· {album.year}</span> : null}
+                    </span>
                   </button>
                 ))}
               </div>

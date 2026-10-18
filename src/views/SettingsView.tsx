@@ -53,6 +53,28 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
         </div>
 
         <div className="settings-row">
+          <span className="settings-label">
+            Look up lyrics online
+            <span className="fineprint">
+              Off, the app shows only the lyrics inside the file. On, it asks LRCLIB when a file has none — and
+              LRCLIB guesses: remixes and instrumentals often come back with another recording's words.
+            </span>
+          </span>
+          <div className="segmented compact" role="tablist" aria-label="Online lyrics lookup">
+            {([false, true] as const).map((on) => (
+              <button
+                key={String(on)}
+                role="tab"
+                aria-selected={settings.lyricsLookup === on}
+                onClick={() => update({ lyricsLookup: on })}
+              >
+                {on ? 'On' : 'Off'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-row">
           <span className="settings-label">Font</span>
           <div className="segmented compact" role="tablist" aria-label="Lyrics font">
             {(['sans', 'serif'] as const).map((font) => (

@@ -250,6 +250,7 @@ export default function App() {
         return (
           <PlayerView
             lyricLeadMs={settings.lyricLeadMs}
+            lyricsLookup={settings.lyricsLookup}
             jbox={jbox}
             lyricsOpen={lyricsOpen}
             onLyricsOpenChange={setLyricsOpen}

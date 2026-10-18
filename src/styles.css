@@ -777,12 +777,27 @@ h1.display {
 }
 
 .album-artist {
+  display: flex;
+  gap: 0.3rem;
   margin-top: 0.12rem;
   font-size: 0.8rem;
   color: var(--dim);
+  /* the artist gives way, the year never does */
+  overflow: hidden;
+}
+
+.album-artist-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.album-year {
+  flex: none;
+  white-space: nowrap;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
 }
 
 .more {

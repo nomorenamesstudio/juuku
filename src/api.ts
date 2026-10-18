@@ -105,7 +105,8 @@ export const signOut = () => request<{ ok: boolean }>('api/logout', { method: 'P
 
 export const getHealth = () => request<Health>('api/health');
 export const getState = () => request<State>('api/state');
-export const getLyrics = (songId: string) => request<Lyrics>(`api/lyrics/${songId}`);
+export const getLyrics = (songId: string, lookup = false) =>
+  request<Lyrics>(`api/lyrics/${songId}${lookup ? '?lookup=1' : ''}`);
 
 export const search = (q: string) =>
   request<{ songs: Song[]; albums: Album[]; artists: Artist[] }>(`api/search?q=${encodeURIComponent(q)}`);
