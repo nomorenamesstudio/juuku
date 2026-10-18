@@ -107,7 +107,11 @@ Preferences are kept per Navidrome account in one JSON file, so they survive a
 redeploy and follow a person from phone to desktop: lyrics settings, the recent
 search list, the library sort and the albums that played. Put a volume on
 `JUUKU_DATA_DIR` (the shipped compose mounts `./data`) or the file goes away with
-the container. The store is `{"version":1,"profiles":{"<account>":{...}}}`, which
+the container. The directory has to be writable by the user inside the container:
+the image runs as `node` (uid 1000), so either `mkdir -p data && chown 1000:1000 data`
+or run the service as the directory's owner with `user: "<uid>:<gid>"`. If it is not
+writable the app still works — the API answers 500 on save and preferences simply
+stay local to each browser. The store is `{"version":1,"profiles":{"<account>":{...}}}`, which
 is also where per-account logins will land.
 
 Set `JUUKU_PASSWORD` and the app asks for it once per browser (a 30-day HttpOnly

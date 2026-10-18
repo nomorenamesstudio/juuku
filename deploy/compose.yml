@@ -22,6 +22,9 @@ services:
       - "3101:3101"
     read_only: true
     volumes:
+      # the container runs as node (uid 1000), so this directory has to be writable
+      # by that uid: `mkdir -p data && chown 1000:1000 data`, or mirror the host uid
+      # here with `user: "<uid>:<gid>"`
       - ./data:/data
     tmpfs:
       - /tmp
