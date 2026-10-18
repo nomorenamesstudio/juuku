@@ -10,6 +10,12 @@ Navidrome's own web UI cannot drive the jukebox — the feature is only reachabl
 
 ![The library, with the player docked at the bottom](docs/screenshot.jpg)
 
+<p align="center">
+  <img src="docs/mobile-player.jpg" width="30%" alt="Player: cover, title, scrubber, transport and volume" />
+  <img src="docs/mobile-lyrics.jpg" width="30%" alt="Lyrics in the cover's place, the singing line lit" />
+  <img src="docs/mobile-album.jpg" width="30%" alt="Album page: cover, facts, actions and the track list" />
+</p>
+
 ## Run it
 
 ```sh

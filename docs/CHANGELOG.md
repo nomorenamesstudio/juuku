@@ -9,6 +9,9 @@ minor, and the tag is what CI builds the published image from.
 
 ## v0.3.1 — 2026-10-18
 
+- **Change** — README images retaken against a 274-album library on the released build: a new desktop shot plus a row of three phone shots (player, lyrics with the sung line lit, album page).
+
+
 - **Fix** — the lyrics pane no longer shows a scrollbar: it auto-scrolls with the song, so the bar appearing and vanishing under the thumb was noise. Scrolling itself still works, and nothing moved (`clientWidth === offsetWidth`).
 
 ## v0.3.0 — 2026-10-17
