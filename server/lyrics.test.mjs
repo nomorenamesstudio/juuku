@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseLrc } from './lyrics.mjs';
+import { cleanArtist, cleanTitle, parseLrc, pickCandidate } from './lyrics.mjs';
 
 // The player highlights a line by comparing these timestamps against the
 // jukebox position, so a wrong unit or a dropped minute desyncs every lyric view
@@ -17,4 +17,40 @@ test('parseLrc keeps untimed lines and drops blanks', () => {
     { text: 'Just a line' },
     { time: 1500, text: 'After all' },
   ]);
+});
+
+// Tags in the library carry featured credits ("Rong feat. Robyn") that LRCLIB does
+// not index, so the search fallback depends on these names being stripped.
+test('cleanTitle drops featured credits and parentheticals', () => {
+  assert.equal(cleanTitle('Rong feat. Robyn'), 'Rong');
+  assert.equal(cleanTitle('Monument (The Inevitable End Version)'), 'Monument');
+  assert.equal(cleanTitle('Running to the Sea feat. Susanne Sundfør'), 'Running to the Sea');
+  assert.equal(cleanTitle('Plain Title'), 'Plain Title');
+});
+
+test('cleanArtist keeps the lead artist only', () => {
+  assert.equal(cleanArtist('Robyn feat. Röyksopp'), 'Robyn');
+  assert.equal(cleanArtist('Röyksopp'), 'Röyksopp');
+});
+
+// A search returns many recordings of the same title; picking one by duration is
+// what stops a seven-minute remix being shown over a three-minute album track.
+test('pickCandidate prefers the recording whose length matches', () => {
+  const results = [
+    { duration: 400, syncedLyrics: '[00:01.00]remix', plainLyrics: null },
+    { duration: 152, syncedLyrics: '[00:01.00]original', plainLyrics: null },
+    { duration: 153, syncedLyrics: null, plainLyrics: 'plain' },
+  ];
+  const best = pickCandidate(results, 152);
+  assert.equal(best.entry.syncedLyrics, '[00:01.00]original');
+  assert.equal(best.timingTrusted, true);
+});
+
+test('pickCandidate marks an off-length result as untrustworthy for timing', () => {
+  // the album version is 6:20, this file is 6:41 — the words are right, the
+  // timestamps belong to another edit
+  const results = [{ duration: 380, plainLyrics: 'words', syncedLyrics: '[00:01.00]x' }];
+  const best = pickCandidate(results, 401, 5);
+  assert.equal(best.timingTrusted, false, 'a remix of another length must not sync');
+  assert.equal(pickCandidate([], 60), null);
 });

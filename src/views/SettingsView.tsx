@@ -1,0 +1,105 @@
+import { useEffect, useState } from 'react';
+import { type Health, getHealth } from '../api';
+import { GithubIcon } from '../icons';
+import { type Settings, saveSettings } from '../settings';
+
+export function SettingsView({ settings, onChange }: { settings: Settings; onChange: (next: Settings) => void }) {
+  const [health, setHealth] = useState<Health | null>(null);
+
+  useEffect(() => {
+    getHealth().then(setHealth, () => setHealth(null));
+  }, []);
+
+  const update = (next: Partial<Settings>) => {
+    const merged = { ...settings, ...next };
+    saveSettings(merged);
+    onChange(merged);
+  };
+
+  return (
+    <div className="view settings-view">
+      <header className="view-head">
+        <h1 className="display">Settings</h1>
+        <p className="fineprint">Saved on this device only</p>
+      </header>
+
+      <section className="settings-block" aria-labelledby="settings-lyrics">
+        <h2 id="settings-lyrics">Lyrics</h2>
+
+        <div className="settings-row">
+          <span className="settings-label">
+            Timing lead
+            <span className="fineprint">
+              How early a line lights up. Raise it if your connection lags; the highlight should land as the
+              singing starts.
+            </span>
+          </span>
+        </div>
+
+        <div className="settings-slider-row">
+          <input
+            className="settings-slider"
+            type="range"
+            min={0}
+            max={2000}
+            step={50}
+            value={settings.lyricLeadMs}
+            onChange={(event) => update({ lyricLeadMs: Number(event.target.value) })}
+            aria-label="Lyric timing lead in milliseconds"
+            aria-valuetext={`${settings.lyricLeadMs} milliseconds`}
+            style={{ ['--progress' as string]: `${(settings.lyricLeadMs / 2000) * 100}%` }}
+          />
+          <output className="settings-value">{settings.lyricLeadMs} ms</output>
+        </div>
+
+        <div className="settings-row">
+          <span className="settings-label">Font</span>
+          <div className="segmented compact" role="tablist" aria-label="Lyrics font">
+            {(['sans', 'serif'] as const).map((font) => (
+              <button
+                key={font}
+                role="tab"
+                aria-selected={settings.lyricFont === font}
+                className={`font-choice font-${font}`}
+                onClick={() => update({ lyricFont: font })}
+              >
+                {font === 'sans' ? 'Sans' : 'Serif'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="settings-block" aria-labelledby="settings-server">
+        <h2 id="settings-server">Connected to</h2>
+        <dl className="settings-facts">
+          <dt>Navidrome</dt>
+          <dd>{health?.url ?? '…'}</dd>
+          <dt>Server version</dt>
+          <dd>{health?.navidrome ?? '…'}</dd>
+          <dt>Signed in as</dt>
+          <dd>{health?.user ?? '…'}</dd>
+          <dt>Jukebox</dt>
+          <dd>{health ? ('enabled' in health.jukebox && health.jukebox.enabled ? 'enabled' : 'off') : '…'}</dd>
+        </dl>
+      </section>
+
+      <section className="settings-block" aria-labelledby="settings-about">
+        <h2 id="settings-about">About</h2>
+        <dl className="settings-facts">
+          <dt>Juuku</dt>
+          <dd>v{__APP_VERSION__}</dd>
+        </dl>
+        <p className="fineprint settings-credit">
+          Made with ♥ by{' '}
+          <a href="https://nomorenames.studio" target="_blank" rel="noreferrer noopener">
+            No More Names Studio
+          </a>
+        </p>
+        <a className="settings-link" href="https://github.com/nomorenamesstudio/juuku" target="_blank" rel="noreferrer noopener">
+          <GithubIcon size={16} /> GitHub repo
+        </a>
+      </section>
+    </div>
+  );
+}

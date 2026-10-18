@@ -3,8 +3,8 @@ import { coverUrl } from './api';
 import { formatTime } from './format';
 import {
   AddToPlaylistIcon,
-  ChevronDownIcon,
   HeartIcon,
+  MicIcon,
   NextIcon,
   PauseIcon,
   PlayIcon,
@@ -128,9 +128,10 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
         <button
           className="icon-button bar-only"
           onClick={() => (expanded ? goBack() : navigate('/player'))}
-          aria-label={expanded ? 'Collapse the player' : 'Expand the player'}
+          aria-label={expanded ? 'Close the lyrics view' : 'Open the lyrics view'}
         >
-          <ChevronDownIcon size={18} style={expanded ? undefined : { transform: 'rotate(180deg)' }} />
+          {/* on wide screens the player is essentially the lyrics view */}
+          <MicIcon size={18} />
         </button>
         </div>
       </div>

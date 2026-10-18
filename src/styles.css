@@ -50,7 +50,7 @@
   --line: #352a1f;
   --cream: #f4ead9;
   --muted: #b6a68c;
-  --dim: #9a8870;
+  --dim: #ab9a80;
   --amber: #f0a24a;
   --ember: #c9583f;
   --radius: 18px;
@@ -64,11 +64,11 @@
   --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.055);
   --glass-blur: blur(24px) saturate(1.45);
   /* motion */
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-1: 120ms;
-  --dur-2: 200ms;
-  --dur-3: 320ms;
+  --dur-1: 170ms;
+  --dur-2: 280ms;
+  --dur-3: 420ms;
   font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.45;
@@ -226,55 +226,15 @@ h1.display {
   display: none;
 }
 
-/* lyrics mode keeps the phone's chrome: you can still play, skip and queue */
-.shell-player.lyrics-open .nowbar {
-  display: flex;
-}
-
-.shell-player.lyrics-open .content {
-  padding-bottom: calc(4.2rem + 4.1rem + env(safe-area-inset-bottom));
-}
-
-.player.lyrics-on {
-  /* the bar + tabs are back in this mode, so the lyrics get the rest of the screen */
-  height: calc(100dvh - 8.3rem - env(safe-area-inset-bottom));
-  min-height: 0;
-  justify-content: flex-start;
-  overflow: hidden;
-}
-
-.player.lyrics-on .lyrics {
-  max-height: 100%;
-  height: 100%;
-}
-
-.player.lyrics-on .player-stage {
-  flex: 1;
-  min-height: 0;
-}
-
-/* lyrics mode keeps the mic (and the heart) so there is a way back to the cover */
-.player.lyrics-on .player-meta,
-.player.lyrics-on .scrub,
-.player.lyrics-on .player-bottom {
-  display: none;
-}
-
-.player.lyrics-on .transport {
-  gap: 2.2rem;
-  padding-bottom: 0.6rem;
-}
-
-.player.lyrics-on .transport > :not(.lyrics-toggle):not(.fav) {
-  display: none;
-}
-
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   /* installed on a phone the app draws under the status bar (black-translucent) */
   padding-top: env(safe-area-inset-top);
+  /* cover glows are wider than the content column; clip at the screen edge instead
+     of letting them create a horizontal scroll */
+  overflow-x: clip;
 }
 
 .content {
@@ -376,15 +336,8 @@ h1.display {
 
 .view {
   padding-top: 0.4rem;
-  animation: view-in 160ms var(--ease) both;
-}
-
-@keyframes view-in {
-  /* starts translucent, not blank: from 0 every navigation read as a flash on iOS */
-  from {
-    opacity: 0.62;
-    transform: translateY(4px);
-  }
+  /* no entry animation: a transform on the view makes iOS repaint the whole
+     layer, which is what flashed the album grid on back navigation */
 }
 
 .nowbar {
@@ -402,20 +355,26 @@ h1.display {
   position: relative;
 }
 
-.player-glow {
-  /* behind the cover and, in lyrics mode, behind the words */
-  top: -2.2rem;
-  height: min(96vw, 620px);
-  filter: blur(56px) saturate(1.25);
-  opacity: 0.45;
-  -webkit-mask-image: radial-gradient(58% 58% at 50% 34%, #000 0%, rgba(0, 0, 0, 0.55) 46%, transparent 76%);
-  mask-image: radial-gradient(58% 58% at 50% 34%, #000 0%, rgba(0, 0, 0, 0.55) 46%, transparent 76%);
+/* the words sit on the wash, so it fades further back in lyrics mode */
+.player.lyrics-on .album-backdrop.player-glow {
+  opacity: 0.26;
 }
 
-.player.lyrics-on .player-glow {
-  /* text sits on it, so keep the wash quieter */
-  opacity: 0.3;
-  height: min(80vw, 520px);
+.album-backdrop.player-glow {
+  /* behind the cover and the words: sized to fill the screen, not to hug the art.
+     Compound selector because .album-backdrop's own height is declared later. */
+  /* wider than the player column: overflow: hidden on .player trims it at the
+     screen edge, so it reaches the sides instead of fading before them */
+  left: -32%;
+  right: -32%;
+  top: -2.2rem;
+  height: min(260vw, 1600px);
+  /* brightness keeps a white cover from turning the page into pale grey, which made
+     the cream and dim text unreadable over it */
+  filter: blur(56px) saturate(1.25) brightness(0.72);
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(80% 66% at 50% 32%, #000 0%, rgba(0, 0, 0, 0.6) 48%, transparent 78%);
+  mask-image: radial-gradient(80% 66% at 50% 32%, #000 0%, rgba(0, 0, 0, 0.6) 48%, transparent 78%);
 }
 
 .player-inner {
@@ -444,6 +403,39 @@ h1.display {
   flex-direction: column;
   gap: 0.9rem;
   padding: 0.9rem 0.15rem 1.3rem;
+}
+
+/* artist: "play all" sits on the title line, the album count stays under it */
+.artist-head {
+  gap: 0.1rem;
+}
+
+.artist-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  /* on desktop the head is a row, so this wrapper has to claim the width or the
+     button stops short of the right edge */
+  flex: 1;
+  min-width: 0;
+}
+
+.artist-heading h1 {
+  min-width: 0;
+}
+
+/* .view-head .fineprint pulls itself up by 0.5rem to close the head's gap; here the
+   gap is gone, so beat that rule's specificity */
+.artist-head .view-head .fineprint,
+.view-head.artist-head .fineprint {
+  margin-top: 0;
+}
+
+.artist-head .secondary.compact {
+  flex: none;
+  padding: 0.42rem 0.8rem;
+  font-size: 0.8rem;
 }
 
 /* library: the browse switch sits beside the title, right aligned */
@@ -535,7 +527,7 @@ h1.display {
   width: 100%;
   /* the glass belongs to the field, not to a band behind it: covers scroll past
      and only the field frosts them, so there is no cut edge anywhere */
-  background-color: rgba(20, 16, 11, 0.8);
+  background-color: rgba(20, 16, 11, 0.93);
   /* the glyph is the field's own background: as a separate overlaid element it sat
      in the backdrop-filter layer and vanished after the first frame */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b6a68c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
@@ -544,8 +536,6 @@ h1.display {
   background-size: 18px 18px;
   appearance: none;
   -webkit-appearance: none;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
   /* clears the glyph on the left and the clear button on the right */
@@ -576,27 +566,11 @@ h1.display {
   display: contents;
 }
 
-.library-bar.stuck::before {
-  content: '';
-  position: absolute;
-  inset: -0.55rem -1.15rem -2.7rem;
-  z-index: -1;
-  pointer-events: none;
-  /* a fade, not a band: no backdrop-filter here, which is what produced the cut */
-  background: linear-gradient(
-    to bottom,
-    rgba(20, 16, 11, 0.9) 0%,
-    rgba(20, 16, 11, 0.84) 40%,
-    rgba(20, 16, 11, 0.58) 64%,
-    rgba(20, 16, 11, 0.26) 84%,
-    rgba(20, 16, 11, 0) 100%
-  );
-}
-
 .library-bar {
   position: sticky;
-  /* floats like the deck instead of hugging the viewport edge */
-  top: 0.55rem;
+  /* sticky offsets are measured against the viewport, so the status-bar allowance
+     belongs here: the field clears the dynamic island in the installed app */
+  top: calc(env(safe-area-inset-top) + 0.35rem);
   z-index: 6;
   padding: 0.3rem 0 0.8rem;
   transition: background-color var(--dur-2), box-shadow var(--dur-2);
@@ -681,12 +655,16 @@ h1.display {
 }
 
 .secondary {
-  border: 1px solid var(--line);
+  /* a glass pill rather than an outline: over a cover glow a transparent button
+     with a hairline border disappears, and the fill keeps the label legible */
+  background: rgba(24, 19, 15, 0.72);
+  border: 1px solid rgba(244, 234, 217, 0.26);
   color: var(--cream);
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--raise);
+  background: rgba(24, 19, 15, 0.86);
+  border-color: rgba(244, 234, 217, 0.38);
 }
 
 .secondary.danger {
@@ -747,6 +725,34 @@ h1.display {
   object-fit: cover;
 }
 
+/* the library stays mounted out of flow, not display:none */
+.library-slot.is-hidden {
+  position: absolute;
+  inset: 0;
+  /* clip it: absolute content still contributes to the document's scroll height,
+     which made the app scrollable by a whole library while hidden. No paint
+     containment: the retained layer smeared over the next view on iOS. */
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* covers ease in as they decode; src/Cover.tsx shows a cached one at once */
+.cover {
+  opacity: 0;
+  transition: opacity 420ms var(--ease);
+}
+
+.cover.ready {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover {
+    transition: none;
+  }
+}
+
 .album-card:hover .album-art {
   box-shadow:
     0 0 0 1px rgba(240, 162, 74, 0.35) inset,
@@ -789,20 +795,32 @@ h1.display {
 .album-backdrop {
   position: absolute;
   z-index: -1;
-  /* bleeds up over the content padding to the viewport top */
+  /* a veil over the cover as well as the colour: on a white sleeve the wash alone
+     left cream and dim text sitting on pale grey */
+  background-image:
+    linear-gradient(
+      to bottom,
+      rgba(20, 16, 11, 0.12) 0%,
+      rgba(20, 16, 11, 0.45) 32%,
+      rgba(20, 16, 11, 0.78) 62%,
+      rgba(20, 16, 11, 0.92) 100%
+    ),
+    var(--cover-url);
+  /* bleeds up over the content padding to the viewport top, down past the actions
+     into the track list, and out past the column to the screen edges */
   top: -4.6rem;
-  left: 0;
-  right: 0;
-  height: min(86vw, 560px);
+  left: -40%;
+  right: -40%;
+  height: min(190vw, 1150px);
   background-size: cover;
   background-position: center;
-  filter: blur(52px) saturate(1.25);
+  filter: blur(52px) saturate(1.25) brightness(0.72);
   opacity: 0.42;
   pointer-events: none;
   /* radial, not linear: a vertical-only fade left visible side edges where the
      blur met the clip */
-  -webkit-mask-image: radial-gradient(72% 64% at 50% 30%, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 76%);
-  mask-image: radial-gradient(72% 64% at 50% 30%, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 76%);
+  -webkit-mask-image: radial-gradient(84% 68% at 50% 30%, #000 0%, rgba(0, 0, 0, 0.58) 46%, transparent 76%);
+  mask-image: radial-gradient(84% 68% at 50% 30%, #000 0%, rgba(0, 0, 0, 0.58) 46%, transparent 76%);
 }
 
 .album-head {
@@ -864,7 +882,7 @@ h1.display {
 }
 
 .album-actions {
-  margin: 0 0 1.4rem;
+  margin: 1.5rem 0 0.2rem;
   /* two buttons sharing the row, not two sizes of pill */
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1476,14 +1494,27 @@ h1.display {
 /* ----------------------------------------------------------------- player */
 
 .player {
+  /* one number for the cover box: the stage and the lyrics both use it, so the
+     two modes lay out identically */
+  --cover: min(calc(100vw - 2.3rem), 468px, 52vh);
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: 100dvh;
+  /* one screen, always: the cover shrinks to fit rather than pushing the volume
+     off the bottom. The top inset is subtracted because .page already pads for it —
+     without this the player hangs that many pixels below the screen in the
+     installed app, which eats the bottom padding */
+  height: calc(100dvh - env(safe-area-inset-top));
+  min-height: 0;
+  overflow: hidden;
   animation: none;
   max-width: 520px;
   margin: 0 auto;
-  padding: 0.6rem 1.15rem calc(1.6rem + env(safe-area-inset-bottom));
+  /* clear of the iOS home indicator without leaving a gap big enough to notice:
+     in the installed app the inset alone is 34px, so the base stays small */
+  /* a hard floor, not just the inset: in Safari the inset is 0 while the home
+     gesture still starts near the bottom edge, so the slider needs 48px anyway */
+  padding: 0.6rem 1.15rem max(3rem, calc(1rem + env(safe-area-inset-bottom)));
 }
 
 .player-grid {
@@ -1507,31 +1538,51 @@ h1.display {
 }
 
 .player-top {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+}
+
+.player-top-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.2rem;
 }
 
 .player-context {
-  flex: 1;
+  /* centred against the header, not against the space left by the buttons */
+  position: absolute;
+  left: 3.4rem;
+  right: 3.2rem;
   text-align: center;
   font-size: 0.8rem;
   color: var(--dim);
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* the mic reads as a toggle, not just a state */
+.transport .lyrics-toggle.is-on,
+.transport .lyrics-toggle.is-on:hover {
+  color: var(--amber);
+  background: rgba(240, 162, 74, 0.16);
 }
 
 .player-stage {
-  flex: 1;
+  /* the stage *is* the cover's box: the flexible row the controls leave over. It is
+     a size container so the cover can be the largest square that fits either axis. */
+  position: relative;
+  flex: 1 1 0;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.3rem 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+  padding-block: 0.6rem;
 }
 
 .player-art {
-  width: 100%;
-  max-width: min(360px, 52vh);
+  width: min(100%, 100cqh);
+  max-width: 100%;
   aspect-ratio: 1;
   border-radius: 16px;
   overflow: hidden;
@@ -1559,8 +1610,16 @@ h1.display {
 
 /* ----------------------------------------------------------------- lyrics */
 
-.player-stage.lyrics-on {
-  align-items: stretch;
+/* the lyrics fill the same box and scroll inside it */
+.player-stage.lyrics-on .lyrics {
+  width: min(100%, 100cqh);
+  height: min(100%, 100cqw);
+  max-height: 100%;
+  aspect-ratio: 1;
+  /* the base rule stretches; the cover is centred, so centre this too */
+  align-self: center;
+  justify-self: center;
+  overflow-y: auto;
 }
 
 .lyrics {
@@ -1573,10 +1632,16 @@ h1.display {
 }
 
 .lyric {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 1.5rem;
-  line-height: 1.35;
-  margin: 0 0 0.35rem;
+  /* sans for reading, serif stays on titles */
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.72rem;
+  /* tight leading inside a wrapped line, a clear gap between lines: 5.5px of
+     internal leading against 13px of margin */
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+  margin: 0 0 0.8rem;
   color: var(--dim);
   transition: color 200ms ease;
 }
@@ -1598,8 +1663,11 @@ h1.display {
 }
 
 .lyrics-note.source {
-  font-size: 0.75rem;
-  padding-top: 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* sits above the words, so it needs space below rather than above */
+  padding: 0 0 0.7rem;
 }
 
 /* ----------------------------------------------------------------- scrub */
@@ -1661,12 +1729,15 @@ h1.display {
 }
 
 .transport {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.1rem;
   padding: 0.2rem 0;
 }
+
+
 
 .play-button {
   display: grid;
@@ -1694,6 +1765,11 @@ h1.display {
   gap: 0.6rem;
   width: 100%;
   color: var(--dim);
+}
+
+.volume-inline {
+  /* the thumb needs vertical room to be grabbed */
+  padding-block: 0.45rem;
 }
 
 .volume-inline input[type='range'] {
@@ -1735,6 +1811,30 @@ h1.display {
   background: var(--muted);
 }
 
+/* iOS 27 blurs whatever is under the status bar in an installed app unless it finds
+   a full-width fixed surface at the edge with a background thicker than ~10px. This
+   gives it one, clipped to empty text so it paints nothing: the style exists for the
+   sampler, the strip stays invisible. Fixed surface, not a padded gap. */
+.status-bar-surface {
+  display: none;
+}
+
+@supports (-webkit-touch-callout: none) and (background-clip: text) {
+  @media (display-mode: standalone) {
+    .status-bar-surface {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      height: 11px;
+      z-index: 100;
+      pointer-events: none;
+      background-color: inherit;
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+  }
+}
+
 /* the cue for an edge-swipe back, phone only */
 .edge-back {
   position: fixed;
@@ -1751,6 +1851,8 @@ h1.display {
   border: 1px solid var(--glass-edge);
   color: var(--cream);
   pointer-events: none;
+  /* hidden at rest: the drag writes opacity straight onto the element */
+  opacity: 0;
   transition: opacity var(--dur-1) linear;
 }
 
@@ -1784,7 +1886,7 @@ h1.display {
 
 .login-field input {
   width: 100%;
-  background-color: rgba(20, 16, 11, 0.8);
+  background-color: rgba(20, 16, 11, 0.93);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
   padding: 0.72rem 0.9rem;
@@ -1807,7 +1909,8 @@ h1.display {
 }
 
 .rail-signout {
-  margin-top: 0.5rem;
+  align-self: flex-start;
+  margin-top: 0.15rem;
   color: var(--muted);
   font-size: 0.75rem;
   text-decoration: underline;
@@ -2049,24 +2152,65 @@ h1.display {
   }
 }
 
-.error-strip {
+/* errors float in at the top: a full-width strip read as part of the layout */
+.error-toast {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   z-index: 40;
+  top: calc(env(safe-area-inset-top) + 0.6rem);
+  left: 50%;
+  translate: -50% 0;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 1rem;
-  background: #3a1c15;
+  gap: 0.7rem;
+  width: max-content;
+  max-width: min(92vw, 30rem);
+  padding: 0.6rem 0.7rem 0.6rem 0.95rem;
+  border-radius: 14px;
+  background: rgba(58, 28, 21, 0.97);
+  border: 1px solid rgba(246, 221, 212, 0.14);
   color: #f6ddd4;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-shadow: 0 22px 50px -26px #000;
+  animation: toast-in var(--dur-2) var(--ease) both;
 }
 
-.error-strip button {
-  margin-left: auto;
-  text-decoration: underline;
+.error-toast-dismiss {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: rgba(246, 221, 212, 0.1);
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: -50% -0.5rem;
+  }
+}
+
+/* the pull-to-refresh cue, at the top edge */
+.pull-hint {
+  position: fixed;
+  z-index: 30;
+  top: calc(env(safe-area-inset-top) + 0.4rem);
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-edge);
+  color: var(--cream);
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2103,7 +2247,8 @@ h1.display {
   .player {
     touch-action: none; /* the sheet drags; only the lyrics pane scrolls */
     transition: transform var(--dur-2) var(--ease-spring);
-    will-change: transform;
+    /* no will-change: a permanently promoted layer survived the route change and
+       smeared over the next view on iOS */
   }
 
   .player.dragging {
@@ -2120,7 +2265,9 @@ h1.display {
     height: 4px;
     margin: 0.1rem auto 0.7rem;
     border-radius: 999px;
-    background: #3a2e22;
+    /* cream at low alpha: the cover glow now reaches up here, and the old dark
+       brown pill disappeared against it */
+    background: rgba(244, 234, 217, 0.38);
   }
 }
 
@@ -2131,6 +2278,11 @@ h1.display {
     display: flex;
   }
 
+  .topbar .settings-open {
+    /* the rail carries the same entry on wide screens */
+    display: none;
+  }
+
   .rail {
     display: flex;
     flex-direction: column;
@@ -2138,7 +2290,8 @@ h1.display {
     position: fixed;
     inset: 0 auto 0 0;
     width: 240px;
-    padding: 1.7rem 1.2rem;
+    /* clear of the docked player, which is fixed over the bottom of the screen */
+    padding: 1.7rem 1.2rem 6.6rem;
     border-right: 1px solid rgba(53, 42, 31, 0.7);
     background: linear-gradient(180deg, rgba(28, 23, 18, 0.6), transparent 40%);
   }
@@ -2194,13 +2347,6 @@ h1.display {
     margin-left: auto;
   }
 
-  .rail-note {
-    margin-top: auto;
-    font-size: 0.75rem;
-    line-height: 1.6;
-    color: var(--dim);
-  }
-
   .page {
     flex: 1;
     margin-left: 240px;
@@ -2249,10 +2395,16 @@ h1.display {
   }
 
   .album-head {
-    grid-template-columns: 200px 1fr;
-    gap: 2rem;
-    align-items: end;
-    padding: 0.4rem 0 1.7rem;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 1.6rem;
+    align-items: start;
+    justify-items: start;
+    padding: 0.4rem 0 1.4rem;
+  }
+
+  /* the meta column fills its track so the actions can sit in one row under it */
+  .album-view .album-meta {
+    width: 100%;
   }
 
   .album-backdrop {
@@ -2275,6 +2427,7 @@ h1.display {
   .album-actions {
     display: flex;
     gap: 0.5rem;
+    margin: 0.9rem 0 0;
   }
 
   .album-actions .primary,
@@ -2599,11 +2752,27 @@ h1.display {
   }
 
   .player-meta {
+  /* a two-line title on one track and a one-liner on the next moved the transport
+     by a whole line, so the block keeps the tallest case */
+  min-height: 4.6rem;
     padding-top: 0.4rem;
+  }
+
+  /* the mobile glow is sized in vw and would fill the entire desktop player,
+     washing the lyrics; keep it behind the cover here */
+  .album-backdrop.player-glow {
+    left: 0;
+    right: 0;
+    height: 560px;
+    opacity: 0.3;
   }
 
   .player-stage {
     flex: none;
+    /* no size containment here: the cover is sized by the grid column, so the stage
+       has to take its height from the art again */
+    container-type: normal;
+    display: block;
   }
 
   .player-art {
@@ -2635,4 +2804,209 @@ h1.display {
   .track-title {
     font-size: 2.4rem;
   }
+}
+
+/* --------------------------------------------------------------- settings */
+
+.settings-block {
+  padding: 1.1rem 0 1.3rem;
+  border-top: 1px solid var(--line);
+}
+
+.settings-block:first-of-type {
+  border-top: 0;
+}
+
+.settings-block h2 {
+  margin: 0 0 0.9rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  font-weight: 500;
+}
+
+.settings-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.settings-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.94rem;
+  color: var(--cream);
+}
+
+.settings-label .fineprint {
+  max-width: 34ch;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.settings-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.settings-leads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.chip {
+  padding: 0.42rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 234, 217, 0.18);
+  background: rgba(24, 19, 15, 0.6);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip.is-on {
+  border-color: rgba(240, 162, 74, 0.6);
+  background: rgba(240, 162, 74, 0.16);
+  color: var(--amber);
+}
+
+.segmented.compact {
+  display: inline-flex;
+  padding: 0.2rem;
+}
+
+.settings-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+  gap: 0.35rem 1rem;
+  margin: 0 0 0.9rem;
+  font-size: 0.88rem;
+}
+
+.settings-facts dt {
+  color: var(--dim);
+}
+
+.settings-facts dd {
+  margin: 0;
+  color: var(--cream);
+  overflow-wrap: anywhere;
+}
+
+.settings-view a {
+  color: var(--amber);
+  text-decoration: none;
+}
+
+/* the lyrics font is a taste setting: same size, leading and spacing, only the
+   family changes. Instrument Serif is 400-only, so asking for 600 would be
+   synthesised bold. */
+[data-lyric-font='serif'] .lyric {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+}
+
+/* settings reads better in a column than across a wide screen */
+@media (min-width: 900px) {
+  .settings-view {
+    max-width: 36rem;
+  }
+}
+
+/* the desktop layout hides the browse switch, not every segmented control */
+.settings-view .segmented {
+  display: inline-flex;
+  margin-bottom: 0;
+}
+
+/* on phones the cog stands in for the rail entry */
+.topbar .settings-open {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+/* the foot of the rail: settings (and sign out, when the app has a password) */
+.rail-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.rail-settings {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin-top: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.rail-settings:hover {
+  background: var(--raise);
+  color: var(--cream);
+}
+
+.rail-settings[aria-current='page'] {
+  background: var(--raise);
+  color: var(--cream);
+}
+
+/* the explanation is two lines, not a narrow column */
+.settings-label .fineprint {
+  max-width: 46ch;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+/* the value rides beside the slider so the pair reads as one control */
+.settings-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0.2rem 0 1.3rem;
+}
+
+.settings-slider {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  accent-color: var(--amber);
+}
+
+/* each font name set in that font, so the choice is visible */
+.font-choice.font-sans {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+}
+
+.font-choice.font-serif {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1rem;
+}
+
+.settings-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--cream);
+}
+
+.settings-link:hover {
+  color: var(--amber);
+}
+
+.settings-credit {
+  margin: 0.2rem 0 0.7rem;
 }

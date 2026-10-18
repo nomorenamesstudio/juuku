@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { type Lyrics, coverUrl, getLyrics } from '../api';
+import { useEffect, useRef, useState } from 'react';
+import { type Lyrics, type PlaybackStatus, coverUrl, getLyrics } from '../api';
+import { Cover } from '../Cover';
 import { formatTime } from '../format';
 import {
   AddToPlaylistIcon,
@@ -88,6 +89,101 @@ function useLyrics(songId: string | undefined) {
   return lyrics;
 }
 
+/**
+ * The volume slider keeps its own draft. Holding it in the player re-rendered the
+ * transport on every pointer move, which made the buttons repaint mid-drag.
+ */
+function VolumeRow({ gain, onCommit }: { gain: number; onCommit: (gain: number) => void }) {
+  const [draft, setDraft] = useState<number | null>(null);
+  const timer = useRef(0);
+  const value = draft ?? gain;
+
+  useEffect(() => {
+    // the server caught up: stop overriding it
+    if (draft !== null && Math.abs(draft - gain) < 0.005) setDraft(null);
+  }, [draft, gain]);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const change = (next: number) => {
+    setDraft(next);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => onCommit(next), 150);
+  };
+
+  const flush = () => {
+    if (draft === null) return;
+    window.clearTimeout(timer.current);
+    onCommit(draft);
+  };
+
+  return (
+    <label className="volume-inline">
+      <VolumeIcon size={18} />
+      <input
+        type="range"
+        min={0}
+        max={1}
+        step={0.01}
+        value={value}
+        onChange={(event) => change(Number(event.target.value))}
+        onPointerUp={flush}
+        onKeyUp={flush}
+        onBlur={flush}
+        aria-label="Volume"
+        aria-valuetext={`${Math.round(value * 100)}%`}
+        style={{ ['--progress' as string]: `${value * 100}%` }}
+      />
+    </label>
+  );
+}
+
+/**
+ * The position arrives once a second, so a highlight timed off it trails the audio
+ * by up to a second. Extrapolate from the last poll while playing and tick a few
+ * times a second — inside this component, so only the words re-render.
+ */
+function useActiveLine(lyrics: Lyrics | null, status: PlaybackStatus | null | undefined, leadMs: number) {
+  const anchor = useRef({ position: 0, at: 0, playing: false });
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    anchor.current = { position: status?.position ?? 0, at: performance.now(), playing: Boolean(status?.playing) };
+    setTick((n) => n + 1);
+  }, [status?.position, status?.playing]);
+
+  useEffect(() => {
+    if (!status?.playing || !lyrics?.synced) return;
+    const id = window.setInterval(() => setTick((n) => n + 1), 200);
+    return () => window.clearInterval(id);
+  }, [status?.playing, lyrics?.synced]);
+
+  if (!lyrics?.synced) return -1;
+  const { position, at, playing } = anchor.current;
+  const seconds = position + (playing ? (performance.now() - at) / 1000 : 0);
+  // the row highlights a touch early, which reads better than a beat late
+  const ms = seconds * 1000 + leadMs;
+  let index = -1;
+  lyrics.lines.forEach((line, lineIndex) => {
+    if (line.time !== undefined && line.time <= ms) index = lineIndex;
+  });
+  return index;
+}
+
+/** the lyrics column with its own clock, so ticks do not re-render the player */
+function SyncedLyrics({
+  lyrics,
+  status,
+  leadMs,
+}: {
+  lyrics: Lyrics | null;
+  status: PlaybackStatus | null | undefined;
+  leadMs: number;
+}) {
+  const activeLine = useActiveLine(lyrics, status, leadMs);
+  return <LyricsPane lyrics={lyrics} activeLine={activeLine} />;
+}
+
 function LyricsPane({ lyrics, activeLine }: { lyrics: Lyrics | null; activeLine: number }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -105,6 +201,11 @@ function LyricsPane({ lyrics, activeLine }: { lyrics: Lyrics | null; activeLine:
       role="region"
       aria-label="Lyrics"
     >
+      {lyrics && lyrics.lines.length > 0 && (
+        <p className="lyrics-note source">
+          {lyrics.synced ? 'synced' : 'unsynced'} · {lyrics.source === 'lrclib' ? 'from LRCLIB' : 'embedded'}
+        </p>
+      )}
       {lyrics === null && <p className="lyrics-note">Reading…</p>}
       {lyrics && lyrics.lines.length === 0 && (
         <p className="lyrics-note">
@@ -121,11 +222,6 @@ function LyricsPane({ lyrics, activeLine }: { lyrics: Lyrics | null; activeLine:
           {line.text || '\u00a0'}
         </p>
       ))}
-      {lyrics && lyrics.lines.length > 0 && (
-        <p className="lyrics-note source">
-          {lyrics.synced ? 'synced' : 'unsynced'} · {lyrics.source === 'lrclib' ? 'from LRCLIB' : 'embedded'}
-        </p>
-      )}
     </div>
   );
 }
@@ -133,43 +229,30 @@ function LyricsPane({ lyrics, activeLine }: { lyrics: Lyrics | null; activeLine:
 export function PlayerView({
   jbox,
   lyricsOpen,
+  lyricLeadMs,
   onLyricsOpenChange,
 }: {
   jbox: Jukebox;
   lyricsOpen: boolean;
+  lyricLeadMs: number;
   onLyricsOpenChange: (open: boolean) => void;
 }) {
   const { current, status, entries } = jbox;
   const showLyrics = lyricsOpen;
   const setShowLyrics = onLyricsOpenChange;
   const [trackDraft, setTrackDraft] = useState<number | null>(null);
-  const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
   const trackTimer = useRef<number | undefined>(undefined);
-  const volumeTimer = useRef<number | undefined>(undefined);
   const lyrics = useLyrics(current?.id);
+  // known-empty means no `.lrc`, no tag and no LRCLIB match; while it loads we do
+  // not know yet, and inside lyrics mode the toggle stays usable so you can leave
+  const lyricsMissing = lyrics !== null && lyrics.lines.length === 0;
   const openActions = useTrackActions();
   const close = () => goBack();
   const { dragY, dragging, handlers } = usePullToDismiss(close);
 
   const duration = current?.duration ?? 0;
   const position = trackDraft ?? status?.position ?? 0;
-  const activeLine = useMemo(() => {
-    if (!lyrics?.synced) return -1;
-    const ms = position * 1000;
-    let index = -1;
-    lyrics.lines.forEach((line, lineIndex) => {
-      if (line.time !== undefined && line.time <= ms) index = lineIndex;
-    });
-    return index;
-  }, [lyrics, position]);
-
-  useEffect(
-    () => () => {
-      window.clearTimeout(trackTimer.current);
-      window.clearTimeout(volumeTimer.current);
-    },
-    [],
-  );
+  useEffect(() => () => window.clearTimeout(trackTimer.current), []);
 
   if (!current) {
     return (
@@ -190,16 +273,6 @@ export function PlayerView({
     }, 200);
   };
 
-  const onVolume = (value: number) => {
-    setVolumeDraft(value);
-    window.clearTimeout(volumeTimer.current);
-    volumeTimer.current = window.setTimeout(() => {
-      jbox.setGain(value).then(() => setVolumeDraft(null));
-    }, 150);
-  };
-
-  const gain = volumeDraft ?? status?.gain ?? 1;
-
   const glow = current.coverArt ? coverUrl(current.coverArt, 300) : null;
 
   return (
@@ -210,21 +283,26 @@ export function PlayerView({
     >
       {/* the same cover glow the album page has, following the current track */}
       {glow ? (
-        <div className="album-backdrop player-glow" style={{ backgroundImage: `url(${glow})` }} aria-hidden="true" />
+        <div className="album-backdrop player-glow" style={{ ['--cover-url' as string]: `url(${glow})` }} aria-hidden="true" />
       ) : null}
       <div className="player-inner">
       <span className="player-grabber" aria-hidden />
       <header className="player-top">
+        <button className="icon-button" onClick={close} aria-label="Close the player">
+          <ChevronDownIcon size={18} />
+        </button>
         <span className="player-context">
           {status?.currentIndex !== undefined ? `track ${status.currentIndex + 1} of ${entries.length}` : 'now playing'}
         </span>
-        <button
-          className="icon-button"
-          onClick={() => openActions([current], { step: 'playlists' })}
-          aria-label="Add this track to a playlist"
-        >
-          <AddToPlaylistIcon size={18} />
-        </button>
+        <div className="player-top-actions">
+          <button
+            className="icon-button"
+            onClick={() => openActions([current], { step: 'playlists' })}
+            aria-label="Add this track to a playlist"
+          >
+            <AddToPlaylistIcon size={18} />
+          </button>
+        </div>
       </header>
 
       <div className="player-grid">
@@ -234,12 +312,12 @@ export function PlayerView({
               <>
                 {/* lyrics mode has no visible track title, so the page still needs one */}
                 <h1 className="sr-only">{current.title} — lyrics</h1>
-                <LyricsPane lyrics={lyrics} activeLine={activeLine} />
+                <SyncedLyrics lyrics={lyrics} status={status} leadMs={lyricLeadMs} />
               </>
             ) : (
               <div className="player-art">
                 {current.coverArt ? (
-                  <img src={coverUrl(current.coverArt, 800)} alt={`${current.album} cover`} draggable={false} />
+                  <Cover src={coverUrl(current.coverArt, 800)} alt={`${current.album} cover`} draggable={false} />
                 ) : null}
               </div>
             )}
@@ -290,7 +368,8 @@ export function PlayerView({
               className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
               onClick={() => setShowLyrics(!showLyrics)}
               aria-pressed={showLyrics}
-              aria-label="Toggle lyrics"
+              aria-label="Show lyrics"
+              disabled={lyricsMissing && !showLyrics}
             >
               <MicIcon size={18} />
             </button>
@@ -329,25 +408,13 @@ export function PlayerView({
           </div>
 
           <div className="player-bottom">
-            <label className="volume-inline">
-              <VolumeIcon size={18} />
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={gain}
-                onChange={(event) => onVolume(Number(event.target.value))}
-                aria-label="Volume"
-                aria-valuetext={`${Math.round(gain * 100)}%`}
-                style={{ ['--progress' as string]: `${gain * 100}%` }}
-              />
-            </label>
+            <VolumeRow gain={status?.gain ?? 1} onCommit={(value) => void jbox.setGain(value)} />
           </div>
+
         </div>
 
         <aside className="player-aside" aria-label="Lyrics">
-          <LyricsPane lyrics={lyrics} activeLine={activeLine} />
+          <SyncedLyrics lyrics={lyrics} status={status} leadMs={lyricLeadMs} />
         </aside>
       </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { type Playlist, type Song, coverUrl, deletePlaylist, getPlaylist } from '../api';
+import { Cover } from '../Cover';
 import { formatTotal } from '../format';
 import { ChevronLeftIcon, PlayIcon, PlusIcon, TrashIcon } from '../icons';
 import { navigate, useBack } from '../router';
@@ -62,7 +63,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
 
       <header className="album-head">
         <div className="album-art large">
-          {playlist?.coverArt ? <img src={coverUrl(playlist.coverArt, 600)} alt="" /> : null}
+          {playlist?.coverArt ? <Cover src={coverUrl(playlist.coverArt, 600)} /> : null}
         </div>
         <div className="album-meta">
           <h1 className="display">{playlist?.name ?? '…'}</h1>

@@ -1,7 +1,8 @@
 import express from 'express';
 import { existsSync } from 'node:fs';
+import { sep } from 'node:path';
 import { join } from 'node:path';
-import { parseLrc } from './lyrics.mjs';
+import { cleanArtist, cleanTitle, parseLrc, pickCandidate } from './lyrics.mjs';
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
@@ -337,6 +338,21 @@ app.get('/api/artists/:id', wrap(async (req, res) => {
   });
 }));
 
+// every track an artist has, album order; the client's "play all" needs one list
+app.get('/api/artists/:id/songs', wrap(async (req, res) => {
+  const artist = await call('getArtist', { id: req.params.id });
+  const albums = artist.artist.album ?? [];
+  const songsOf = await Promise.all(
+    albums.map((entry) =>
+      call('getAlbum', { id: entry.id }).then(
+        (albumResponse) => (albumResponse.album.song ?? []).map(song),
+        () => [],
+      ),
+    ),
+  );
+  res.json({ songs: songsOf.flat() });
+}));
+
 app.get('/api/cover/:id', wrap(async (req, res) => {
   const { body, contentType } = await binary('getCoverArt', { id: req.params.id, size: Number(req.query.size ?? 300) });
   res.setHeader('Content-Type', contentType);
@@ -349,25 +365,62 @@ app.get('/api/cover/:id', wrap(async (req, res) => {
 const lyricsCache = new Map();
 const LYRIC_TTL = 24 * 60 * 60 * 1000;
 
-async function lyricsFromLrclib(entry) {
-  const url = new URL('https://lrclib.net/api/get');
-  url.searchParams.set('artist_name', entry.artist ?? '');
-  url.searchParams.set('track_name', entry.title ?? '');
-  if (entry.album) url.searchParams.set('album_name', entry.album);
-  if (entry.duration) url.searchParams.set('duration', String(entry.duration));
-  const res = await fetch(url, {
-    signal: AbortSignal.timeout(8000),
-    headers: { 'User-Agent': 'juuku/0.1 (local jukebox remote)' },
-  });
-  if (!res.ok) return null;
-  const body = await res.json();
+const LRCLIB_HEADERS = { 'User-Agent': 'juuku/0.1 (local jukebox remote)' };
+
+function lyricsFromLrclibBody(body) {
   const synced = body.syncedLyrics ? parseLrc(body.syncedLyrics) : null;
   const plain = body.plainLyrics
-    ? body.plainLyrics.split(/\r?\n/).filter((line) => line.trim()).map((text) => ({ text: text.trim() }))
+    ? body.plainLyrics
+        .split(/\r?\n/)
+        .filter((line) => line.trim())
+        .map((text) => ({ text: text.trim() }))
     : null;
   const lines = synced?.length ? synced : plain;
   if (!lines?.length) return null;
   return { source: 'lrclib', synced: Boolean(synced?.length), lines };
+}
+
+async function lrclibJson(url) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000), headers: LRCLIB_HEADERS });
+  if (!res.ok) return null;
+  return res.json().catch(() => null);
+}
+
+/**
+ * LRCLIB has a strict endpoint that wants the exact names and duration, and a
+ * search endpoint that tolerates the tags we actually have. Files often carry
+ * "Rong feat. Robyn" while LRCLIB indexes "Rong", so a search with the featured
+ * credit stripped and a duration match is what usually resolves it.
+ */
+async function lyricsFromLrclib(entry) {
+  const title = cleanTitle(entry.title);
+  const artist = cleanArtist(entry.artist);
+
+  const exact = new URL('https://lrclib.net/api/get');
+  exact.searchParams.set('artist_name', entry.artist ?? '');
+  exact.searchParams.set('track_name', entry.title ?? '');
+  if (entry.album) exact.searchParams.set('album_name', entry.album);
+  if (entry.duration) exact.searchParams.set('duration', String(entry.duration));
+  const hit = await lrclibJson(exact).catch(() => null);
+  const direct = hit ? lyricsFromLrclibBody(hit) : null;
+  if (direct) return direct;
+
+  for (const query of [{ track: title, artist }, { track: title }]) {
+    if (!query.track) continue;
+    const search = new URL('https://lrclib.net/api/search');
+    search.searchParams.set('track_name', query.track);
+    if (query.artist) search.searchParams.set('artist_name', query.artist);
+    const results = await lrclibJson(search).catch(() => null);
+    const best = pickCandidate(results, entry.duration);
+    if (best) {
+      // only trust the timestamps when the lengths agree; otherwise take the words
+      // unsynced rather than scroll them against the wrong recording
+      const body = best.timingTrusted ? best.entry : { plainLyrics: best.entry.plainLyrics };
+      const found = lyricsFromLrclibBody(body);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 app.get('/api/lyrics/:id', wrap(async (req, res) => {
@@ -511,8 +564,23 @@ app.delete('/api/favorites/:id', wrap(async (req, res) => {
 
 const dist = join(process.cwd(), 'dist');
 if (existsSync(dist)) {
-  app.use(express.static(dist));
-  app.get('/{*path}', (_req, res) => res.sendFile(join(dist, 'index.html')));
+  app.use(
+    express.static(dist, {
+      setHeaders(res, path) {
+        // hashed assets never change; the shell must, or an installed app keeps
+        // showing a build from days ago
+        if (path.endsWith('index.html') || path.endsWith('manifest.webmanifest')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        } else if (path.includes(`${sep}assets${sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    }),
+  );
+  app.get('/{*path}', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(join(dist, 'index.html'));
+  });
 }
 
 app.listen(PORT, HOST, () => {

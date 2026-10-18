@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { type Album, type Song, coverUrl, getAlbum } from '../api';
+import { Cover } from '../Cover';
 import { formatTotal } from '../format';
 import { ChevronLeftIcon, HeartIcon, PlayIcon, PlusIcon } from '../icons';
 import { navigate, useBack } from '../router';
@@ -39,7 +40,7 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
       {art ? (
         <div
           className="album-backdrop"
-          style={{ backgroundImage: `url(${art})` }}
+          style={{ ['--cover-url' as string]: `url(${art})` }}
           aria-hidden="true"
         />
       ) : null}
@@ -49,7 +50,7 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
 
       <header className="album-head">
         <div className="album-art large">
-          {art ? <img src={art} alt="" /> : null}
+          {art ? <Cover src={art} /> : null}
         </div>
         <div className="album-meta">
           <div className="album-title">
@@ -73,21 +74,21 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
               formatTotal(songs.reduce((sum, song) => sum + (song.duration || 0), 0))
             }</span>
           </p>
+          <div className="actions album-actions">
+          <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs)}>
+            <PlayIcon size={18} /> Play album
+          </button>
+          <button
+            className="secondary"
+            disabled={jbox.busy || songs.length === 0}
+            onClick={() => jbox.addToQueue(songs, `Queued ${album?.name}`)}
+          >
+            <PlusIcon size={18} /> Add to queue
+          </button>
+          </div>
         </div>
       </header>
 
-      <div className="actions album-actions">
-        <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs)}>
-          <PlayIcon size={18} /> Play album
-        </button>
-        <button
-          className="secondary"
-          disabled={jbox.busy || songs.length === 0}
-          onClick={() => jbox.addToQueue(songs, `Queued ${album?.name}`)}
-        >
-          <PlusIcon size={18} /> Add to queue
-        </button>
-      </div>
 
       <div className="track-table">
         <div className="track-head" aria-hidden>

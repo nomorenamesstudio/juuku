@@ -8,7 +8,8 @@ export type Route =
   | { name: 'playlists' }
   | { name: 'playlist'; id: string }
   | { name: 'queue' }
-  | { name: 'player' };
+  | { name: 'player' }
+  | { name: 'settings' };
 
 function parse(hash: string): Route {
   const path = hash.replace(/^#\/?/, '');
@@ -30,6 +31,8 @@ function parse(hash: string): Route {
       return { name: 'queue' };
     case 'player':
       return { name: 'player' };
+    case 'settings':
+      return { name: 'settings' };
     default:
       return { name: 'library', tab: 'albums' };
   }
@@ -75,6 +78,7 @@ const LABELS: Record<Route['name'], string> = {
   playlist: 'Playlist',
   queue: 'Queue',
   player: 'Player',
+  settings: 'Settings',
 };
 
 /** Back, labelled with where it actually goes: the previous view inside the app. */

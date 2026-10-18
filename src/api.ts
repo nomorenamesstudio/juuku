@@ -118,6 +118,7 @@ export const getCounts = () => request<{ albums: number | null }>('api/counts');
 
 export const getArtists = () => request<{ artists: Artist[] }>('api/artists');
 export const getArtist = (id: string) => request<{ artist: Artist; albums: Album[] }>(`api/artists/${id}`);
+export const getArtistSongs = (id: string) => request<{ songs: Song[] }>(`api/artists/${id}/songs`);
 
 export const getFavorites = () => request<Favorites>('api/favorites');
 export const addFavorite = (ids: string[]) =>

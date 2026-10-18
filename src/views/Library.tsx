@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CloseIcon } from '../icons';
 import { type Album, type Artist, type Song, coverUrl, getAlbums, search } from '../api';
+import { Cover } from '../Cover';
 import { useCounts } from '../useCounts';
 import { navigate } from '../router';
 import { SongRow } from '../rows';
@@ -137,7 +138,7 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                   <li key={artist.id}>
                     <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
                       {artist.coverArt ? (
-                        <img className="artist-avatar" src={coverUrl(artist.coverArt, 96)} alt="" loading="lazy" />
+                        <Cover className="artist-avatar" src={coverUrl(artist.coverArt, 96)} />
                       ) : (
                         <span className="artist-avatar empty" aria-hidden>
                           {artist.name.slice(0, 1)}
@@ -160,7 +161,7 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                 {results.albums.map((album) => (
                   <li key={album.id}>
                     <button className="link-row with-art" onClick={() => navigate(`/album/${album.id}`)}>
-                      {album.coverArt && <img src={coverUrl(album.coverArt, 120)} alt="" />}
+                      {album.coverArt && <Cover src={coverUrl(album.coverArt, 120)} />}
                       <span className="link-text">
                         <span className="row-title">{album.name}</span>
                         <span className="row-sub">{album.artist}</span>
@@ -198,7 +199,7 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                 {albums.map((album) => (
                   <button key={album.id} className="album-card" onClick={() => navigate(`/album/${album.id}`)}>
                     <span className="album-art">
-                      {album.coverArt ? <img src={coverUrl(album.coverArt, 300)} alt="" loading="lazy" /> : null}
+                      {album.coverArt ? <Cover src={coverUrl(album.coverArt, 300)} /> : null}
                     </span>
                     <span className="album-name">{album.name}</span>
                     <span className="album-artist">{album.artist}</span>
@@ -217,7 +218,7 @@ export function Library({ jbox, tab }: { jbox: Jukebox; tab: Tab }) {
                 <li key={artist.id}>
                   <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
                     {artist.coverArt ? (
-                      <img className="artist-avatar" src={coverUrl(artist.coverArt, 96)} alt="" loading="lazy" />
+                      <Cover className="artist-avatar" src={coverUrl(artist.coverArt, 96)} />
                     ) : (
                       <span className="artist-avatar empty" aria-hidden>
                         {artist.name.slice(0, 1)}

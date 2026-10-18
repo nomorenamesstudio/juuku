@@ -16,6 +16,11 @@
     <meta name="description" content="Queue, skip and favorite music on the Navidrome jukebox that is playing in the room." />
   </head>
   <body>
+    <!-- iOS standalone samples the screen edge for a full-width fixed surface and
+         blurs the content instead when it finds none. This is that surface: empty,
+         clipped, non-interactive, and outside the app root so it exists on cold
+         start. See the rule in src/styles.css. -->
+    <div class="status-bar-surface" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

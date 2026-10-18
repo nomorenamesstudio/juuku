@@ -7,6 +7,29 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.0 — 2026-10-17
+
+- **Feature** — a Settings page: the lyric timing lead (slider, 0–2000ms, saved per device in `localStorage`, default 400ms) and the lyrics font (sans or serif, same size and leading, only the family changes). It also reports the Navidrome URL and version, the account, the jukebox state, the app version, the studio credit and the GitHub link. On phones the topbar cog opens it and turns into a close button; on wide screens it lives at the foot of the sidebar.
+- **Feature** — the lyric highlight keeps its own clock: the position arrives on a 1s poll, so it extrapolates from the last sample and ticks 200ms, plus the configurable lead. Measured: 251ms from a seek to the correct line (was up to 1s).
+- **Change** — bright sleeves no longer wash the page: the cover glow is drawn at `brightness(.72)` under a vertical veil, and `--dim` went from `#9a8870` to `#ab9a80`. On a white cover the title now measures 16:1 and the facts 7:1 (was 3.0:1).
+- **Change** — secondary buttons are glass pills (translucent fill plus a visible outline) instead of bare outlines, so they hold up over artwork: cream on the composited fill lands around 5.5:1.
+- **Change** — the album actions sit in the meta column on wide screens (cover left, title/meta/buttons beside it) and the close chevron in the player header ends the sheet without a drag; the deck's trailing button is the lyrics mic.
+- **Fix** — the transport no longer shifts when a track change brings a longer or shorter title: the meta block reserves its tallest case (measured spread 0px across six tracks).
+
+- **Fix** — the installed app washed out and blurred the top of the screen. iOS 27 standalone samples the viewport edge for a full-width fixed surface and blurs content when it finds none (WebKit's fixed-container sampling needs a background thicker than ~10px and not transparent). The app now ships `.status-bar-surface`: a fixed, full-width, 11px tall element that inherits the page colour but clips its background to empty text, so the sampler finds a surface while nothing is painted. It is inert, outside the app root, and only enabled in standalone WebKit (`@supports (-webkit-touch-callout: none) and (background-clip: text)` + `@media (display-mode: standalone)`). Mechanism and prior art: [nanobot#5942](https://github.com/HKUDS/nanobot/pull/5942), [MacRumors thread](https://forums.macrumors.com/threads/ios-27-pwa-blurred-across-top-of-screen.2489325/).
+
+- **Fix** — the installed app hugged the home indicator while Safari looked fine: the player's height was `100dvh` inside a page that already pads for the status bar, so the player hung that many pixels below the screen and ate its own bottom padding. The height subtracts the top inset now, and the bottom spacing has a 48px floor instead of relying on an inset that Safari reports as 0.
+- **Fix** — the SPA shell is served `no-cache` (hashed assets stay `immutable`): an installed app was launching a cached `index.html` and running an old build for hours.
+- **Fix** — volume and seeking went through the same action wrapper as play/skip, and `button:disabled` dims the transport — so nudging the volume flashed every control. They no longer raise `busy`.
+- **Fix** — the volume slider keeps its own draft state; dragging it re-rendered the whole player on every pointer move.
+- **Feature** — "Play all" on an artist page, right-aligned with the title: the server fans out over the artist's albums (`GET /api/artists/:id/songs`) and returns one ordered list.
+- **Feature** — covers fade in as they decode, and appear instantly when cached (`src/Cover.tsx`), so returning to the grid never re-fades them.
+- **Feature** — the library stays mounted while you are in an album, so going back repaints decoded covers.
+- **Change** — motion is slower and softer: `--dur-1/2/3` are 170/280/420ms on a gentler curve, and the view entry animation is gone (its transform was repainting the whole grid on iOS).
+- **Change** — the player's lyrics mode is the player with the lyrics in the cover's box: same stage, same size, scrolling inside, and nothing else moves. The mic in the transport is the toggle (amber when on) and is disabled when a track has no lyrics.
+- **Fix** — LRCLIB fallback: after the strict lookup misses, search by title with featured credits and parentheticals stripped, and pick the result whose length matches (within 5s). A hit outside that window is shown unsynced instead of scrolling its timestamps against a different edit.
+- **Fix** — the hidden library slot no longer contributes its full height to the document (it made the app scroll by a whole library while the route was elsewhere).
+
 ## v0.2.0 — 2026-10-17
 
 - **Feature** — the album page paints its cover behind the hero: blurred, radial-masked, fading out in every direction and bleeding up to the viewport top (the header needed `z-index: 1` to stay readable). The hero is one centred column on phones, with the cover at 62% and both actions sharing the row evenly.

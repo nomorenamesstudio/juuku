@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NowBar } from './MiniPlayer';
-import { ArtistIcon, ChevronLeftIcon, HeartIcon, LibraryIcon, LogOutIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
+import { ArtistIcon, ChevronLeftIcon, CloseIcon, HeartIcon, LibraryIcon, LogOutIcon, PlaylistIcon, QueueIcon, RefreshIcon } from './icons';
 import { TrackActions, TrackActionsProvider } from './TrackActions';
 import { LoginView } from './views/LoginView';
 import { type Session, getSession, signOut, type Song } from './api';
 import { goBack, navigate, useRoute } from './router';
+import { type Settings, applySettings, loadSettings } from './settings';
 import { useCounts } from './useCounts';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
 import { ArtistView } from './views/ArtistView';
+import { SettingsView } from './views/SettingsView';
+import { SettingsIcon } from './icons';
 import { FavoritesView } from './views/FavoritesView';
 import { Library } from './views/Library';
 import { PlayerView } from './views/PlayerView';
@@ -32,11 +35,72 @@ const TABS = [
 ];
 
 /**
+ * Pull down from the top of a list to re-fetch state. The refresh button in the
+ * corner was doing this silently, so the gesture replaces it.
+ */
+function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
+  const [pull, setPull] = useState(0);
+  const pullRef = useRef(0);
+
+  useEffect(() => {
+    if (!enabled || !window.matchMedia('(max-width: 899px)').matches) return;
+    let startY: number | null = null;
+    let armed = false;
+
+    const reset = () => {
+      startY = null;
+      armed = false;
+      pullRef.current = 0;
+      setPull(0);
+    };
+
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse' || window.scrollY > 0) return;
+      if (document.querySelector('.sheet-layer, .player')) return;
+      startY = event.clientY;
+      armed = false;
+    };
+
+    const onMove = (event: PointerEvent) => {
+      if (startY === null) return;
+      const dy = event.clientY - startY;
+      if (dy <= 0 || window.scrollY > 0) return reset();
+      armed = dy > 14;
+      if (!armed) return;
+      pullRef.current = Math.min(1, dy / 90);
+      setPull(pullRef.current);
+    };
+
+    const onUp = () => {
+      if (armed && pullRef.current > 0.75) onRefresh();
+      reset();
+    };
+
+    window.addEventListener('pointerdown', onDown, true);
+    window.addEventListener('pointermove', onMove, true);
+    window.addEventListener('pointerup', onUp, true);
+    window.addEventListener('pointercancel', reset, true);
+    return () => {
+      window.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', reset, true);
+    };
+  }, [enabled, onRefresh]);
+
+  return pull;
+}
+
+/**
  * iOS-style back: a left-edge drag on a phone. Nothing moves while dragging (that
  * would fight the sticky bar and the fixed deck), so a chevron fades in as a cue.
  */
-function useEdgeSwipeBack(onBack: () => void) {
-  const [pull, setPull] = useState(0);
+function useEdgeSwipeBack(fence: React.RefObject<HTMLDivElement | null>, onBack: () => void) {
+  // the cue is written straight to the DOM: re-rendering the whole app on every
+  // pointermove made the phone stutter mid-gesture
+  const cue = (value: number) => {
+    if (fence.current) fence.current.style.opacity = String(value);
+  };
 
   useEffect(() => {
     let origin: { x: number; y: number } | null = null;
@@ -45,7 +109,7 @@ function useEdgeSwipeBack(onBack: () => void) {
     const reset = () => {
       origin = null;
       travel = 0;
-      setPull(0);
+      cue(0);
     };
 
     const onDown = (event: PointerEvent) => {
@@ -62,14 +126,27 @@ function useEdgeSwipeBack(onBack: () => void) {
       const dy = event.clientY - origin.y;
       // a vertical drag belongs to the player's pull-to-dismiss, not to us
       if (Math.abs(dy) > 50 && travel === 0) return reset();
-      if (dx <= 0) return setPull(0);
+      if (dx <= 0) return cue(0);
       travel = dx;
-      setPull(Math.min(1, dx / 110));
+      cue(Math.min(1, dx / 110));
     };
 
-    const onUp = () => {
-      if (origin && travel > 90) onBack();
+    const onUp = (event: PointerEvent) => {
+      const commit = Boolean(origin) && travel > 90;
       reset();
+      if (!commit) return;
+      // the finger lifting over a card would otherwise be delivered to the new
+      // route as a click, and iOS repaints the grid while the gesture is still
+      // settling — that repaint is the flash
+      event.preventDefault();
+      const swallow = (click: Event) => {
+        click.preventDefault();
+        click.stopPropagation();
+      };
+      document.addEventListener('click', swallow, true);
+      window.setTimeout(() => document.removeEventListener('click', swallow, true), 400);
+      // let the gesture finish dispatching before the DOM swaps under it
+      window.setTimeout(onBack, 50);
     };
 
     window.addEventListener('pointerdown', onDown, true);
@@ -83,18 +160,19 @@ function useEdgeSwipeBack(onBack: () => void) {
       window.removeEventListener('pointercancel', reset, true);
     };
   }, [onBack]);
-
-  return pull;
 }
 
 export default function App() {
   const { route } = useRoute();
   const [session, setSession] = useState<Session | null>(null);
-  const edgePull = useEdgeSwipeBack(() => goBack(route.name === 'playlist' ? '/playlists' : '/library'));
+  const edgeCue = useRef<HTMLDivElement | null>(null);
+  const pull = usePullToRefresh(() => void jbox.refresh(), route.name !== 'player');
+  useEdgeSwipeBack(edgeCue, () => goBack(route.name === 'playlist' ? '/playlists' : '/library'));
   // nothing polls until we know whether a password is needed
   const paused = !session || (session.required && !session.authenticated);
   const jbox = useJukebox({ paused });
   const [lyricsOpen, setLyricsOpen] = useState(false);
+  const [settings, setSettings] = useState<Settings>(loadSettings);
   const counts = useCounts({ paused });
 
   const loadSession = () => getSession().then(setSession, () => setSession({ required: false, authenticated: true }));
@@ -112,15 +190,19 @@ export default function App() {
     step?: 'playlists';
   } | null>(null);
   const isPlayer = route.name === 'player';
-  // on phones the full-screen player owns the screen, except in lyrics mode where
-  // the mini player and tabs come back so you can still drive playback
-  const chrome = !isPlayer || lyricsOpen;
+  // the full-screen player owns the screen, lyrics mode included: nothing but the
+  // stage content changes there
+  const chrome = !isPlayer;
 
   // leaving the player route should not leave lyrics mode armed for next time
   useEffect(() => {
     if (route.name !== 'player' && lyricsOpen) setLyricsOpen(false);
   }, [route.name, lyricsOpen]);
   const count = jbox.entries.length;
+
+  useEffect(() => {
+    applySettings(settings);
+  }, [settings]);
 
   const routeKey = route.name === 'album' || route.name === 'artist' ? `${route.name}:${route.id}` : route.name;
 
@@ -137,14 +219,23 @@ export default function App() {
             ? 'favorites'
             : route.name === 'queue'
               ? 'queue'
-              : 'albums';
+              : route.name === 'settings'
+                ? 'settings'
+                : 'albums';
+
+  const isLibrary = route.name === 'library';
+  // the library's tab has to survive while its view is hidden
+  const libraryTab = useRef<'albums' | 'artists'>('albums');
+  if (isLibrary) libraryTab.current = route.tab;
 
   const view = (() => {
     switch (route.name) {
+      case 'library':
+        return null;
       case 'album':
         return <AlbumView id={route.id} jbox={jbox} />;
       case 'artist':
-        return <ArtistView key={route.id} id={route.id} />;
+        return <ArtistView key={route.id} id={route.id} jbox={jbox} />;
       case 'favorites':
         return <FavoritesView jbox={jbox} />;
       case 'playlists':
@@ -153,18 +244,29 @@ export default function App() {
         return <PlaylistView id={route.id} jbox={jbox} />;
       case 'queue':
         return <QueueView jbox={jbox} />;
+      case 'settings':
+        return <SettingsView settings={settings} onChange={setSettings} />;
       case 'player':
         return (
           <PlayerView
+            lyricLeadMs={settings.lyricLeadMs}
             jbox={jbox}
             lyricsOpen={lyricsOpen}
             onLyricsOpenChange={setLyricsOpen}
           />
         );
       default:
-        return <Library jbox={jbox} tab={route.tab} />;
+        return null;
     }
   })();
+
+  const librarySlot = (
+    // kept in the layout but invisible: display:none makes iOS throw away the
+    // decoded covers, so coming back re-decodes them and the grid flashes
+    <div className={`library-slot ${isLibrary ? '' : 'is-hidden'}`} aria-hidden={!isLibrary}>
+      <Library jbox={jbox} tab={libraryTab.current} />
+    </div>
+  );
 
   // the shell must not mount before we know whether a password is needed, or its
   // first fetches race the session check and 401
@@ -188,9 +290,7 @@ export default function App() {
   return (
     <TrackActionsProvider value={(songs, options) => setTrackActions({ songs, ...options })}>
     <div
-      className={`shell ${isPlayer ? 'shell-player' : ''} ${lyricsOpen ? 'lyrics-open' : ''} ${
-        count > 0 && !isPlayer ? 'has-deck' : ''
-      }`}
+      className={`shell ${isPlayer ? 'shell-player' : ''} ${count > 0 && !isPlayer ? 'has-deck' : ''}`}
     >
       <aside className="rail" aria-label="Main">
         <button className="wordmark" onClick={() => navigate('/library/albums')}>
@@ -232,16 +332,16 @@ export default function App() {
           ))}
         </nav>
 
-        <p className="rail-note">
-          {jbox.health ? (
-            <>
-              {jbox.health.navidrome}
-              <br />
-              {jbox.health.url.replace(/^https?:\/\//, '')}
-            </>
-          ) : (
-            'connecting…'
-          )}
+        <div className="rail-foot">
+          <button
+            className="rail-settings"
+            aria-current={section === 'settings' ? 'page' : undefined}
+            onClick={() => navigate('/settings')}
+          >
+            <SettingsIcon size={18} />
+            Settings
+          </button>
+
           {session?.required && (
             <button
               className="rail-signout"
@@ -250,12 +350,13 @@ export default function App() {
               Sign out
             </button>
           )}
-        </p>
+        </div>
+
       </aside>
 
       <div className="page">
         {!isPlayer && (
-          <div className="topbar">
+          <header className="topbar">
             <button className="wordmark small" onClick={() => navigate('/library/albums')}>
               <span className="wordmark-stack">
                 <span className="wordmark-latin">juuku</span>
@@ -265,8 +366,12 @@ export default function App() {
               </span>
               <span className={`led ${jbox.error ? 'bad' : jbox.health?.ok ? 'good' : ''}`} />
             </button>
-            <button className="icon-button" onClick={jbox.refresh} aria-label="Refresh state">
-              <RefreshIcon size={18} />
+            <button
+              className="icon-button settings-open"
+              onClick={() => (route.name === 'settings' ? goBack() : navigate('/settings'))}
+              aria-label={route.name === 'settings' ? 'Close settings' : 'Settings'}
+            >
+              {route.name === 'settings' ? <CloseIcon size={18} /> : <SettingsIcon size={18} />}
             </button>
             {session?.required && (
               <button
@@ -277,18 +382,19 @@ export default function App() {
                 <LogOutIcon size={18} />
               </button>
             )}
-          </div>
+          </header>
         )}
 
         <main className="content" key={routeKey}>
-          {view}
+          {librarySlot}
+      {isLibrary ? null : view}
         </main>
 
         {count > 0 && (
           <NowBar
             jbox={jbox}
             expanded={isPlayer}
-            onOpen={isPlayer && lyricsOpen ? () => setLyricsOpen(false) : undefined}
+            onOpen={undefined}
           />
         )}
 
@@ -313,17 +419,23 @@ export default function App() {
         )}
       </div>
 
-      {edgePull > 0 && (
-        <div className="edge-back" style={{ opacity: edgePull }} aria-hidden="true">
-          <ChevronLeftIcon size={18} />
+      <div className="edge-back" ref={edgeCue} aria-hidden="true">
+        <ChevronLeftIcon size={18} />
+      </div>
+
+      {pull > 0 && (
+        <div className="pull-hint" style={{ opacity: pull }} aria-hidden="true">
+          <RefreshIcon size={16} style={{ transform: `rotate(${pull * 180}deg)` }} />
         </div>
       )}
 
       {jbox.toast && <output className="toast">{jbox.toast}</output>}
       {jbox.error && (
-        <div className="error-strip" role="alert">
-          {jbox.error}
-          <button onClick={jbox.dismissError}>Dismiss</button>
+        <div className="error-toast" role="alert">
+          <span>{jbox.error}</span>
+          <button className="error-toast-dismiss" onClick={jbox.dismissError} aria-label="Dismiss this message">
+            ×
+          </button>
         </div>
       )}
 

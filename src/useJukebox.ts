@@ -171,6 +171,22 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     [notify],
   );
 
+  // same as run(), without touching `busy`: volume and seeking happen while the
+  // user keeps interacting, and busy dims every transport button mid-drag
+  const quietly = useCallback(
+    async <T,>(action: () => Promise<T>): Promise<T | undefined> => {
+      try {
+        const result = await action();
+        setError(null);
+        return result;
+      } catch (err) {
+        setError((err as Error).message);
+        return undefined;
+      }
+    },
+    [],
+  );
+
   const afterQueueChange = useCallback(async () => {
     await refresh();
   }, [refresh]);
@@ -273,21 +289,21 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
 
   const setGain = useCallback(
     async (gain: number) => {
-      const applied = await run(() => control({ action: 'setGain', gain }));
+      const applied = await quietly(() => control({ action: 'setGain', gain }));
       if (applied) setState((prev) => (prev ? { ...prev, status: { ...prev.status, gain: applied.gain } } : prev));
     },
-    [run],
+    [quietly],
   );
 
   const seek = useCallback(
     async (seconds: number) => {
       if (!state) return;
-      await run(async () => {
+      await quietly(async () => {
         await control({ action: 'skip', index: state.status.currentIndex, offset: Math.round(seconds) });
         await afterQueueChange();
       });
     },
-    [state, run, afterQueueChange],
+    [state, quietly, afterQueueChange],
   );
 
   const toggleFavorite = useCallback(

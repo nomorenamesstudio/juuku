@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import pkg from './package.json';
+
+const version = pkg.version;
 
 export default defineConfig(({ command }) => ({
   plugins: [react()],
+  define: { __APP_VERSION__: JSON.stringify(version) },
   // relative assets in the build: the app is served at / on the LAN but Tailscale
   // mounts it at /juuku, and only relative URLs survive a prefix
   base: command === 'build' ? './' : '/',

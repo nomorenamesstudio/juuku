@@ -86,3 +86,33 @@ link's back button would leave the site.
 Phones also get an edge-swipe: a pointer drag that starts within 26px of the left
 edge, travels 90px horizontally, and is ignored when it looks vertical so the
 player's pull-to-dismiss keeps working.
+
+## Safe areas and the player's height
+
+The player is the one view that has to fit the screen exactly, and the status bar is
+handled by the page, not by the player: `.page` pads itself with
+`env(safe-area-inset-top)` and the player's height is
+`calc(100dvh - env(safe-area-inset-top))`. Using plain `100dvh` there made the player
+hang one status bar below the screen in the installed app, which silently ate the
+bottom padding — the same CSS measured fine in Safari (inset 0) and hugged the home
+gesture in the PWA (inset 59px).
+
+`env(safe-area-inset-bottom)` is 0 in Safari and ~34px installed, so any spacing that
+has to clear the home indicator uses `max(3rem, … + env(safe-area-inset-bottom))`
+rather than the inset alone.
+
+The SPA shell is served with `Cache-Control: no-cache` and hashed assets `immutable`:
+without that, an installed app keeps launching a cached `index.html` and none of the
+CSS above ever reaches the phone.
+
+### The status-bar surface (iOS standalone only)
+
+iOS 27 washes out and blurs the top of an installed web app when it does not find a
+full-width fixed surface at the screen edge — WebKit samples the edge for a
+background thicker than ~10px and blurs what is underneath instead. `index.html`
+carries an empty `.status-bar-surface` outside the app root for exactly that: 11px
+tall, viewport-fixed, full width, inheriting the page colour, with its background
+clipped to empty text so it paints nothing visible. It is `pointer-events: none`,
+`aria-hidden`, and enabled only under `display-mode: standalone` on WebKit. It must
+not be hidden with `opacity: 0` or `visibility: hidden` — that removes the background
+the sampler is looking for. Prior art: nanobot#5942.
