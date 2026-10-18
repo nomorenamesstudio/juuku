@@ -219,7 +219,9 @@ h1.display {
 
 /* the deck floats above the tab bar, so the page needs the extra room only then */
 .has-deck .content {
-  padding-bottom: 9.6rem;
+  /* deck + tab bar, plus the home-indicator inset: without it the last row of a
+     long list sat under the deck in the installed app */
+  padding-bottom: calc(9.6rem + env(safe-area-inset-bottom));
 }
 
 .shell-player .nowbar {

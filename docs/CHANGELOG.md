@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.2 — 2026-10-18
+
+- **Fix** — the last row of a long list sat under the docked player in the installed app: the page reserved the deck and tab bar but not the home-indicator inset, so the deck floated that much higher than the space kept for it. The padding now includes `env(safe-area-inset-bottom)` (measured 15px clear either way).
+
 ## v0.3.1 — 2026-10-18
 
 - **Change** — README images retaken against a 274-album library on the released build: a new desktop shot plus a row of three phone shots (player, lyrics with the sung line lit, album page).
