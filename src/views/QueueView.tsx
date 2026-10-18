@@ -14,7 +14,9 @@ export function QueueView({ jbox }: { jbox: Jukebox }) {
         <h1 className="display">Queue</h1>
         <p className="fineprint">
           {entries.length === 0 ? 'Empty' : `${entries.length} ${entries.length === 1 ? 'track' : 'tracks'} · ${formatTotal(total)}`}
-          {status && status.currentIndex >= 0 ? ` · playing track ${status.currentIndex + 1}` : ''}
+          {status && status.currentIndex >= 0
+            ? ` · track ${status.currentIndex + 1}, ${Math.max(entries.length - status.currentIndex - 1, 0)} left`
+            : ''}
         </p>
         {entries.length > 0 && (
           <div className="actions">
@@ -50,6 +52,7 @@ export function QueueView({ jbox }: { jbox: Jukebox }) {
               song={song}
               index={index}
               active={index === status?.currentIndex}
+              played={status ? status.currentIndex >= 0 && index < status.currentIndex : false}
               playing={!!status?.playing}
               onSkip={() => jbox.playAt(index)}
               onRemove={() => jbox.removeAt(index)}

@@ -198,7 +198,8 @@ export default function App() {
   useEffect(() => {
     if (route.name !== 'player' && lyricsOpen) setLyricsOpen(false);
   }, [route.name, lyricsOpen]);
-  const count = jbox.entries.length;
+  // the badge counts what is still ahead of the current track, not the whole queue
+  const count = Math.max(jbox.entries.length - (jbox.status?.currentIndex ?? -1) - 1, 0);
 
   useEffect(() => {
     applySettings(settings);

@@ -1010,6 +1010,19 @@ h1.display {
   background: rgba(240, 162, 74, 0.09);
 }
 
+/* a track that already played keeps its place but steps back */
+.row-played {
+  opacity: 0.42;
+}
+
+.row-played:hover {
+  opacity: 0.7;
+}
+
+.row-played .row-title {
+  color: var(--muted);
+}
+
 .row-active:hover {
   background: rgba(240, 162, 74, 0.12);
 }

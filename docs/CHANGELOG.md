@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.3.9 — 2026-10-18
+
+- **Feature** — the queue counts down: the badge shows the tracks still ahead of the current one, and entries that already played stay in the list at 42% opacity (70% on hover, still removable) with the current row keeping its amber marker. Both come from `currentIndex`, so restarting the list through Repeat all or a fresh play restores the full count and full opacity by itself.
+- **Change** — the queue header reads `track 25, 35 left` instead of `playing track 25`.
+
 ## v0.3.8 — 2026-10-18
 
 - **Fix** — a search scrolls the page back to the top when its results land, instead of leaving you in the middle of the new list.

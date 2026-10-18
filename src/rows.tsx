@@ -72,15 +72,16 @@ interface QueueRowProps {
   song: Song;
   index: number;
   active: boolean;
+  played: boolean;
   playing: boolean;
   onSkip: () => void;
   onRemove: () => void;
 }
 
-/** Queue row: tapping skips to that entry. */
-export function QueueRow({ song, index, active, playing, onSkip, onRemove }: QueueRowProps) {
+/** Queue row: tapping skips to that entry, past entries fade but stay. */
+export function QueueRow({ song, index, active, played, playing, onSkip, onRemove }: QueueRowProps) {
   return (
-    <li className={`row ${active ? 'row-active' : ''}`}>
+    <li className={`row ${active ? 'row-active' : ''} ${played ? 'row-played' : ''}`}>
       <span className="row-number">{active ? <Eq playing={playing} /> : index + 1}</span>
       <button className="row-main" onClick={onSkip} aria-label={`Skip to ${song.title}`}>
         <span className="row-title">{song.title}</span>
