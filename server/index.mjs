@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMarked } from './lyrics.mjs';
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
-import { listSockets, quitPlayers, socketsShared } from './player.mjs';
+import { dropDeadSockets, livePlayers, quitPlayers, socketsShared } from './player.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
 try {
@@ -251,7 +251,7 @@ app.get('/api/state', wrap(async (_req, res) => {
  * track — it keeps playing but Navidrome no longer knows about it.
  */
 app.get('/api/player/status', wrap(async (_req, res) => {
-  res.json({ shared: socketsShared(), players: (await listSockets()).length });
+  res.json({ shared: socketsShared(), players: await livePlayers() });
 }));
 
 let lastHealAt = 0;
@@ -298,8 +298,12 @@ setInterval(() => {
   if (process.env.JUUKU_MPV_WATCHDOG === '0') return;
   if (Date.now() - lastHealAt < HEAL_COOLDOWN_MS) return;
   void (async () => {
-    const sockets = await listSockets();
-    if (sockets.length < 2) return;
+    // a socket file can outlive its player, so count what actually answers
+    if ((await livePlayers()) < 2) {
+      // clear dead files only — a live player must never be touched here
+      await dropDeadSockets();
+      return;
+    }
     lastHealAt = Date.now();
     try {
       const result = await serialWrite(restartPlayback);

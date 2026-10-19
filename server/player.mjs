@@ -1,4 +1,4 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, unlink } from 'node:fs/promises';
 import { createConnection } from 'node:net';
 import { join } from 'node:path';
 
@@ -25,6 +25,41 @@ export async function listSockets() {
 
 export const socketsShared = () => process.env.JUUKU_MPV_SOCKETS !== undefined;
 
+/** A socket file can outlive its player: only a connect says whether it is alive. */
+export function probeSocket(path, timeoutMs = 400) {
+  return new Promise((resolve) => {
+    const socket = createConnection(path);
+    let settled = false;
+    const done = (alive) => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      resolve(alive);
+    };
+    socket.setTimeout(timeoutMs, () => done(false));
+    socket.on('error', () => done(false));
+    socket.on('connect', () => done(true));
+  });
+}
+
+/** How many players are actually alive right now. */
+export async function livePlayers() {
+  const sockets = await listSockets();
+  let live = 0;
+  for (const path of sockets) {
+    if (await probeSocket(path)) live += 1;
+  }
+  return live;
+}
+
+async function drop(path) {
+  try {
+    await unlink(path);
+  } catch {
+    // already gone, or not ours to remove
+  }
+}
+
 /** Send mpv the JSON `quit` command; resolves false when the socket is stale. */
 export function quitSocket(path, timeoutMs = 1500) {
   return new Promise((resolve) => {
@@ -46,12 +81,31 @@ export function quitSocket(path, timeoutMs = 1500) {
   });
 }
 
-/** Quit every player socket still in the shared dir. */
+/** Remove socket files whose player is gone; never touches a live one. */
+export async function dropDeadSockets() {
+  const sockets = await listSockets();
+  let dropped = 0;
+  for (const path of sockets) {
+    if (!(await probeSocket(path))) {
+      await drop(path);
+      dropped += 1;
+    }
+  }
+  return dropped;
+}
+
+/**
+ * Quit every player socket in the shared dir and clear the leftovers: a dead
+ * player's socket file would otherwise keep counting as a player.
+ */
 export async function quitPlayers() {
   const sockets = await listSockets();
   let quit = 0;
+  let stale = 0;
   for (const path of sockets) {
     if (await quitSocket(path)) quit += 1;
+    else stale += 1;
+    await drop(path);
   }
-  return { found: sockets.length, quit };
+  return { found: sockets.length, quit, stale };
 }

@@ -36,3 +36,18 @@ test('quitSocket sends mpv the quit command over a unix socket', async () => {
 test('quitSocket reports a stale socket instead of throwing', async () => {
   assert.equal(await quitSocket(join(tmpdir(), 'no-such-mpv.socket')), false);
 });
+
+test('probeSocket says whether a socket still has a listener', async () => {
+  const { probeSocket } = await import('./player.mjs');
+  const dir = await mkdtemp(join(tmpdir(), 'juuku-probe-'));
+  const path = join(dir, 'mpv-ctrl-probe.socket');
+  const server = createServer(() => {});
+  await new Promise((resolve) => server.listen(path, resolve));
+
+  assert.equal(await probeSocket(path), true);
+  await new Promise((resolve) => server.close(resolve));
+  // the file may remain, but nothing answers on it any more
+  assert.equal(await probeSocket(path), false);
+
+  await rm(dir, { recursive: true, force: true });
+});
