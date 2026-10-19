@@ -559,7 +559,9 @@ h1.display {
 .view .view-head + .rows,
 .view .view-head + .plain-list,
 .library-head + .album-grid,
-.library-head + .plain-list {
+.library-head + .playlist-new,
+.library-head + .plain-list,
+.library-head + .empty {
   margin-top: 1.4rem;
 }
 
@@ -748,8 +750,9 @@ h1.display {
 
 .section-label {
   margin: 1.4rem 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
   color: var(--dim);
 }
 
@@ -3207,6 +3210,107 @@ h1.display {
   margin: 0.2rem 0 0.7rem;
 }
 
+/* ------------------------------------------------------------- home shelves */
+
+.shelf {
+  margin-top: 1.4rem;
+}
+
+.shelf:first-of-type {
+  margin-top: 0.2rem;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.shelf-head .section-label {
+  margin: 0;
+}
+
+/* the shelf link reads like the back link on a detail page: same size, same muted
+   tone, chevron on the side it points to */
+.shelf-head .shelf-all {
+  margin: 0;
+  color: var(--muted);
+}
+
+.shelf-head .shelf-all:hover {
+  color: var(--cream);
+}
+
+.flip {
+  transform: rotate(180deg);
+}
+
+/* the track scrolls sideways, snaps on a card and hides its scrollbar */
+.shelf-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 42%;
+  gap: 0.7rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* the cards are wider than the padding box, so the first and last must line up
+     with the column instead of the screen edge */
+  padding-bottom: 0.2rem;
+}
+
+.shelf-track::-webkit-scrollbar {
+  display: none;
+}
+
+.shelf-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  text-align: left;
+  scroll-snap-align: start;
+}
+
+.shelf-card .album-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the artist cards are round, like the avatars they carry everywhere else */
+.shelf-artist .album-art {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.shelf-artist .artist-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+[data-theme='geek'] .shelf-artist .album-art,
+[data-theme='geek'] .shelf-artist .artist-avatar {
+  border-radius: 1px;
+}
+
+@media (min-width: 640px) {
+  .shelf-track {
+    grid-auto-columns: 28%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shelf-track {
+    grid-auto-columns: 19%;
+  }
+}
+
 /* --------------------------------------------------------------- search page */
 
 .search-field {
@@ -3265,8 +3369,10 @@ h1.display {
   margin-top: 0;
 }
 
-.section-head .inline-link {
-  font-size: 0.8rem;
+.section-head .inline-link,
+.shelf-head .shelf-all {
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 .history-row {

@@ -18,7 +18,9 @@ All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "err
 | POST | `/api/playlists/:id/songs` | Append songs to a playlist |
 | DELETE | `/api/playlists/:id/songs/:songId` | Remove one song from a playlist |
 | GET | `/api/search?q=` | Songs + albums + artists in one call |
-| GET | `/api/albums?type=newest&size=30&offset=0` | Album list, paged (`newest`, `alphabeticalByName`, …) |
+| GET | `/api/home?day=YYYY-MM-DD` | The four album shelves plus the daily artists for the given local day |
+| GET | `/api/counts` | Totals for the tab pills: `{ albums, playlists }` |
+| GET | `/api/albums?type=newest&size=30&offset=0&day=` | Album list, paged (`newest`, `recent`, `byYear`, `alphabeticalByName`, `alphabeticalByArtist`, `daily`) |
 | GET | `/api/albums/:id` | Album plus its songs |
 | GET | `/api/artists` | All artists |
 | GET | `/api/artists/:id` | Artist plus their albums |
@@ -29,6 +31,20 @@ All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "err
 | POST | `/api/favorites` | Add songs to it (`{ ids: string[] }`, deduped) |
 | DELETE | `/api/favorites/:songId` | Remove one song from it |
 | GET | `/api/cover/:id?size=300` | Cover art proxy (cached a day) |
+
+### `GET /api/home?day=YYYY-MM-DD`
+
+```json
+{
+  "lastPlayed": [ … albums … ],
+  "lastAdded": [ … ],
+  "newestRelease": [ … ],
+  "dailyPicks": [ … ],
+  "dailyArtists": [ … artists … ]
+}
+```
+
+Ten each, at most. `lastPlayed` comes from juuku's own log (`recent.json` in the data dir) because Navidrome does not record jukebox playback; `dailyPicks` and `dailyArtists` are the whole library shuffled with a seed derived from `day`, so the order is stable for that day and changes at midnight. `dailyArtists` leaves out the `Various Artists` catch-all.
 
 ### `GET /api/health`
 

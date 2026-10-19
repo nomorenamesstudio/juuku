@@ -82,7 +82,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
-  const body = await res.json().catch(() => ({}));
+  // a body that is not JSON means the path is not ours (a stale server behind an
+  // older build answers index.html); swallowing it turned that into `{}` and a
+  // crash far from the cause
+  const text = await res.text();
+  let body: { error?: string } & Record<string, unknown> = {};
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      throw new Error(`${res.status} ${res.statusText}: expected JSON from ${path}`);
+    }
+  }
   if (!res.ok) {
     // an expired session surfaces as a 401 on whatever the app calls next
     if (res.status === 401) window.dispatchEvent(new Event('juuku:unauthorized'));
@@ -123,13 +134,30 @@ export const getLyrics = (songId: string, lookup = false) =>
 export const search = (q: string) =>
   request<{ songs: Song[]; albums: Album[]; artists: Artist[] }>(`api/search?q=${encodeURIComponent(q)}`);
 
-export type AlbumSort = 'alphabeticalByName' | 'alphabeticalByArtist' | 'newest' | 'recent' | 'byYear';
+export type AlbumSort = 'alphabeticalByName' | 'alphabeticalByArtist' | 'newest' | 'recent' | 'byYear' | 'daily';
+
+export interface HomeRows {
+  lastPlayed: Album[];
+  lastAdded: Album[];
+  newestRelease: Album[];
+  dailyPicks: Album[];
+  dailyArtists: Artist[];
+}
+
+export async function getHome(): Promise<HomeRows> {
+  const payload = await request<Partial<HomeRows>>(`api/home?day=${new Date().toLocaleDateString('sv')}`);
+  const keys: (keyof HomeRows)[] = ['lastPlayed', 'lastAdded', 'newestRelease', 'dailyPicks', 'dailyArtists'];
+  if (!keys.every((key) => Array.isArray(payload?.[key]))) throw new Error('the server has no home rows');
+  return payload as HomeRows;
+}
 
 export const getAlbums = (offset = 0, size = 30, type: AlbumSort = 'newest') =>
-  request<{ albums: Album[]; hasMore: boolean }>(`api/albums?type=${type}&size=${size}&offset=${offset}`);
+  request<{ albums: Album[]; hasMore: boolean }>(
+    `api/albums?type=${type}&size=${size}&offset=${offset}&day=${new Date().toLocaleDateString('sv')}`,
+  );
 
 export const getAlbum = (id: string) => request<{ album: Album; songs: Song[] }>(`api/albums/${id}`);
-export const getCounts = () => request<{ albums: number | null }>('api/counts');
+export const getCounts = () => request<{ albums: number | null; playlists: number | null }>('api/counts');
 
 export const getArtists = () => request<{ artists: Artist[] }>('api/artists');
 export const getArtist = (id: string) => request<{ artist: Artist; albums: Album[] }>(`api/artists/${id}`);

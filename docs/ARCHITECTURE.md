@@ -31,6 +31,20 @@ switch, the sort dropdown — is built from `--field-h` (3rem), `--field-bg`,
 section labels and the rows all start on the same content edge: the head carries no
 horizontal padding of its own.
 
+## Home
+
+`/` is a set of horizontally scrolling shelves, ten albums each: last played, last
+added, newest release, daily picks, then a row of ten daily artists. Each shelf's
+"See all" writes the matching library sort and goes to `/library/albums` (artists
+go to `/library/artists`), which is why `daily` exists as a sort type.
+
+"Last played" is juuku's own log: Navidrome never stores jukebox playback, so the
+server notes the album that was playing when the queue moves on and keeps the last
+forty ids in `recent.json` in the data dir — a restart would otherwise wipe the row.
+The two daily rows are the whole library shuffled with a mulberry32 seeded from the
+local date the client sends, so they hold still all day and differ between devices
+only if the devices disagree about the date.
+
 ## Themes
 
 One attribute on `<html>`, `data-theme="classic|modern|geek"`, set from

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 
+export type LibraryTab = 'albums' | 'artists' | 'playlists';
+
 export type Route =
-  | { name: 'library'; tab: 'albums' | 'artists' }
+  | { name: 'home' }
+  | { name: 'library'; tab: LibraryTab }
   | { name: 'album'; id: string }
   | { name: 'artist'; id: string }
   | { name: 'favorites' }
@@ -21,13 +24,16 @@ function parse(hash: string): Route {
     case 'artist':
       return id ? { name: 'artist', id } : { name: 'library', tab: 'artists' };
     case 'library':
-      return { name: 'library', tab: id === 'artists' ? 'artists' : 'albums' };
+      return { name: 'library', tab: id === 'artists' ? 'artists' : id === 'playlists' ? 'playlists' : 'albums' };
     case 'favorites':
       return { name: 'favorites' };
+    // playlists live under the library now; the old link still lands there
     case 'playlists':
-      return { name: 'playlists' };
+      return { name: 'library', tab: 'playlists' };
+    case 'home':
+      return { name: 'home' };
     case 'playlist':
-      return id ? { name: 'playlist', id } : { name: 'playlists' };
+      return id ? { name: 'playlist', id } : { name: 'library', tab: 'playlists' };
     case 'queue':
       return { name: 'queue' };
     case 'player':
@@ -37,7 +43,7 @@ function parse(hash: string): Route {
     case 'settings':
       return { name: 'settings' };
     default:
-      return { name: 'library', tab: 'albums' };
+      return { name: 'home' };
   }
 }
 
@@ -73,6 +79,7 @@ export function goBack(fallback = '/library') {
 }
 
 const LABELS: Record<Route['name'], string> = {
+  home: 'Home',
   library: 'Library',
   album: 'Album',
   artist: 'Artist',

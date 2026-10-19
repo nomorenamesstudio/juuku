@@ -3,6 +3,7 @@ import { type Artist, getArtists, getCounts } from './api';
 
 export interface Counts {
   albums: number | null;
+  playlists: number | null;
   artists: Artist[];
 }
 
@@ -13,11 +14,11 @@ let inflight: Promise<Counts> | null = null;
 function load() {
   inflight ??= Promise.all([getCounts(), getArtists()])
     .then(([totals, list]) => {
-      cached = { albums: totals.albums, artists: list.artists };
+      cached = { albums: totals.albums, playlists: totals.playlists, artists: list.artists };
       return cached;
     })
     .catch(() => {
-      cached = { albums: null, artists: [] };
+      cached = { albums: null, playlists: null, artists: [] };
       return cached;
     });
   return inflight;

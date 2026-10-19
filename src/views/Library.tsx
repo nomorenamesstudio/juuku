@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { AlbumsIcon, ArtistIcon, ChevronDownIcon, RefreshIcon } from '../icons';
+import { AlbumsIcon, ArtistIcon, ChevronDownIcon, PlaylistIcon, RefreshIcon } from '../icons';
 import { type Album, type AlbumSort, coverUrl, getAlbums } from '../api';
 import { Cover } from '../Cover';
 import { useCounts } from '../useCounts';
 import { readPref, writePref } from '../prefs';
-import { navigate } from '../router';
-
-type Tab = 'albums' | 'artists';
+import { type LibraryTab, navigate } from '../router';
+import { PlaylistsView } from './PlaylistsView';
 
 const SORTS = [
   { type: 'alphabeticalByName', label: 'Alphabetical' },
@@ -14,6 +13,7 @@ const SORTS = [
   { type: 'newest', label: 'Last added' },
   { type: 'recent', label: 'Last played' },
   { type: 'byYear', label: 'Last released' },
+  { type: 'daily', label: 'Daily picks' },
 ] as const;
 
 const SORT_KEY = 'juuku.library.sort';
@@ -27,7 +27,7 @@ function readSort(): AlbumSort {
 // grid paint empty first, which reads as a reload on a phone
 let albumCache: { albums: Album[]; hasMore: boolean; sort: AlbumSort } | null = null;
 
-export function Library({ tab }: { tab: Tab }) {
+export function Library({ tab }: { tab: LibraryTab }) {
   const [sort, setSort] = useState<AlbumSort>(readSort);
   const [albums, setAlbums] = useState<Album[]>(albumCache?.sort === readSort() ? albumCache.albums : []);
   const [hasMore, setHasMore] = useState(albumCache?.sort === readSort() ? albumCache.hasMore : false);
@@ -58,6 +58,7 @@ export function Library({ tab }: { tab: Tab }) {
   // the hook's list is the one the artist tab renders, so its length is the pill
   const artists = counts?.artists ?? [];
   const albumTotal = counts?.albums ?? null;
+  const playlistTotal = counts?.playlists ?? null;
 
   const loadMore = async () => {
     setLoading(true);
@@ -78,7 +79,7 @@ export function Library({ tab }: { tab: Tab }) {
     <div className="view">
       <div className="library-head">
         <header className="view-head">
-          <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
+          <h1 className="display">{tab === 'albums' ? 'Albums' : tab === 'artists' ? 'Artists' : 'Playlists'}</h1>
           <div className="library-controls">
             <div className="segmented" role="tablist" aria-label="Browse">
               <button
@@ -101,6 +102,16 @@ export function Library({ tab }: { tab: Tab }) {
                 <ArtistIcon size={17} />
                 {artists.length > 0 && <span className="count-pill">{artists.length}</span>}
               </button>
+              <button
+                role="tab"
+                aria-selected={tab === 'playlists'}
+                aria-label="Playlists"
+                title="Playlists"
+                onClick={() => navigate('/library/playlists')}
+              >
+                <PlaylistIcon size={17} />
+                {playlistTotal !== null && <span className="count-pill">{playlistTotal}</span>}
+              </button>
             </div>
             {tab === 'albums' && (
               <label className="sort-select">
@@ -119,7 +130,9 @@ export function Library({ tab }: { tab: Tab }) {
         </header>
       </div>
 
-    {tab === 'albums' ? (
+    {tab === 'playlists' ? (
+        <PlaylistsView embedded />
+      ) : tab === 'albums' ? (
         <>
           {albums.length === 0 && (
             <p className="empty">

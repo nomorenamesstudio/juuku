@@ -2,6 +2,7 @@ import { type ComponentType, useSyncExternalStore } from 'react';
 import {
   PixelAddToPlaylistIcon,
   PixelAlbumsIcon,
+  PixelHomeIcon,
   PixelArtistIcon,
   PixelChevronDownIcon,
   PixelChevronLeftIcon,
@@ -32,9 +33,8 @@ import {
 import {
   SolidAddToPlaylistIcon,
   SolidAlbumsIcon,
+  SolidHomeIcon,
   SolidArtistIcon,
-  SolidChevronDownIcon,
-  SolidChevronLeftIcon,
   SolidCloseIcon,
   SolidGithubIcon,
   SolidHeartIcon,
@@ -64,6 +64,7 @@ import {
   ChevronDown,
   ChevronLeft,
   Heart,
+  House,
   Disc3,
   Library,
   ListMusic,
@@ -155,13 +156,14 @@ export const PlusIcon = icon(Plus, PixelPlusIcon, SolidPlusIcon);
 export const QueueIcon = icon(ListMusic, PixelQueueIcon, SolidQueueIcon);
 export const PlaylistIcon = icon(ListMusic, PixelPlaylistIcon, SolidPlaylistIcon);
 export const AddToPlaylistIcon = icon(ListPlus, PixelAddToPlaylistIcon, SolidAddToPlaylistIcon);
+export const HomeIcon = icon(House, PixelHomeIcon, SolidHomeIcon);
 export const AlbumsIcon = icon(Disc3, PixelAlbumsIcon, SolidAlbumsIcon);
 export const LibraryIcon = icon(Library, PixelLibraryIcon, SolidLibraryIcon);
 export const ArtistIcon = icon(UserRound, PixelArtistIcon, SolidArtistIcon);
 export const SearchIcon = icon(Search, PixelSearchIcon, SolidSearchIcon);
 export const RefreshIcon = icon(RotateCw, PixelRefreshIcon, SolidRefreshIcon);
-export const ChevronDownIcon = icon(ChevronDown, PixelChevronDownIcon, SolidChevronDownIcon);
-export const ChevronLeftIcon = icon(ChevronLeft, PixelChevronLeftIcon, SolidChevronLeftIcon);
+export const ChevronDownIcon = icon(ChevronDown, PixelChevronDownIcon);
+export const ChevronLeftIcon = icon(ChevronLeft, PixelChevronLeftIcon);
 export const VolumeIcon = icon(Volume2, PixelVolumeIcon, SolidVolumeIcon);
 export const MicIcon = icon(MicVocal, PixelMicIcon, SolidMicIcon);
 export const MoreIcon = icon(MoreHorizontal, PixelMoreIcon, SolidMoreIcon);

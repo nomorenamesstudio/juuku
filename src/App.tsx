@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { NowBar } from './MiniPlayer';
 import {
+  AlbumsIcon,
   ArtistIcon,
   ChevronLeftIcon,
+  HomeIcon,
   CloseIcon,
   LibraryIcon,
   LogOutIcon,
@@ -15,7 +17,7 @@ import {
 import { TrackActions, TrackActionsProvider } from './TrackActions';
 import { LoginView } from './views/LoginView';
 import { type Session, getSession, signOut, type Song } from './api';
-import { goBack, navigate, useRoute } from './router';
+import { type LibraryTab, goBack, navigate, useRoute } from './router';
 import { type Settings, applySettings, loadSettings } from './settings';
 import { hydratePrefs } from './prefs';
 import { type Theme, applyTheme, loadTheme } from './theme';
@@ -29,20 +31,21 @@ import { FavoritesView } from './views/FavoritesView';
 import { Library } from './views/Library';
 import { PlayerView } from './views/PlayerView';
 import { PlaylistView } from './views/PlaylistView';
-import { PlaylistsView } from './views/PlaylistsView';
+import { HomeView } from './views/HomeView';
 import { QueueView } from './views/QueueView';
 
 const RAIL = [
-  { path: '/library/albums', label: 'Albums', group: 'Browse', icon: LibraryIcon },
+  { path: '/home', label: 'Home', group: 'Browse', icon: HomeIcon },
+  { path: '/library/albums', label: 'Albums', group: 'Browse', icon: AlbumsIcon },
   { path: '/library/artists', label: 'Artists', group: 'Browse', icon: ArtistIcon },
-  { path: '/playlists', label: 'Playlists', group: 'Yours', icon: PlaylistIcon },
+  { path: '/library/playlists', label: 'Playlists', group: 'Browse', icon: PlaylistIcon },
   { path: '/search', label: 'Search', group: 'Yours', icon: SearchIcon },
   { path: '/queue', label: 'Queue', group: 'Yours', icon: QueueIcon },
 ];
 
 const TABS = [
+  { path: '/home', label: 'Home', icon: HomeIcon },
   { path: '/library/albums', label: 'Library', icon: LibraryIcon },
-  { path: '/playlists', label: 'Playlists', icon: PlaylistIcon },
   { path: '/search', label: 'Search', icon: SearchIcon },
   { path: '/queue', label: 'Queue', icon: QueueIcon },
 ];
@@ -245,7 +248,9 @@ export default function App() {
   const routeKey = route.name === 'album' || route.name === 'artist' ? `${route.name}:${route.id}` : route.name;
 
   const section =
-    route.name === 'playlists' || route.name === 'playlist'
+    route.name === 'home'
+      ? 'home'
+      : route.name === 'playlist'
       ? 'playlists'
       : route.name === 'library'
       ? route.tab
@@ -265,7 +270,7 @@ export default function App() {
 
   const isLibrary = route.name === 'library';
   // the library's tab has to survive while its view is hidden
-  const libraryTab = useRef<'albums' | 'artists'>('albums');
+  const libraryTab = useRef<LibraryTab>('albums');
   if (isLibrary) libraryTab.current = route.tab;
 
   const view = (() => {
@@ -278,8 +283,8 @@ export default function App() {
         return <ArtistView key={route.id} id={route.id} jbox={jbox} />;
       case 'favorites':
         return <FavoritesView jbox={jbox} />;
-      case 'playlists':
-        return <PlaylistsView />;
+      case 'home':
+        return <HomeView />;
       case 'playlist':
         return <PlaylistView id={route.id} jbox={jbox} />;
       case 'queue':

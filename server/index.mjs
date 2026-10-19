@@ -1,5 +1,6 @@
 import express from 'express';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { sep } from 'node:path';
 import { join } from 'node:path';
 import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMarked } from './lyrics.mjs';
@@ -187,7 +188,34 @@ let lastObserved = null;
 
 /** Albums that played, newest first — the source of the "last played" sort. */
 const RECENT_ALBUMS_MAX = 40;
+/**
+ * The recent log lives in the data dir: it is the only record of jukebox playback
+ * (Navidrome never stores it), so a deploy restart must not wipe the home row.
+ */
+const DATA_DIR = process.env.JUUKU_DATA_DIR ?? '.data';
+const RECENT_FILE = join(DATA_DIR, 'recent.json');
 const recentAlbums = [];
+
+function loadRecent() {
+  try {
+    const parsed = JSON.parse(readFileSync(RECENT_FILE, 'utf8'));
+    if (Array.isArray(parsed)) recentAlbums.push(...parsed.filter((id) => typeof id === 'string').slice(0, RECENT_ALBUMS_MAX));
+  } catch {
+    // first run or unreadable file: an empty log is fine
+  }
+}
+
+let recentSaveTimer = null;
+
+function saveRecent() {
+  if (recentSaveTimer) return;
+  recentSaveTimer = setTimeout(() => {
+    recentSaveTimer = null;
+    writeFile(RECENT_FILE, JSON.stringify(recentAlbums), () => {});
+  }, 800);
+}
+
+loadRecent();
 
 function noteAlbum(previous, next) {
   const index = previous?.status?.currentIndex ?? -1;
@@ -199,6 +227,7 @@ function noteAlbum(previous, next) {
   if (at !== -1) recentAlbums.splice(at, 1);
   recentAlbums.unshift(entry.albumId);
   recentAlbums.length = Math.min(recentAlbums.length, RECENT_ALBUMS_MAX);
+  saveRecent();
 }
 
 /** The albums played here, in order, as full album records. */
@@ -450,6 +479,84 @@ app.get('/api/search', wrap(async (req, res) => {
 const ALPHABETICAL_CACHE = new Map();
 const ALPHABETICAL_TTL_MS = 5 * 60_000;
 
+/** every album, in pages of 500, cached — the raw material for the shuffles */
+const ALL_ALBUMS_CACHE = { at: 0, albums: [] };
+
+async function allAlbums() {
+  if (Date.now() - ALL_ALBUMS_CACHE.at < ALPHABETICAL_TTL_MS && ALL_ALBUMS_CACHE.albums.length > 0) {
+    return ALL_ALBUMS_CACHE.albums;
+  }
+  const all = [];
+  for (let offset = 0; offset < 5000; offset += 500) {
+    const response = await call('getAlbumList2', { type: 'alphabeticalByName', size: 500, offset });
+    const page = (response.albumList2?.album ?? []).map(album);
+    all.push(...page);
+    if (page.length < 500) break;
+  }
+  ALL_ALBUMS_CACHE.at = Date.now();
+  ALL_ALBUMS_CACHE.albums = all;
+  return all;
+}
+
+/** deterministic PRNG, so a day keeps its picks across reloads and devices */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle(list, seed) {
+  const random = mulberry32(seed);
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** a list in an order that only changes when the local day does */
+const DAILY_CACHE = new Map();
+
+/** Navidrome's catch-all for compilations; nothing personal to recommend there */
+const isVariousArtists = (name) => /^various( artists)?$/i.test(String(name ?? '').trim());
+
+async function dailyArtists(day) {
+  const key = `artists:${day || new Date().toISOString().slice(0, 10)}`;
+  const cached = DAILY_CACHE.get(key);
+  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+  const response = await call('getArtists');
+  const artists = (response.artists?.index ?? [])
+    .flatMap((index) =>
+      (index.artist ?? []).map((artist) => ({
+        id: artist.id,
+        name: artist.name,
+        albumCount: artist.albumCount,
+        coverArt: artist.coverArt,
+      })),
+    )
+    .filter((artist) => !isVariousArtists(artist.name));
+  // the newest artists are the ones worth a nudge; shuffle the whole list instead
+  const seed = [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, 11);
+  const shuffled = seededShuffle(artists, seed);
+  DAILY_CACHE.set(key, { at: Date.now(), albums: shuffled });
+  return shuffled;
+}
+
+async function dailyAlbums(day) {
+  const key = day || new Date().toISOString().slice(0, 10);
+  const cached = DAILY_CACHE.get(key);
+  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+  const seed = [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, 7);
+  const albums = seededShuffle(await allAlbums(), seed);
+  DAILY_CACHE.set(key, { at: Date.now(), albums });
+  return albums;
+}
+
 async function allAlbumsAlphabetical(type) {
   const cached = ALPHABETICAL_CACHE.get(type);
   if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
@@ -475,6 +582,11 @@ app.get('/api/albums', wrap(async (req, res) => {
     const page = albums.slice(offset, offset + size);
     return res.json({ albums: page, offset, hasMore: offset + size < albums.length });
   }
+  if (type === 'daily') {
+    const albums = await dailyAlbums(String(req.query.day ?? ''));
+    const page = albums.slice(offset, offset + size);
+    return res.json({ albums: page, offset, hasMore: offset + size < albums.length });
+  }
   // Navidrome has no release-date order, and byYear walks the range in the direction
   // it is given: newest year first means asking for this year down to 1900
   const years = type === 'byYear' ? { fromYear: new Date().getFullYear(), toYear: 1900 } : {};
@@ -485,6 +597,36 @@ app.get('/api/albums', wrap(async (req, res) => {
   const response = await call('getAlbumList2', { type, size, offset, ...years });
   const albums = (response.albumList2?.album ?? []).map(album);
   res.json({ albums, offset, hasMore: albums.length === size });
+}));
+
+/**
+ * The home screen's shelves. "Last played" is juuku's own log (Navidrome never
+ * records jukebox playback), the rest come straight from the library.
+ */
+app.get('/api/home', wrap(async (req, res) => {
+  const day = String(req.query.day ?? '');
+  const list = (response) => (response.albumList2?.album ?? []).map(album);
+
+  const [played, added, released, daily, dailyNames] = await Promise.all([
+    recentlyPlayed(10, 0),
+    call('getAlbumList2', { type: 'newest', size: 10 }).then(list),
+    call('getAlbumList2', {
+      type: 'byYear',
+      size: 10,
+      fromYear: new Date().getFullYear(),
+      toYear: 1900,
+    }).then(list),
+    dailyAlbums(day).then((albums) => albums.slice(0, 10)),
+    dailyArtists(day).then((artists) => artists.slice(0, 10)),
+  ]);
+
+  res.json({
+    lastPlayed: played,
+    lastAdded: added,
+    newestRelease: released,
+    dailyPicks: daily,
+    dailyArtists: dailyNames,
+  });
 }));
 
 app.get('/api/albums/:id', wrap(async (req, res) => {
@@ -502,25 +644,32 @@ app.get('/api/albums/:id', wrap(async (req, res) => {
 }));
 
 // totals for the library tab pills; null when the server is not Navidrome
-let counts = { at: 0, value: { albums: null } };
+let counts = { at: 0, value: { albums: null, playlists: null } };
 
 app.get('/api/counts', wrap(async (_req, res) => {
   if (Date.now() - counts.at > 300_000) {
-    counts = { at: Date.now(), value: { albums: await nativeTotal('album').catch(() => null) } };
+    const [albums, playlists] = await Promise.all([
+      nativeTotal('album').catch(() => null),
+      call('getPlaylists')
+        .then((response) => (response.playlists?.playlist ?? []).length)
+        .catch(() => null),
+    ]);
+    counts = { at: Date.now(), value: { albums, playlists } };
   }
   res.json(counts.value);
 }));
 
 app.get('/api/artists', wrap(async (_req, res) => {
   const response = await call('getArtists');
-  const artists = (response.artists?.index ?? []).flatMap((index) =>
-    (index.artist ?? []).map((artist) => ({
-      id: artist.id,
-      name: artist.name,
-      albumCount: artist.albumCount,
-      coverArt: artist.coverArt,
-    })),
-  );
+  const artists = (response.artists?.index ?? [])
+    .flatMap((index) =>
+      (index.artist ?? []).map((artist) => ({
+        id: artist.id,
+        name: artist.name,
+        albumCount: artist.albumCount,
+        coverArt: artist.coverArt,
+      })),
+    );
   // same rule as the albums: `"Heroes"` sorts under H, symbols-only first
   res.json({ artists: alphabeticalBy(artists, 'name') });
 }));

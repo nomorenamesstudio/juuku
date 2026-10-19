@@ -7,6 +7,17 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.2 — 2026-10-19
+
+- **Feature** — a **home screen** at `/`: horizontally scrolling shelves of ten — *Last played*, *Last added*, *Newest release*, *Daily picks*, *Daily artists*. Each title carries a **See all** that sets the matching library sort and opens the library; the artist shelf goes to the Artists tab. The two daily rows are the whole library shuffled with a seed from the local date, so they hold still all day and turn over at midnight, and `Various Artists` is left out of the artist row (the Artists tab keeps it).
+- **Feature** — **playlists moved under the library** as the third tab, with its own counter in the switch (`Albums 310 · Artists 80 · Playlists 1`); `/playlists` still lands there. The tab bar is now *Home · Library · Search · Queue*, and the rail lists Home, Albums, Artists, Playlists.
+- **Feature** — `Daily picks` joined the album sort dropdown, so the home row's "See all" has a full-page view of the same shuffled order.
+- **Feature** — the **played-albums log is persisted** (`recent.json` in the data dir). It is the only record of jukebox playback, and every restart used to wipe the "Last played" row and sort.
+- **Change** — the home shelves' "See all" wears the back-link style with a trailing chevron, and section headers now outrank their actions: labels are `13.4px/600`, actions `11.5px/500` (they were the other way round — the action was larger than the header).
+- **Fix** — modern's chevrons were Phosphor's filled triangles (its fill weight has no chevron at all); the chevron icons now fall back to the stroke glyph in every theme but geek.
+- **Fix** — `request()` no longer swallows a non-JSON body as `{}`: a path the server does not know answers with `index.html`, which used to turn into an empty object and a crash far from the cause. `getHome()` also validates its payload.
+- **Docs** — `/api/home`, the `daily` sort type and the home-row reasoning are documented.
+
 ## v0.7.1 — 2026-10-19
 
 - **Change** — the modern theme's accent is **Glacier turquoise** (`#3adbc9`) on a cooled grey canvas, instead of a green that looks like every streaming service. Contrast against the theme's own surfaces: 10.9 on the page, 10.1 on panels, 9.6 for ink on the accent.
