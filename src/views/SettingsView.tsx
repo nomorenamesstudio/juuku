@@ -1,14 +1,36 @@
 import { useEffect, useState } from 'react';
-import { type Health, getHealth } from '../api';
+import { type Health, type PlayerStatus, getHealth, getPlayerStatus, restartPlayers } from '../api';
 import { GithubIcon } from '../icons';
 import { type Settings, saveSettings } from '../settings';
 
 export function SettingsView({ settings, onChange }: { settings: Settings; onChange: (next: Settings) => void }) {
   const [health, setHealth] = useState<Health | null>(null);
+  const [players, setPlayers] = useState<PlayerStatus | null>(null);
+  const [restarting, setRestarting] = useState(false);
+  const [restartNote, setRestartNote] = useState<string | null>(null);
 
   useEffect(() => {
     getHealth().then(setHealth, () => setHealth(null));
+    getPlayerStatus().then(setPlayers, () => setPlayers(null));
   }, []);
+
+  const restart = async () => {
+    setRestarting(true);
+    setRestartNote(null);
+    try {
+      const result = await restartPlayers();
+      setRestartNote(
+        `Killed ${result.quit} leftover ${result.quit === 1 ? 'player' : 'players'}${
+          result.restored ? ', queue restored' : ''
+        }.`,
+      );
+    } catch (err) {
+      setRestartNote((err as Error).message);
+    } finally {
+      setRestarting(false);
+      getPlayerStatus().then(setPlayers, () => {});
+    }
+  };
 
   const update = (next: Partial<Settings>) => {
     const merged = { ...settings, ...next };
@@ -102,9 +124,19 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
           <dd>{health?.navidrome ?? '…'}</dd>
           <dt>Signed in as</dt>
           <dd>{health?.user ?? '…'}</dd>
+          <dt>Players</dt>
+          <dd>
+            {players ? (players.shared ? `${players.players} running` : 'not shared') : '…'}
+          </dd>
           <dt>Jukebox</dt>
           <dd>{health ? ('enabled' in health.jukebox && health.jukebox.enabled ? 'enabled' : 'off') : '…'}</dd>
         </dl>
+        {players?.shared && (
+          <button className="secondary" onClick={() => void restart()} disabled={restarting}>
+            {restarting ? 'Restarting…' : 'Restart playback'}
+          </button>
+        )}
+        {restartNote && <p className="fineprint settings-note">{restartNote}</p>}
       </section>
 
       <section className="settings-block" aria-labelledby="settings-about">

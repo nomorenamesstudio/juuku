@@ -103,6 +103,35 @@ ARM server pulls natively):
 docker pull ghcr.io/nomorenamesstudio/juuku:latest
 ```
 
+### The kill switch, and why it needs a shared directory
+
+Navidrome runs one `mpv` per track and cannot always reap the previous one: when its
+socket write fails it drops the reference and the orphan keeps playing, which sounds
+like two tracks at once. Navidrome gives every player an IPC socket, and `quit` on
+that socket ends it — that is what the **Restart playback** button in Settings does:
+clear the queue (Navidrome quits the player it knows about), quit whatever sockets
+are left, then put the queue back and start again.
+
+For that to work the sockets have to be visible from this container, and mpv creates
+them `0600 root`:
+
+```yaml
+# navidrome
+environment:
+  - TMPDIR=/mpv-sockets
+volumes:
+  - ./mpv-sockets:/mpv-sockets
+# juuku
+environment:
+  JUUKU_MPV_SOCKETS: /mpv-sockets
+volumes:
+  - ./mpv-sockets:/mpv-sockets
+# the sockets are root-only, so this container has to run as root to open them
+user: "0:0"
+```
+
+Without the directory Settings shows `Players: not shared` and hides the button.
+
 Preferences are kept per Navidrome account in one JSON file, so they survive a
 redeploy and follow a person from phone to desktop: lyrics settings, the recent
 search list, the library sort and the albums that played. Put a volume on

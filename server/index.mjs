@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMarked } from './lyrics.mjs';
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
+import { listSockets, quitPlayers, socketsShared } from './player.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
 try {
@@ -244,6 +245,43 @@ function readState() {
 app.get('/api/state', wrap(async (_req, res) => {
   res.json(await readState());
 }));
+
+/**
+ * How many players are actually running. More than one means Navidrome lost a
+ * track — it keeps playing but Navidrome no longer knows about it.
+ */
+app.get('/api/player/status', wrap(async (_req, res) => {
+  res.json({ shared: socketsShared(), players: (await listSockets()).length });
+}));
+
+/**
+ * Kill switch: clear the queue (Navidrome quits the player it knows about), then
+ * `quit` every socket still alive — those are the orphans — and put the queue back
+ * where it was.
+ */
+app.post('/api/player/restart', wrap(async (_req, res) => serialWrite(async () => {
+  const before = await readState();
+  const index = before.status.currentIndex;
+  const wasPlaying = before.status.playing;
+
+  await call('jukeboxControl', { action: 'clear' });
+  invalidateState();
+  // give Navidrome a moment to remove its own socket, so only orphans are left
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  const killed = await quitPlayers();
+
+  if (index >= 0 && before.entries.length > 0) {
+    const ids = before.entries.map((entry) => entry.id);
+    await call('jukeboxControl', { action: 'set', id: ids }, { repeat: ['id'] });
+    await waitForQueue(ids);
+    const target = Math.min(index, ids.length - 1);
+    await call('jukeboxControl', { action: 'skip', index: target });
+    if (wasPlaying) await call('jukeboxControl', { action: 'start' });
+    invalidateState();
+  }
+
+  res.json({ ...killed, players: (await listSockets()).length, restored: index >= 0 });
+})));
 
 // preferences belong to the Navidrome account, not to one browser
 app.get('/api/prefs', wrap(async (_req, res) => {

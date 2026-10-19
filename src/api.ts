@@ -104,6 +104,18 @@ export const signIn = (password: string) =>
 export const signOut = () => request<{ ok: boolean }>('api/logout', { method: 'POST' });
 
 export const getHealth = () => request<Health>('api/health');
+
+export interface PlayerStatus {
+  shared: boolean;
+  players: number;
+}
+
+export const getPlayerStatus = () => request<PlayerStatus>('api/player/status');
+
+export const restartPlayers = () =>
+  request<{ found: number; quit: number; players: number; restored: boolean }>('api/player/restart', {
+    method: 'POST',
+  });
 export const getState = () => request<State>('api/state');
 export const getLyrics = (songId: string, lookup = false) =>
   request<Lyrics>(`api/lyrics/${songId}${lookup ? '?lookup=1' : ''}`);

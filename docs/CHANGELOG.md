@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.5.0 — 2026-10-18
+
+- **Feature** — a kill switch for a lost player: Settings gains a **Players** line (`2 running`) and a **Restart playback** button. It clears the queue so Navidrome quits the player it knows about, sends `quit` to every mpv socket still alive, then restores the queue and the index. No ssh. It only appears when Navidrome's socket directory is shared with this container (`JUUKU_MPV_SOCKETS`, see SETUP) — without that the page says `not shared`.
+- **Fix** — a `start` after a skip is sent only when playback had stopped; the stalled-switch nudge is gone (it was spawning a second mpv).
+
 ## v0.4.6 — 2026-10-18
 
 - **Fix** — the same track could play twice: the "stalled switch" nudge fired while a queue change was still in flight (index moved, nothing playing yet, position 0) and its extra `start` made Navidrome spawn a second mpv, while the action that caused the change spawned its own. The nudge is gone — the silence it patched came from the exclusive sound card, which `dmix` solved. Only one player on the box now after `set` → `skip` → `start`.
