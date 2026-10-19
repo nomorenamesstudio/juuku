@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.4.6 — 2026-10-18
+
+- **Fix** — the same track could play twice: the "stalled switch" nudge fired while a queue change was still in flight (index moved, nothing playing yet, position 0) and its extra `start` made Navidrome spawn a second mpv, while the action that caused the change spawned its own. The nudge is gone — the silence it patched came from the exclusive sound card, which `dmix` solved. Only one player on the box now after `set` → `skip` → `start`.
+- **Fix** — a `start` is only sent after a skip when playback had actually stopped (repeat-one at the end, repeat-all wrap); skip resumes by itself.
+
 ## v0.4.5 — 2026-10-18
 
 - **Fix** — two tracks could play at once. Navidrome switches tracks without a lock, so two overlapping jukebox actions (a skip from one device, a start from another) each spawned an mpv — and since the shared dmix device lets both open the card, both were audible. Jukebox writes are now serialized in juuku's server (one at a time), and the client no longer sends a redundant `start` right after a skip: `skip` already resumes playback itself.
