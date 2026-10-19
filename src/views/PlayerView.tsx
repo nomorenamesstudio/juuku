@@ -327,23 +327,29 @@ export function PlayerView({
 
           <div className="player-meta">
             <h1 className="display track-title">{current.title}</h1>
+            {/* two lines, not one run-on: the artist on its own, then the album
+                with its year, so a long album name wraps inside itself instead of
+                pushing dots and years onto lines of their own */}
             <p className="byline">
-              {current.artistId ? (
-                <button className="artist-link" onClick={() => navigate(`/artist/${current.artistId}`)}>
-                  {current.artist}
-                </button>
-              ) : (
-                current.artist
-              )}{' '}
-              <span className="sep">·</span>{' '}
-              {current.albumId ? (
-                <button className="artist-link" onClick={() => navigate(`/album/${current.albumId}`)}>
-                  {current.album}
-                </button>
-              ) : (
-                current.album
-              )}
-              {current.year ? <span className="year"> · {current.year}</span> : null}
+              <span className="byline-artist">
+                {current.artistId ? (
+                  <button className="artist-link" onClick={() => navigate(`/artist/${current.artistId}`)}>
+                    {current.artist}
+                  </button>
+                ) : (
+                  current.artist
+                )}
+                {current.year ? <span className="year">{'\u00a0· '}{current.year}</span> : null}
+              </span>
+              <span className="byline-album">
+                {current.albumId ? (
+                  <button className="artist-link" onClick={() => navigate(`/album/${current.albumId}`)}>
+                    {current.album}
+                  </button>
+                ) : (
+                  current.album
+                )}
+              </span>
             </p>
           </div>
 

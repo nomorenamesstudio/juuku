@@ -59,11 +59,38 @@ let depth = 0;
 // Module level so every view reads the same answer, not a copy made at mount.
 const same = (a: Route, b: Route) => a.name === b.name && (a as { id?: string }).id === (b as { id?: string }).id;
 
+/**
+ * Where each view was left. A view that scrolls (the album grid, a queue) came back
+ * at the top before, which loses your place when you open a record and step back.
+ */
+const scrollMemory = new Map<string, number>();
+/**
+ * The offset has to be sampled *while* the old view is still on screen: by the time
+ * hashchange fires React has already swapped the view, the page is shorter and the
+ * browser has clamped scrollY to whatever fits — which is how 1400 became 377.
+ */
+let trackedHash = window.location.hash;
+let trackedY = window.scrollY;
+window.addEventListener(
+  'scroll',
+  () => {
+    // a scroll caused by the layout collapsing on the way out must not count
+    if (window.location.hash === trackedHash) trackedY = window.scrollY;
+  },
+  { passive: true },
+);
+// the browser restores its own idea of the offset on history.back, which fought the
+// per-view memory below and landed between the two
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+const scrollKey = (hash: string) => hash.replace(/^#/, '') || '/';
 let here: Route = parse(window.location.hash);
 let stack: Route[] = [here];
 let cameFrom: Route = here;
 
-window.addEventListener('hashchange', () => {
+window.addEventListener('hashchange', (event) => {
+  scrollMemory.set(scrollKey(new URL(event.oldURL).hash), trackedY);
+  trackedHash = window.location.hash;
+  trackedY = window.scrollY;
   depth += 1;
   const next = parse(window.location.hash);
   if (stack.length > 1 && same(stack[stack.length - 2], next)) stack.pop();
@@ -105,8 +132,22 @@ export function useRoute() {
 
   useEffect(() => {
     const onHashChange = () => {
-      setRoute(parse(window.location.hash));
-      window.scrollTo({ top: 0 });
+      const next = parse(window.location.hash);
+      setRoute(next);
+      // the player owns the screen, so it never carries an offset; every other view
+      // returns to where it was left, or starts at the top on a first visit
+      const remembered = next.name === 'player' ? undefined : scrollMemory.get(scrollKey(window.location.hash));
+      // the view is mounted hidden, so its height arrives a frame or two after the
+      // route does: keep asking for the old offset until the page is tall enough
+      let tries = 0;
+      const restore = () => {
+        window.scrollTo({ top: remembered ?? 0 });
+        tries += 1;
+        if (remembered && tries < 6 && Math.abs(window.scrollY - remembered) > 4) {
+          window.setTimeout(() => requestAnimationFrame(restore), 80);
+        }
+      };
+      requestAnimationFrame(restore);
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);

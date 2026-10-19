@@ -1784,6 +1784,22 @@ h1.display {
 
 .player-meta .byline {
   font-size: 0.86rem;
+  /* two lines: the artist, then the album and its year. A long album name wraps
+     inside its own line instead of turning into a centred button-box */
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.player-meta .byline .artist-link {
+  display: inline;
+  text-align: start;
+}
+
+.player-meta .byline-album {
+  color: var(--dim);
 }
 
 /* ----------------------------------------------------------------- lyrics */

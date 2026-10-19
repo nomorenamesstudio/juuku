@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.3 — 2026-10-19
+
+- **Fix** — a long album title wrapped as one centred box in the player byline, leaving the artist alone on the first line and `· 2024` on a third. The byline is two lines now: the artist with the year, then the album wrapping inside its own line.
+- **Fix** — views came back at the top after a detour: opening an album from the library and stepping back lost your place. Every non-player view remembers its offset (`history.scrollRestoration` is handed to the app, and the offset is sampled on scroll while the view is still on screen — sampling it on `hashchange` read the clamped value, 1400 became 377).
+
 ## v0.7.2 — 2026-10-19
 
 - **Feature** — a **home screen** at `/`: horizontally scrolling shelves of ten — *Last played*, *Last added*, *Newest release*, *Daily picks*, *Daily artists*. Each title carries a **See all** that sets the matching library sort and opens the library; the artist shelf goes to the Artists tab. The two daily rows are the whole library shuffled with a seed from the local date, so they hold still all day and turn over at midnight, and `Various Artists` is left out of the artist row (the Artists tab keeps it).
