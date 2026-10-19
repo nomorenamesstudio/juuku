@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.2 — 2026-10-19
+
+- **Fix** — modern's ✕ (and its plus, dots, queue, playlist and add-to-playlist glyphs) came from Phosphor's fill weight, which paints a filled rounded square with the mark knocked out — in a row it read as a grey tile. Those six now come from the bold weight instead, plain silhouettes at the same weight as the rest.
+- **Fix** — geek's playlist covers kept an 8px radius because the `<img>` carries its own rounding inside a square container; images are squared with everything else now.
+
 ## v0.8.1 — 2026-10-19
 
 - **Fix** — the lyrics button drew a podcast mic in modern and geek. Modern now uses Phosphor's **stage microphone** (handheld, on a stand) and geek a pixel **page of lines**, since Pixelarticons has no singing mic; classic keeps lucide's vocal mic.
