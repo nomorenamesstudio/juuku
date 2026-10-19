@@ -72,6 +72,8 @@
   --lyric-weight: 400;
   /* how present the cover glow is: a terminal does not glow */
   --glow: 0.42;
+  /* the un-sung lyric line */
+  --lyric-dim: #59493a;
   /* the tint at the top of the page; themes that want a flat canvas drop it */
   --wash: color-mix(in srgb, var(--accent) 16%, transparent);
   /* every standalone control — search, create, the browse switch, the sort
@@ -109,16 +111,21 @@
 /* classic is what the variables above already describe; these two swap them */
 
 [data-theme='modern'] {
-  --bg: #101012;
-  --panel: #17171a;
-  --raise: #232327;
-  --line: #303036;
+  /* glacier: turquoise accent on a cool grey canvas, chosen over the green that
+     every streaming service uses */
+  --bg: #0e1213;
+  --panel: #151b1d;
+  --raise: #1e2628;
+  --line: #2a3436;
   --text: #ffffff;
   --muted: #b3b3b9;
   --dim: #a3a3aa;
-  --accent: #1ed760;
-  --accent-ink: #06180c;
+  --accent: #3adbc9;
+  --accent-ink: #04231f;
   --danger: #f2545b;
+  --glass-strong: color-mix(in srgb, var(--bg) 82%, transparent);
+  --glass-text: color-mix(in srgb, var(--text) 84%, var(--bg));
+  --lyric-dim: color-mix(in srgb, var(--text) 32%, var(--bg));
   --radius: 12px;
   --font-body: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
@@ -141,6 +148,9 @@
   --accent: #46f28b;
   --accent-ink: #04140b;
   --danger: #ff6b6b;
+  --glass-strong: color-mix(in srgb, var(--bg) 82%, transparent);
+  --glass-text: color-mix(in srgb, var(--text) 84%, var(--bg));
+  --lyric-dim: color-mix(in srgb, var(--text) 30%, var(--bg));
   --radius: 2px;
   --font-body: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --font-display: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
@@ -763,7 +773,7 @@ h1.display {
 
 .primary {
   background: var(--amber);
-  color: #201505;
+  color: var(--accent-ink);
 }
 
 .primary:hover:not(:disabled) {
@@ -1480,7 +1490,7 @@ h1.display {
   height: 40px;
   border-radius: 50%;
   background: var(--amber);
-  color: #201505;
+  color: var(--accent-ink);
 }
 
 .nowbar-play:hover:not(:disabled) {
@@ -1647,7 +1657,7 @@ h1.display {
   padding: 0 0.25rem;
   border-radius: 999px;
   background: var(--amber);
-  color: #201505;
+  color: var(--accent-ink);
   font-size: 0.75rem;
   line-height: 1rem;
   text-align: center;
@@ -1817,7 +1827,7 @@ h1.display {
 }
 
 .lyric.timed {
-  color: #59493a;
+  color: var(--lyric-dim);
 }
 
 .lyric.timed.on {
@@ -1921,7 +1931,7 @@ h1.display {
   height: 64px;
   border-radius: 50%;
   background: var(--amber);
-  color: #201505;
+  color: var(--accent-ink);
   box-shadow: 0 14px 30px -16px color-mix(in srgb, var(--accent) 80%, transparent);
 }
 
@@ -2297,7 +2307,7 @@ h1.display {
   padding: 0.55rem 1rem;
   border-radius: 999px;
   background: var(--ember);
-  color: #1a0f0a;
+  color: var(--accent-ink);
   font-size: 0.88rem;
   font-weight: 500;
 }
@@ -2378,9 +2388,9 @@ h1.display {
   max-width: min(92vw, 30rem);
   padding: 0.6rem 0.7rem 0.6rem 0.95rem;
   border-radius: 14px;
-  background: rgba(58, 28, 21, 0.97);
-  border: 1px solid rgba(246, 221, 212, 0.14);
-  color: #f6ddd4;
+  background: color-mix(in srgb, var(--danger) 18%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--danger) 22%, transparent);
+  color: color-mix(in srgb, var(--danger) 24%, var(--text));
   font-size: 0.82rem;
   line-height: 1.35;
   box-shadow: 0 22px 50px -26px #000;
@@ -3410,7 +3420,7 @@ h1.display {
 }
 
 .theme-swatch-modern {
-  background: linear-gradient(150deg, #1ed760 0%, #14140f 55%, #101012 100%);
+  background: linear-gradient(150deg, #3adbc9 0%, #12181a 55%, #0e1213 100%);
 }
 
 .theme-swatch-geek {

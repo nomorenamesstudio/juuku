@@ -2,7 +2,7 @@ export type Theme = 'classic' | 'modern' | 'geek';
 
 export const THEMES: { id: Theme; name: string; note: string }[] = [
   { id: 'classic', name: 'Classic', note: 'Serif, amber, cover glow' },
-  { id: 'modern', name: 'Modern', note: 'Sans, green, flat' },
+  { id: 'modern', name: 'Modern', note: 'Sans, turquoise, flat' },
   { id: 'geek', name: 'Geek', note: 'Monospace terminal' },
 ];
 

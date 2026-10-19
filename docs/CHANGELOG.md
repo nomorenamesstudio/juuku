@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.1 — 2026-10-19
+
+- **Change** — the modern theme's accent is **Glacier turquoise** (`#3adbc9`) on a cooled grey canvas, instead of a green that looks like every streaming service. Contrast against the theme's own surfaces: 10.9 on the page, 10.1 on panels, 9.6 for ink on the accent.
+- **Fix** — the last warm colors were hardcoded rather than themed: the **glass** behind the mini player and the tab bar (`rgba(22,18,14,.82)`, `#c8b8a0`), the un-sung lyric line (`#59493a`), the ink on accent-filled buttons (`#201505`, `#1a0f0a`) and the danger toast's brick red. All of them are tokens now — `--glass-strong`, `--glass-text`, `--lyric-dim`, `--accent-ink` and a mix of `--danger` — with Classic's exact values kept in `:root`, so the cool themes carry no brown.
+
 ## v0.7.0 — 2026-10-19
 
 - **Feature** — the Albums/Artists switch is icons now: a record for albums, a person for artists, each with its album count. The words stay in `aria-label`/`title`. Freeing that width put the full sort labels back — *Alphabetical, By artist, Last added, Last played, Last released*. The record is lucide `Disc3` in classic, Phosphor `vinyl-record` in modern, and a hand-drawn 24px pixel disc in geek (Pixelarticons has no vinyl).
