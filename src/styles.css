@@ -159,6 +159,9 @@
   .search-field,
   .theme-choice,
   .theme-swatch,
+  .playlist-new,
+  .sheet-new,
+  .sheet-new input,
   .sort-select select,
   .nowbar,
   .row,
@@ -2104,12 +2107,47 @@ h1.display {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.62rem 0.8rem;
-  font-size: 0.94rem;
+  font-size: 1rem;
 }
 
 .playlist-new input::placeholder,
 .sheet-new input::placeholder {
   color: var(--dim);
+}
+
+/* the page's create row is one capsule: input and button share a border */
+.playlist-new {
+  gap: 0.4rem;
+  min-height: 3rem;
+  padding: 0.22rem 0.22rem 0.22rem 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.playlist-new:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.playlist-new input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.34rem 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--text);
+  /* 16px or iOS zooms the page when the field takes focus */
+  font-size: 1rem;
+  outline: none;
+  appearance: none;
+}
+
+.playlist-new .primary {
+  flex: none;
+  align-self: stretch;
+  padding: 0 0.85rem;
+  border-radius: 9px;
 }
 
 .playlist-art-fallback {

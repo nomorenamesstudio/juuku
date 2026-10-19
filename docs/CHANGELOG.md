@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.3 — 2026-10-19
+
+- **Change** — the create-playlist row is one capsule: the field and its **Create** button share a single border, the button sits flush at the right edge and stretches to the field's height (39px inside a 48px row, so it is an easy target), the border warms to the accent on focus, and it submits on Enter as before. Geek squares it with everything else.
+
 ## v0.8.2 — 2026-10-19
 
 - **Fix** — modern's ✕ (and its plus, dots, queue, playlist and add-to-playlist glyphs) came from Phosphor's fill weight, which paints a filled rounded square with the mark knocked out — in a row it read as a grey tile. Those six now come from the bold weight instead, plain silhouettes at the same weight as the rest.
