@@ -8,6 +8,19 @@ export const THEMES: { id: Theme; name: string; note: string }[] = [
 
 const KEY = 'juuku.theme';
 
+let current: Theme = 'classic';
+const listeners = new Set<() => void>();
+
+export const getTheme = () => current;
+
+/** Components that draw differently per theme (the pixel icons) subscribe here. */
+export function subscribeTheme(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 export function loadTheme(): Theme {
   try {
     const stored = localStorage.getItem(KEY);
@@ -20,7 +33,9 @@ export function loadTheme(): Theme {
 
 export function applyTheme(theme: Theme) {
   // one attribute; every colour, face and corner radius reads from it in CSS
+  current = theme;
   document.documentElement.dataset.theme = theme;
+  for (const listener of listeners) listener();
 }
 
 export function saveTheme(theme: Theme) {

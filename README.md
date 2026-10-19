@@ -113,7 +113,7 @@ Copy `.env.example` to `.env` and point it at the Navidrome you want to control:
 server/          API + Subsonic client (plain ESM Node, no build step)
 src/             React UI (Vite + TS): views/, rows, player, mini player
 src/views/       Library, AlbumView, ArtistView, QueueView, FavoritesView, PlayerView
-public/fonts/    Bricolage Grotesque + Instrument Serif (SIL OFL, licenses alongside)
+public/fonts/    Bricolage Grotesque, Instrument Serif, Geist Mono (SIL OFL, licenses alongside)
 sandbox/         throwaway music/data mount points for the dev instance
 scripts/         sandbox-up.sh — compose + seed music + create admin + scan
                  audio-dev.sh — route the container's mpv to your speakers
@@ -129,6 +129,11 @@ Free, MIT, no telemetry, no accounts. If Juuku earns a place in your setup:
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+Bundled assets keep their own licenses: Bricolage Grotesque, Instrument Serif and
+Geist Mono are SIL OFL (license files in `public/fonts/`), and the geek theme's pixel
+icons come from [Pixelarticons](https://github.com/halfmage/pixelarticons) by Gerrit
+Halfmann, MIT.
 
 ## Built with AI
 

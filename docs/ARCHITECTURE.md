@@ -20,7 +20,9 @@ display face, lyric face and the cover-glow strength is a CSS custom property in
 `styles.css`; a theme block only overrides those, and derived tints use
 `color-mix()` of `--accent` / `--bg` / `--line` / `--text` so nothing is left
 painted in the classic palette. Adding a fourth theme is one block of variables plus
-an entry in `THEMES`.
+an entry in `THEMES`. Icons follow the same switch: `src/icons.tsx` wraps each lucide
+glyph and, in geek, renders its `src/pixel-icons.tsx` counterpart — both read the
+theme from the subscription in `theme.ts`, so components never pass a theme down.
 
 ## Decisions
 
