@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.1 — 2026-10-19
+
+- **Fix** — the lyrics button drew a podcast mic in modern and geek. Modern now uses Phosphor's **stage microphone** (handheld, on a stand) and geek a pixel **page of lines**, since Pixelarticons has no singing mic; classic keeps lucide's vocal mic.
+
 ## v0.8.0 — 2026-10-19
 
 - **Feature** — the modern theme gets its own icons: 26 **Phosphor** glyphs in the fill weight (MIT), solid and slightly bolder, which is the shape language a Spotify-like surface wants. Classic keeps lucide strokes, geek keeps pixels, each set subscribes to the theme.
