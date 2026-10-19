@@ -35,6 +35,14 @@ export function Library({ tab }: { tab: LibraryTab }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // the shell remounts this view on every route change (the content element is
+    // keyed by route), so a cached list must not be thrown away for page one: that
+    // left the grid at 30 albums and the restored scroll with nowhere to go
+    if (albumCache?.sort === sort && albumCache.albums.length > 0) {
+      setAlbums(albumCache.albums);
+      setHasMore(albumCache.hasMore);
+      return;
+    }
     let alive = true;
     getAlbums(0, 30, sort).then((payload) => {
       albumCache = { albums: payload.albums, hasMore: payload.hasMore, sort };
@@ -48,11 +56,15 @@ export function Library({ tab }: { tab: LibraryTab }) {
   }, [sort]);
 
   const changeSort = (next: AlbumSort) => {
+    // re-picking the current order must not empty the grid and refetch it
+    if (next === sort) return;
     writePref(SORT_KEY, next);
     albumCache = null;
     setAlbums([]);
     setHasMore(false);
     setSort(next);
+    // a new order is a new list: staying 5000px down it is disorienting
+    window.scrollTo({ top: 0 });
   };
 
   // the hook's list is the one the artist tab renders, so its length is the pill

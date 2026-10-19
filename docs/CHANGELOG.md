@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.4 — 2026-10-19
+
+- **Fix** — coming back from an album kept only the first page of the library: the shell remounts the content element per route, and the remount refetched page one, dropping whatever you had loaded — which is also why the restored scroll landed inside the first thirty. The cached list is reused when the sort has not changed, re-picking the current order no longer empties the grid, and changing the sort starts at the top.
+
 ## v0.7.3 — 2026-10-19
 
 - **Fix** — a long album title wrapped as one centred box in the player byline, leaving the artist alone on the first line and `· 2024` on a third. The byline is two lines now: the artist with the year, then the album wrapping inside its own line.
