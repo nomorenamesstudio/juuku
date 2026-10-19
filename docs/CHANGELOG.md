@@ -7,51 +7,20 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
-## v0.8.4 — 2026-10-19
-
-- **Change** — the Playlists page drops its "Built here or in any Subsonic client" line: the title sits 9px above the create field and says enough.
-
-## v0.8.3 — 2026-10-19
-
-- **Change** — the create-playlist row is one capsule: the field and its **Create** button share a single border, the button sits flush at the right edge and stretches to the field's height (39px inside a 48px row, so it is an easy target), the border warms to the accent on focus, and it submits on Enter as before. Geek squares it with everything else.
-
-## v0.8.2 — 2026-10-19
-
-- **Fix** — modern's ✕ (and its plus, dots, queue, playlist and add-to-playlist glyphs) came from Phosphor's fill weight, which paints a filled rounded square with the mark knocked out — in a row it read as a grey tile. Those six now come from the bold weight instead, plain silhouettes at the same weight as the rest.
-- **Fix** — geek's playlist covers kept an 8px radius because the `<img>` carries its own rounding inside a square container; images are squared with everything else now.
-
-## v0.8.1 — 2026-10-19
-
-- **Fix** — the lyrics button drew a podcast mic in modern and geek. Modern now uses Phosphor's **stage microphone** (handheld, on a stand) and geek a pixel **page of lines**, since Pixelarticons has no singing mic; classic keeps lucide's vocal mic.
-
-## v0.8.0 — 2026-10-19
-
-- **Feature** — the modern theme gets its own icons: 26 **Phosphor** glyphs in the fill weight (MIT), solid and slightly bolder, which is the shape language a Spotify-like surface wants. Classic keeps lucide strokes, geek keeps pixels, each set subscribes to the theme.
-- **Fix** — the queue's remove button was a plus rotated 45°, so geek drew a rotated pixel plus; it is a real close glyph now and geek shows the pixel ✕.
-- **Fix** — geek's corners are **1px**, and the now-playing bars lost their rounding: everything from rows, covers, chips and inputs to the play button and the player artwork sits square.
-- **Docs** — Phosphor credited next to Pixelarticons.
-
-## v0.7.0 — 2026-10-19
-
-- **Feature** — the geek theme draws **pixel icons** instead of the stroke set: 26 glyphs from [Pixelarticons](https://github.com/halfmage/pixelarticons) (MIT) — play, pause, skip, shuffle, repeat, trash, heart, close, search, settings and the rest — bundled as components on the same 24 grid, filled with `currentColor` so they inherit the theme's ink, and rendered with `crispEdges` so the pixels stay sharp at 18px. Icons subscribe to the theme, so the swap happens with the rest of the repaint and no call site changed; classic and modern keep lucide.
-- **Docs** — asset credits: fonts under SIL OFL, pixel icons under MIT.
-
-## v0.6.2 — 2026-10-19
-
-- **Change** — Classic's album titles grow to 1.18rem (18.9px against the sans 13.8px): Instrument Serif reads smaller at the same size, so equal pixels looked unequal.
-- **Change** — Geek's corners are 2px everywhere, not 3.
-
-## v0.6.1 — 2026-10-19
-
-- **Change** — Classic sets library album titles in the serif; the grid reads like a record shelf.
-- **Change** — Modern is a neutral dark grey canvas: the accent wash at the top of the page is gone (`--wash`), so green appears only on controls and accents, and the cover glow sits back at 0.42.
-- **Change** — Geek uses **Geist Mono** (self-hosted, 23 kB, OFL) everywhere — UI, titles and lyrics — with corners forced to 3px, including the parts that hardcode a pill.
-
 ## v0.6.0 — 2026-10-19
 
-- **Feature** — three themes, picked in Settings and kept per device (a theme is about the screen you are holding, not the account): **Classic** — the current look, serif titles and lyrics, amber, cover glow; **Modern** — bold sans titles, green accent on near-black, flatter surfaces, sans lyrics; **Geek** — monospace everywhere, terminal green, 2px corners, no glow. The whole sheet now reads from tokens (`--bg`, `--panel`, `--line`, `--text`, `--accent`, `--radius`, `--font-display`, `--lyric-face`, `--glow`), and the 43 hardcoded brand tints became `color-mix()` of them, so a theme repaints everything — accent chips, row highlights, glass, glow included. Applied before the first paint, so nothing flashes.
-- **Change** — the odd "font" setting is gone: the theme owns the lyric typeface (Classic serif, Modern sans, Geek mono).
-- **Fix** — `Players` in Settings reports live players and the kill switch works (see 0.5.1-0.5.3).
+One release for the theme work: three themes, three icon sets, and the small UI
+fixes that came out of looking at them.
+
+- **Feature** — **three themes**, picked in Settings and kept per device (a theme is about the screen you are holding, not the account). **Classic**: the look from before — serif titles and lyrics, amber, cover glow; library album titles in the serif at 1.18rem, because Instrument Serif reads smaller than the sans at equal pixels. **Modern**: bold sans titles, green accent, neutral dark grey canvas with no accent wash, sans lyrics, corners at 12px. **Geek**: **Geist Mono** everywhere, terminal green, 1px corners, no glow, no wash.
+- **Feature** — **three icon sets**, one per theme: lucide strokes (classic), **Phosphor** fill/bold (modern, MIT) and **Pixelarticons** (geek, MIT, `crispEdges`). Each wrapper subscribes to the theme, so the swap rides the repaint and no call site knows. The lyrics button is a vocal mic in classic and modern, a page of lines in geek; the ✕, plus, dots, queue and playlist glyphs come from Phosphor's bold weight because the fill versions paint a rounded square around the mark.
+- **Feature** — the stylesheet reads from tokens (`--bg`, `--panel`, `--line`, `--text`, `--accent`, `--radius`, `--font-display`, `--lyric-face`, `--glow`, `--wash`), and the 43 hardcoded brand tints became `color-mix()` of them, so a theme repaints accent chips, row highlights, glass and the glow. Applied before first paint.
+- **Feature** — the geek theme's corners are 1px everywhere, cover images included, and the now-playing bars are square.
+- **Change** — the create-playlist row is one capsule: input and **Create** share a single border, the button stretches to the field height and the border warms to the accent on focus.
+- **Change** — the Playlists page drops its "Built here or in any Subsonic client" line.
+- **Change** — the separate lyric-font setting is gone: the theme owns the typeface.
+- **Fix** — the queue's remove button was a plus rotated 45°, which geek drew as a rotated pixel plus; it is a real ✕ now.
+- **Docs** — asset credits: fonts under SIL OFL, Pixelarticons and Phosphor under MIT.
 
 ## v0.5.3 — 2026-10-19
 
