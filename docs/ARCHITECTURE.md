@@ -12,6 +12,16 @@ Navidrome (:4533)  ── IPC ──▶  mpv  ──▶  speakers on the Navidro
 
 Navidrome's jukebox is not exposed by its own web UI. The only interface is Subsonic's `jukeboxControl`, and it is a **poll-and-command** API: there is no event stream, no websocket, no long-poll. That single fact shapes the whole design.
 
+## Themes
+
+One attribute on `<html>`, `data-theme="classic|modern|geek"`, set from
+`localStorage` before React renders (`src/theme.ts`). Every colour, corner radius,
+display face, lyric face and the cover-glow strength is a CSS custom property in
+`styles.css`; a theme block only overrides those, and derived tints use
+`color-mix()` of `--accent` / `--bg` / `--line` / `--text` so nothing is left
+painted in the classic palette. Adding a fourth theme is one block of variables plus
+an entry in `THEMES`.
+
 ## Decisions
 
 **The server owns the credentials.** The browser could call Subsonic directly, but then the Navidrome password would live in the page and CORS would have to be opened on the Navidrome instance. A thin proxy keeps both problems away and gives one place to add auth later, when this is not just a LAN toy.

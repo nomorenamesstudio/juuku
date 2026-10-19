@@ -2,8 +2,19 @@ import { useEffect, useState } from 'react';
 import { type Health, type PlayerStatus, getHealth, getPlayerStatus, restartPlayers } from '../api';
 import { GithubIcon } from '../icons';
 import { type Settings, saveSettings } from '../settings';
+import { THEMES, type Theme, saveTheme } from '../theme';
 
-export function SettingsView({ settings, onChange }: { settings: Settings; onChange: (next: Settings) => void }) {
+export function SettingsView({
+  settings,
+  onChange,
+  theme,
+  onTheme,
+}: {
+  settings: Settings;
+  onChange: (next: Settings) => void;
+  theme: Theme;
+  onTheme: (next: Theme) => void;
+}) {
   const [health, setHealth] = useState<Health | null>(null);
   const [players, setPlayers] = useState<PlayerStatus | null>(null);
   const [restarting, setRestarting] = useState(false);
@@ -43,9 +54,34 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
       <header className="view-head">
         <h1 className="display">Settings</h1>
         <p className="fineprint">
-          Saved on this server for your account — every device that points here shares them
+          Lyrics settings are saved on this server for your account; the theme stays on this device
         </p>
       </header>
+
+      <section className="settings-block" aria-labelledby="settings-theme">
+        <h2 id="settings-theme">Theme</h2>
+        <p className="fineprint">This device only</p>
+        <div className="theme-choices" role="radiogroup" aria-label="Theme">
+          {THEMES.map((option) => (
+            <button
+              key={option.id}
+              role="radio"
+              aria-checked={theme === option.id}
+              className={`theme-choice ${theme === option.id ? 'is-on' : ''}`}
+              onClick={() => {
+                saveTheme(option.id);
+                onTheme(option.id);
+              }}
+            >
+              <span className={`theme-swatch theme-swatch-${option.id}`} aria-hidden />
+              <span className="theme-text">
+                <span className="row-title">{option.name}</span>
+                <span className="row-sub">{option.note}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className="settings-block" aria-labelledby="settings-lyrics">
         <h2 id="settings-lyrics">Lyrics</h2>
@@ -97,22 +133,6 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
           guesses: remixes and instrumentals often come back with another recording's words.
         </p>
 
-        <div className="settings-row">
-          <span className="settings-label">Font</span>
-          <div className="segmented compact" role="tablist" aria-label="Lyrics font">
-            {(['sans', 'serif'] as const).map((font) => (
-              <button
-                key={font}
-                role="tab"
-                aria-selected={settings.lyricFont === font}
-                className={`font-choice font-${font}`}
-                onClick={() => update({ lyricFont: font })}
-              >
-                {font === 'sans' ? 'Sans' : 'Serif'}
-              </button>
-            ))}
-          </div>
-        </div>
       </section>
 
       <section className="settings-block" aria-labelledby="settings-server">

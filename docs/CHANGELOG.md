@@ -7,6 +7,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.6.0 — 2026-10-19
+
+- **Feature** — three themes, picked in Settings and kept per device (a theme is about the screen you are holding, not the account): **Classic** — the current look, serif titles and lyrics, amber, cover glow; **Modern** — bold sans titles, green accent on near-black, flatter surfaces, sans lyrics; **Geek** — monospace everywhere, terminal green, 2px corners, no glow. The whole sheet now reads from tokens (`--bg`, `--panel`, `--line`, `--text`, `--accent`, `--radius`, `--font-display`, `--lyric-face`, `--glow`), and the 43 hardcoded brand tints became `color-mix()` of them, so a theme repaints everything — accent chips, row highlights, glass, glow included. Applied before the first paint, so nothing flashes.
+- **Change** — the odd "font" setting is gone: the theme owns the lyric typeface (Classic serif, Modern sans, Geek mono).
+- **Fix** — `Players` in Settings reports live players and the kill switch works (see 0.5.1-0.5.3).
+
 ## v0.5.3 — 2026-10-19
 
 - **Fix** — the watchdog threw `listSockets is not defined` instead of cleaning up, because the restart routine still asked for a helper the status endpoint had stopped importing. The restart response reports the live player count again.

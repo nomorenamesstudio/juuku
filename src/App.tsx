@@ -18,6 +18,7 @@ import { type Session, getSession, signOut, type Song } from './api';
 import { goBack, navigate, useRoute } from './router';
 import { type Settings, applySettings, loadSettings } from './settings';
 import { hydratePrefs } from './prefs';
+import { type Theme, applyTheme, loadTheme } from './theme';
 import { useCounts } from './useCounts';
 import { useJukebox } from './useJukebox';
 import { AlbumView } from './views/AlbumView';
@@ -188,6 +189,12 @@ export default function App() {
   // the account's preferences arrive before the shell paints, so nothing flashes
   // a device-local value that the account overrides
   const [prefsReady, setPrefsReady] = useState(false);
+  // per device on purpose: a theme is about the screen you are holding
+  const [theme, setTheme] = useState<Theme>(loadTheme);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     let alive = true;
@@ -277,7 +284,7 @@ export default function App() {
       case 'search':
         return <SearchView jbox={jbox} />;
       case 'settings':
-        return <SettingsView settings={settings} onChange={setSettings} />;
+        return <SettingsView settings={settings} onChange={setSettings} theme={theme} onTheme={setTheme} />;
       case 'player':
         return (
           <PlayerView

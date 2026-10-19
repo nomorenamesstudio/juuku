@@ -44,23 +44,37 @@
 
 :root {
   color-scheme: dark;
+  /* what a theme changes: surfaces, text, one accent, type and corners */
   --bg: #14100b;
   --panel: #1c1712;
   --raise: #251d15;
   --line: #352a1f;
-  --cream: #f4ead9;
+  --text: #f4ead9;
   --muted: #b6a68c;
   --dim: #ab9a80;
-  --amber: #f0a24a;
-  --ember: #c9583f;
+  --accent: #f0a24a;
+  /* ink for text sitting on the accent */
+  --accent-ink: #201505;
+  --danger: #c9583f;
   --radius: 18px;
+  --font-body: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --display-weight: 400;
+  --lyric-face: 'Instrument Serif', Georgia, serif;
+  --lyric-weight: 400;
+  /* how present the cover glow is: a terminal does not glow */
+  --glow: 0.42;
+  /* legacy aliases so the rest of the sheet keeps reading the same names */
+  --cream: var(--text);
+  --amber: var(--accent);
+  --ember: var(--danger);
   /* ice glass: translucent surfaces over blurred, slightly saturated backdrop */
-  --glass: rgba(28, 23, 18, 0.52);
+  --glass: color-mix(in srgb, var(--panel) 52%, transparent);
   --glass-strong: rgba(22, 18, 14, 0.82);
   /* text sitting on glass needs its own tone: over a bright cover the app's dim
      and muted would fall under 4.5:1 (measured 3.6-3.8 over white) */
   --glass-text: #c8b8a0;
-  --glass-edge: rgba(244, 234, 217, 0.09);
+  --glass-edge: color-mix(in srgb, var(--text) 9%, transparent);
   --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.055);
   --glass-blur: blur(24px) saturate(1.45);
   /* motion */
@@ -69,9 +83,54 @@
   --dur-1: 170ms;
   --dur-2: 280ms;
   --dur-3: 420ms;
-  font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.45;
+}
+
+/* ---------------------------------------------------------------- themes */
+
+/* classic is what the variables above already describe; these two swap them */
+
+[data-theme='modern'] {
+  --bg: #101012;
+  --panel: #17171a;
+  --raise: #232327;
+  --line: #303036;
+  --text: #ffffff;
+  --muted: #b3b3b9;
+  --dim: #a3a3aa;
+  --accent: #1ed760;
+  --accent-ink: #06180c;
+  --danger: #f2545b;
+  --radius: 12px;
+  --font-body: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --display-weight: 700;
+  --lyric-face: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --lyric-weight: 600;
+  --glow: 0.5;
+}
+
+[data-theme='geek'] {
+  --bg: #05070a;
+  --panel: #0a0f14;
+  --raise: #101821;
+  --line: #1d2a36;
+  --text: #c9f7e2;
+  --muted: #7fb99f;
+  --dim: #6ba189;
+  --accent: #46f28b;
+  --accent-ink: #04140b;
+  --danger: #ff6b6b;
+  --radius: 2px;
+  --font-body: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --font-display: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --display-weight: 600;
+  --lyric-face: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --lyric-weight: 500;
+  /* no soft blur, no glow: a terminal shows text */
+  --glow: 0;
 }
 
 * {
@@ -97,7 +156,7 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(90% 60% at 50% -10%, rgba(240, 162, 74, 0.16) 0%, transparent 65%),
+    radial-gradient(90% 60% at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 65%),
     var(--bg);
   color: var(--cream);
   -webkit-font-smoothing: antialiased;
@@ -173,8 +232,8 @@ input {
 }
 
 .display {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
   letter-spacing: -0.015em;
   line-height: 1.05;
   margin: 0;
@@ -327,7 +386,7 @@ h1.display {
 
 .led.good {
   background: var(--amber);
-  box-shadow: 0 0 10px rgba(240, 162, 74, 0.7);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .led.bad {
@@ -359,7 +418,7 @@ h1.display {
 
 /* the words sit on the wash, so it fades further back in lyrics mode */
 .player.lyrics-on .album-backdrop.player-glow {
-  opacity: 0.26;
+  opacity: calc(var(--glow) * 0.62);
 }
 
 .album-backdrop.player-glow {
@@ -374,7 +433,7 @@ h1.display {
   /* brightness keeps a white cover from turning the page into pale grey, which made
      the cream and dim text unreadable over it */
   filter: blur(56px) saturate(1.25) brightness(0.72);
-  opacity: 0.45;
+  opacity: var(--glow);
   -webkit-mask-image: radial-gradient(80% 66% at 50% 32%, #000 0%, rgba(0, 0, 0, 0.6) 48%, transparent 78%);
   mask-image: radial-gradient(80% 66% at 50% 32%, #000 0%, rgba(0, 0, 0, 0.6) 48%, transparent 78%);
 }
@@ -524,7 +583,7 @@ h1.display {
 }
 
 .search-clear:hover {
-  background: rgba(244, 234, 217, 0.08);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
   color: var(--cream);
 }
 
@@ -532,7 +591,7 @@ h1.display {
   width: 100%;
   /* the glass belongs to the field, not to a band behind it: covers scroll past
      and only the field frosts them, so there is no cut edge anywhere */
-  background-color: rgba(20, 16, 11, 0.93);
+  background-color: color-mix(in srgb, var(--bg) 93%, transparent);
   /* the glyph is the field's own background: as a separate overlaid element it sat
      in the backdrop-filter layer and vanished after the first frame */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b6a68c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
@@ -581,14 +640,14 @@ h1.display {
   margin-left: 0.4rem;
   padding: 0.06rem 0.42rem;
   border-radius: 999px;
-  background: rgba(244, 234, 217, 0.07);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--muted);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
 
 .segmented button[aria-selected='true'] .count-pill {
-  background: rgba(240, 162, 74, 0.16);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--amber);
 }
 
@@ -641,14 +700,14 @@ h1.display {
 .secondary {
   /* a glass pill rather than an outline: over a cover glow a transparent button
      with a hairline border disappears, and the fill keeps the label legible */
-  background: rgba(24, 19, 15, 0.72);
-  border: 1px solid rgba(244, 234, 217, 0.26);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text) 26%, transparent);
   color: var(--cream);
 }
 
 .secondary:hover:not(:disabled) {
-  background: rgba(24, 19, 15, 0.86);
-  border-color: rgba(244, 234, 217, 0.38);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  border-color: color-mix(in srgb, var(--text) 38%, transparent);
 }
 
 .secondary.danger {
@@ -658,8 +717,8 @@ h1.display {
 
 .secondary[aria-pressed='true'] {
   color: var(--amber);
-  border-color: rgba(240, 162, 74, 0.5);
-  background: rgba(240, 162, 74, 0.08);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .empty {
@@ -744,7 +803,7 @@ h1.display {
 
 .album-card:hover .album-art {
   box-shadow:
-    0 0 0 1px rgba(240, 162, 74, 0.35) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) inset,
     0 14px 30px -18px rgba(0, 0, 0, 0.95);
 }
 
@@ -820,10 +879,10 @@ h1.display {
   background-image:
     linear-gradient(
       to bottom,
-      rgba(20, 16, 11, 0.12) 0%,
-      rgba(20, 16, 11, 0.45) 32%,
-      rgba(20, 16, 11, 0.78) 62%,
-      rgba(20, 16, 11, 0.92) 100%
+      color-mix(in srgb, var(--bg) 12%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 45%, transparent) 32%,
+      color-mix(in srgb, var(--bg) 78%, transparent) 62%,
+      color-mix(in srgb, var(--bg) 92%, transparent) 100%
     ),
     var(--cover-url);
   /* bleeds up over the content padding to the viewport top, down past the actions
@@ -835,7 +894,7 @@ h1.display {
   background-size: cover;
   background-position: center;
   filter: blur(52px) saturate(1.25) brightness(0.72);
-  opacity: 0.42;
+  opacity: var(--glow);
   pointer-events: none;
   /* radial, not linear: a vertical-only fade left visible side edges where the
      blur met the clip */
@@ -894,7 +953,7 @@ h1.display {
 .artist-link:hover,
 .artist-link:focus-visible {
   color: var(--amber);
-  border-bottom-color: rgba(240, 162, 74, 0.5);
+  border-bottom-color: color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
 .album-meta h1 {
@@ -989,7 +1048,7 @@ h1.display {
 }
 
 .row-active {
-  background: rgba(240, 162, 74, 0.09);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
 }
 
 /* a track that already played keeps its place but steps back */
@@ -1006,7 +1065,7 @@ h1.display {
 }
 
 .row-active:hover {
-  background: rgba(240, 162, 74, 0.12);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .row-number {
@@ -1081,7 +1140,7 @@ h1.display {
   width: 100%;
   padding: 0.7rem 0.2rem;
   text-align: left;
-  border-bottom: 1px solid rgba(53, 42, 31, 0.6);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
 }
 
 .link-row.with-art {
@@ -1367,7 +1426,7 @@ h1.display {
   align-items: center;
   gap: 0.3rem;
   padding: 0.35rem 0.4rem;
-  background: rgba(28, 23, 18, 0.92);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
   backdrop-filter: blur(18px);
   border: 1px solid var(--line);
   border-radius: 15px;
@@ -1521,7 +1580,7 @@ h1.display {
   text-align: center;
   font-variant-numeric: tabular-nums;
   /* ring so the pill reads as separate from the icon behind it */
-  box-shadow: 0 0 0 2px rgba(20, 16, 11, 0.95);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bg) 95%, transparent);
 }
 
 /* ----------------------------------------------------------------- player */
@@ -1598,7 +1657,7 @@ h1.display {
 .transport .lyrics-toggle.is-on,
 .transport .lyrics-toggle.is-on:hover {
   color: var(--amber);
-  background: rgba(240, 162, 74, 0.16);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .player-stage {
@@ -1738,7 +1797,7 @@ h1.display {
   margin-top: -4.5px;
   border-radius: 50%;
   background: var(--cream);
-  box-shadow: 0 0 0 5px rgba(240, 162, 74, 0.14);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .scrub input[type='range']::-moz-range-track {
@@ -1789,7 +1848,7 @@ h1.display {
   border-radius: 50%;
   background: var(--amber);
   color: #201505;
-  box-shadow: 0 14px 30px -16px rgba(240, 162, 74, 0.8);
+  box-shadow: 0 14px 30px -16px color-mix(in srgb, var(--accent) 80%, transparent);
 }
 
 .play-button:hover:not(:disabled) {
@@ -1928,7 +1987,7 @@ h1.display {
 
 .login-field input {
   width: 100%;
-  background-color: rgba(20, 16, 11, 0.93);
+  background-color: color-mix(in srgb, var(--bg) 93%, transparent);
   border: 1px solid var(--glass-edge);
   border-radius: 12px;
   padding: 0.72rem 0.9rem;
@@ -2034,7 +2093,7 @@ h1.display {
   justify-content: space-between;
   gap: 0.6rem;
   padding-bottom: 0.6rem;
-  border-bottom: 1px solid rgba(53, 42, 31, 0.6);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
 }
 
 .sheet-eyebrow {
@@ -2156,7 +2215,7 @@ h1.display {
 
   .nowbar,
   .tabbar {
-    background: rgba(20, 16, 11, 0.97);
+    background: color-mix(in srgb, var(--bg) 97%, transparent);
   }
 }
 
@@ -2309,7 +2368,7 @@ h1.display {
     border-radius: 999px;
     /* cream at low alpha: the cover glow now reaches up here, and the old dark
        brown pill disappeared against it */
-    background: rgba(244, 234, 217, 0.38);
+    background: color-mix(in srgb, var(--text) 38%, transparent);
   }
 }
 
@@ -2334,8 +2393,8 @@ h1.display {
     width: 240px;
     /* clear of the docked player, which is fixed over the bottom of the screen */
     padding: 1.7rem 1.2rem 6.6rem;
-    border-right: 1px solid rgba(53, 42, 31, 0.7);
-    background: linear-gradient(180deg, rgba(28, 23, 18, 0.6), transparent 40%);
+    border-right: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 60%, transparent), transparent 40%);
   }
 
   .rail-nav {
@@ -2376,7 +2435,7 @@ h1.display {
 
   .rail-nav button[aria-current='page'] {
     color: var(--amber);
-    background: rgba(240, 162, 74, 0.08);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
 
   .rail-nav .badge {
@@ -2548,7 +2607,7 @@ h1.display {
     border: 0;
     border-radius: 0;
     border-top: 1px solid var(--line);
-    background: rgba(20, 16, 11, 0.97);
+    background: color-mix(in srgb, var(--bg) 97%, transparent);
     box-shadow: 0 -20px 40px -30px #000;
   }
 
@@ -2788,7 +2847,7 @@ h1.display {
     min-height: 0;
     max-height: 100%;
     overflow: hidden;
-    border-left: 1px solid rgba(53, 42, 31, 0.7);
+    border-left: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
     padding-left: 2.4rem;
   }
 
@@ -2860,16 +2919,16 @@ h1.display {
 .chip {
   padding: 0.42rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(244, 234, 217, 0.18);
-  background: rgba(24, 19, 15, 0.6);
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
   color: var(--muted);
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
 }
 
 .chip.is-on {
-  border-color: rgba(240, 162, 74, 0.6);
-  background: rgba(240, 162, 74, 0.16);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--amber);
 }
 
@@ -2904,9 +2963,9 @@ h1.display {
 /* the lyrics font is a taste setting: same size, leading and spacing, only the
    family changes. Instrument Serif is 400-only, so asking for 600 would be
    synthesised bold. */
-[data-lyric-font='serif'] .lyric {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
+.lyric {
+  font-family: var(--lyric-face);
+  font-weight: var(--lyric-weight);
 }
 
 /* settings reads better in a column than across a wide screen */
@@ -3024,7 +3083,7 @@ h1.display {
   padding: 0 0.55rem 0 0.9rem;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(20, 16, 11, 0.93);
+  background: color-mix(in srgb, var(--bg) 93%, transparent);
   color: var(--dim);
 }
 
@@ -3070,7 +3129,7 @@ h1.display {
 
 /* a recent entry is the thing itself, like a search result, not the words typed */
 .history-row {
-  border-bottom: 1px solid rgba(53, 42, 31, 0.6);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
 }
 
 .history-row:last-child {
@@ -3153,4 +3212,59 @@ h1.display {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* ------------------------------------------------------------- theme picker */
+
+.theme-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.theme-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: left;
+  color: var(--text);
+}
+
+.theme-choice.is-on {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.theme-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.theme-swatch {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.theme-swatch-classic {
+  background:
+    radial-gradient(120% 120% at 30% 20%, #f0a24a 0%, #8a4a1f 45%, #14100b 100%);
+}
+
+.theme-swatch-modern {
+  background: linear-gradient(150deg, #1ed760 0%, #14140f 55%, #101012 100%);
+}
+
+.theme-swatch-geek {
+  background:
+    repeating-linear-gradient(0deg, rgba(70, 242, 139, 0.14) 0 1px, transparent 1px 4px),
+    #05070a;
+  border-radius: 3px;
 }

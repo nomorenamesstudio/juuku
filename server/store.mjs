@@ -39,10 +39,9 @@ export function clean(patch) {
   const out = {};
   for (const [key, value] of Object.entries(patch ?? {})) {
     if (key === 'juuku.settings' && value && typeof value === 'object') {
-      const { lyricLeadMs, lyricFont, lyricsLookup } = value;
+      const { lyricLeadMs, lyricsLookup } = value;
       out[key] = {
         lyricLeadMs: Number.isFinite(lyricLeadMs) ? Math.min(2000, Math.max(0, Number(lyricLeadMs))) : 400,
-        lyricFont: lyricFont === 'serif' ? 'serif' : 'sans',
         lyricsLookup: lyricsLookup === true,
       };
     } else if (key === 'juuku.search.recent' && Array.isArray(value)) {
