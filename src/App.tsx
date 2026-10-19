@@ -35,12 +35,12 @@ import { HomeView } from './views/HomeView';
 import { QueueView } from './views/QueueView';
 
 const RAIL = [
-  { path: '/home', label: 'Home', group: 'Browse', icon: HomeIcon },
-  { path: '/library/albums', label: 'Albums', group: 'Browse', icon: AlbumsIcon },
-  { path: '/library/artists', label: 'Artists', group: 'Browse', icon: ArtistIcon },
-  { path: '/library/playlists', label: 'Playlists', group: 'Browse', icon: PlaylistIcon },
-  { path: '/search', label: 'Search', group: 'Yours', icon: SearchIcon },
-  { path: '/queue', label: 'Queue', group: 'Yours', icon: QueueIcon },
+  { path: '/home', label: 'Home', icon: HomeIcon },
+  { path: '/search', label: 'Search', icon: SearchIcon },
+  { path: '/library/albums', label: 'Albums', icon: AlbumsIcon },
+  { path: '/library/artists', label: 'Artists', icon: ArtistIcon },
+  { path: '/library/playlists', label: 'Playlists', icon: PlaylistIcon },
+  { path: '/queue', label: 'Queue', icon: QueueIcon },
 ];
 
 const TABS = [
@@ -352,31 +352,30 @@ export default function App() {
         </button>
 
         <nav className="rail-nav">
-          {['Browse', 'Yours'].map((group) => (
-            <div key={group} className="rail-group">
-              <p>{group}</p>
-              {RAIL.filter((item) => item.group === group).map(({ path, label, icon: Icon }) => (
-                <button
-                  key={path}
-                  aria-current={section === path.split('/').pop() ? 'page' : undefined}
-                  onClick={() => navigate(path)}
-                >
-                  <Icon size={18} />
-                  {label}
-                  {path === '/library/albums' && counts?.albums != null && (
-                    <span className="count-pill">{counts.albums}</span>
-                  )}
-                  {path === '/library/artists' && counts && counts.artists.length > 0 && (
-                    <span className="count-pill">{counts.artists.length}</span>
-                  )}
-                  {path === '/queue' && count > 0 && (
-                    <span className="badge" key={count}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+          {RAIL.map(({ path, label, icon: Icon }) => (
+            <button
+              key={path}
+              aria-current={section === path.split('/').pop() ? 'page' : undefined}
+              onClick={() => navigate(path)}
+              title={label}
+            >
+              <Icon size={18} />
+              {label}
+              {path === '/library/albums' && counts?.albums != null && (
+                <span className="count-pill">{counts.albums}</span>
+              )}
+              {path === '/library/artists' && counts && counts.artists.length > 0 && (
+                <span className="count-pill">{counts.artists.length}</span>
+              )}
+              {path === '/library/playlists' && counts?.playlists != null && (
+                <span className="count-pill">{counts.playlists}</span>
+              )}
+              {path === '/queue' && count > 0 && (
+                <span className="badge" key={count}>
+                  {count}
+                </span>
+              )}
+            </button>
           ))}
         </nav>
 
@@ -385,6 +384,7 @@ export default function App() {
             className="rail-settings"
             aria-current={section === 'settings' ? 'page' : undefined}
             onClick={() => navigate('/settings')}
+            title="Settings"
           >
             <SettingsIcon size={18} />
             Settings

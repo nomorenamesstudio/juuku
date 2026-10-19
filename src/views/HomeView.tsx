@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { type Album, type AlbumSort, type Artist, type HomeRows, coverUrl, getHome } from '../api';
 import { Cover } from '../Cover';
 import { ChevronLeftIcon } from '../icons';
@@ -21,23 +21,78 @@ const SHELVES: { key: AlbumShelfKey; title: string; sort: AlbumSort }[] = [
 let cache: { at: number; rows: HomeRows } | null = null;
 const CACHE_MS = 30_000;
 
+function useShelf() {
+  const track = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: true, end: true });
+
+  const measure = () => {
+    const node = track.current;
+    if (!node) return;
+    const max = node.scrollWidth - node.clientWidth;
+    setEdges({ start: node.scrollLeft <= 2, end: node.scrollLeft >= max - 2 });
+  };
+
+  useEffect(() => {
+    const node = track.current;
+    if (!node) return;
+    measure();
+    node.addEventListener('scroll', measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => {
+      node.removeEventListener('scroll', measure);
+      observer.disconnect();
+    };
+  }, []);
+
+  const step = (direction: 1 | -1) => {
+    const node = track.current;
+    if (!node) return;
+    // two fifths of the track, so a step keeps two cards of context on screen
+    node.scrollBy({ left: direction * Math.round(node.clientWidth * 0.4), behavior: 'smooth' });
+  };
+
+  return { track, step, edges };
+}
+
 function Shelf({ title, albums, sort }: { title: string; albums: Album[]; sort: AlbumSort }) {
+  const { track, step, edges } = useShelf();
   if (albums.length === 0) return null;
   return (
     <section className="shelf">
       <div className="shelf-head">
         <h2 className="section-label">{title}</h2>
-        <button
-          className="back shelf-all"
-          onClick={() => {
-            writePref(SORT_KEY, sort);
-            navigate('/library/albums');
-          }}
-        >
-          See all <ChevronLeftIcon size={16} className="flip" />
-        </button>
+        <div className="shelf-tools">
+          <button
+            className="icon-button shelf-step"
+            onClick={() => step(-1)}
+            disabled={edges.start}
+            aria-label={`Scroll ${title} back`}
+            title="Back"
+          >
+            <ChevronLeftIcon size={16} />
+          </button>
+          <button
+            className="icon-button shelf-step"
+            onClick={() => step(1)}
+            disabled={edges.end}
+            aria-label={`Scroll ${title} on`}
+            title="More"
+          >
+            <ChevronLeftIcon size={16} className="flip" />
+          </button>
+          <button
+            className="back shelf-all"
+            onClick={() => {
+              writePref(SORT_KEY, sort);
+              navigate('/library/albums');
+            }}
+          >
+            See all <ChevronLeftIcon size={16} className="flip" />
+          </button>
+        </div>
       </div>
-      <div className="shelf-track">
+      <div className="shelf-track" ref={track}>
         {albums.map((album) => (
           <button key={album.id} className="shelf-card" onClick={() => navigate(`/album/${album.id}`)}>
             <span className="album-art">
@@ -56,16 +111,37 @@ function Shelf({ title, albums, sort }: { title: string; albums: Album[]; sort: 
 }
 
 function ArtistShelf({ artists, onSeeAll }: { artists: Artist[]; onSeeAll: () => void }) {
+  const { track, step, edges } = useShelf();
   if (artists.length === 0) return null;
   return (
     <section className="shelf">
       <div className="shelf-head">
         <h2 className="section-label">Daily artists</h2>
-        <button className="back shelf-all" onClick={onSeeAll}>
-          See all <ChevronLeftIcon size={16} className="flip" />
-        </button>
+        <div className="shelf-tools">
+          <button
+            className="icon-button shelf-step"
+            onClick={() => step(-1)}
+            disabled={edges.start}
+            aria-label="Scroll daily artists back"
+            title="Back"
+          >
+            <ChevronLeftIcon size={16} />
+          </button>
+          <button
+            className="icon-button shelf-step"
+            onClick={() => step(1)}
+            disabled={edges.end}
+            aria-label="Scroll daily artists on"
+            title="More"
+          >
+            <ChevronLeftIcon size={16} className="flip" />
+          </button>
+          <button className="back shelf-all" onClick={onSeeAll}>
+            See all <ChevronLeftIcon size={16} className="flip" />
+          </button>
+        </div>
       </div>
-      <div className="shelf-track">
+      <div className="shelf-track" ref={track}>
         {artists.map((artist) => (
           <button key={artist.id} className="shelf-card shelf-artist" onClick={() => navigate(`/artist/${artist.id}`)}>
             <span className="album-art">

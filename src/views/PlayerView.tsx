@@ -170,6 +170,18 @@ function useActiveLine(lyrics: Lyrics | null, status: PlaybackStatus | null | un
   return index;
 }
 
+/** true on a wide screen, where the lyrics have their own column beside the cover */
+function useWide() {
+  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 900px)');
+    const onChange = () => setWide(media.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+  return wide;
+}
+
 /** the lyrics column with its own clock, so ticks do not re-render the player */
 function SyncedLyrics({
   lyrics,
@@ -241,6 +253,9 @@ export function PlayerView({
 }) {
   const { current, status, entries } = jbox;
   const showLyrics = lyricsOpen;
+  // on a wide screen the lyrics panel sits beside the artwork, so the stage keeps the
+  // cover: swapping in the lyrics there showed them twice and hid the cover
+  const wide = useWide();
   const setShowLyrics = onLyricsOpenChange;
   const [trackDraft, setTrackDraft] = useState<number | null>(null);
   const trackTimer = useRef<number | undefined>(undefined);
@@ -309,8 +324,8 @@ export function PlayerView({
 
       <div className="player-grid">
         <div className="player-main">
-          <div className={`player-stage ${showLyrics ? 'lyrics-on' : ''}`}>
-            {showLyrics ? (
+          <div className={`player-stage ${showLyrics && !wide ? 'lyrics-on' : ''}`}>
+            {showLyrics && !wide ? (
               <>
                 {/* lyrics mode has no visible track title, so the page still needs one */}
                 <h1 className="sr-only">{current.title} — lyrics</h1>
@@ -373,16 +388,18 @@ export function PlayerView({
 
           <div className="transport">
             <button
-              className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''}`}
+              className={`icon-button lyrics-toggle ${showLyrics ? 'is-on' : ''} ${wide ? 'is-wide' : ''}`}
               onClick={() => setShowLyrics(!showLyrics)}
               aria-pressed={showLyrics}
               aria-label="Show lyrics"
+              title="Show lyrics"
               disabled={lyricsMissing && !showLyrics}
             >
               <MicIcon size={18} />
             </button>
             <button
               className="icon-button"
+              title="Previous track"
               onClick={() => jbox.step(-1)}
               disabled={jbox.busy || !status || status.currentIndex <= 0}
               aria-label="Previous track"
@@ -391,6 +408,7 @@ export function PlayerView({
             </button>
             <button
               className="play-button"
+              title={status?.playing ? 'Pause' : 'Play'}
               onClick={jbox.togglePlay}
               disabled={jbox.busy}
               aria-label={status?.playing ? 'Pause' : 'Play'}
@@ -399,6 +417,7 @@ export function PlayerView({
             </button>
             <button
               className="icon-button"
+              title="Next track"
               onClick={() => jbox.step(1)}
               disabled={jbox.busy || !status || status.currentIndex >= entries.length - 1}
               aria-label="Next track"
@@ -421,9 +440,11 @@ export function PlayerView({
 
         </div>
 
-        <aside className="player-aside" aria-label="Lyrics">
-          <SyncedLyrics lyrics={lyrics} status={status} leadMs={lyricLeadMs} />
-        </aside>
+        {wide && (
+          <aside className="player-aside" aria-label="Lyrics">
+            <SyncedLyrics lyrics={lyrics} status={status} leadMs={lyricLeadMs} />
+          </aside>
+        )}
       </div>
       </div>
     </div>

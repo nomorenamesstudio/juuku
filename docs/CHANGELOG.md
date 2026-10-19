@@ -7,6 +7,18 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.6 — 2026-10-19
+
+Wide screens got the pass they needed; the phone layout is unchanged.
+
+- **Desktop shell** — one flat rail (Home, Search, Albums, Artists, Playlists, Queue, Settings at the foot) instead of the Browse/Yours groups; the search field fills the content column; page titles no longer stick to the top; the library sort sits on the title row, right-aligned.
+- **Desktop library** — artists render as a wall of round faces with album counts, matching the daily shelf, instead of the thin list.
+- **Shelves** — back/forward buttons step a shelf by 40% and disable at the ends (tracked with a scroll listener plus a `ResizeObserver`); the *See all* action wears the same button shape while the arrows are visible. Hidden on touch, where the shelf is swiped.
+- **Player on a wide screen** — the artwork stays on the stage and the lyrics live in the aside. Before, toggling lyrics swapped the cover out *and* rendered the panel, so the words appeared twice and the cover vanished. The mic toggle is hidden there, because the panel is always present.
+- **Footer player** — the title takes the width it has (the 340px cap clipped it), and the queue button is gone: the rail already has Queue.
+- **Tooltips** — rail entries, shelf arrows, transport, play/pause, lyrics, favorites, add-to-playlist, volume and the row icons all title themselves.
+- **Docs** — README screenshots refreshed from one session (hero kept as is), plus a Classic/Modern/Geek strip.
+
 ## v0.7.5 — 2026-10-19
 
 - **Fix** — the double playback, at its source. Navidrome's debug log shows the same pattern every time: `Track switching detected` → `Executing mpv command`, and in the same second `action=start` with `Loaded track: %!s(<nil>)` → a second `Executing mpv command`. Between closing the finished track and loading the next one Navidrome's `ActiveTrack` is nil, and `Start` in that window spawns another mpv beside the one the switcher just started — then the watchdog cleans up. `/api/control` no longer takes a `start` at face value: it reads the queue, waits 350ms for a switch to land, reads again, and drops the write when the queue is already playing (a genuine start on a stopped queue still goes through, ~380ms). The same guard drops a `stop` on an already stopped queue. Writes are logged as `[control] …` so the next occurrence is attributable.

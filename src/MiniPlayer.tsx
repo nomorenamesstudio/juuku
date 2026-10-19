@@ -9,7 +9,6 @@ import {
   PauseIcon,
   PlayIcon,
   PrevIcon,
-  QueueIcon,
   VolumeIcon,
 } from './icons';
 import { goBack, navigate } from './router';
@@ -76,10 +75,22 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
       </div>
 
       <div className="nowbar-center">
-        <button className="icon-button bar-only" onClick={() => jbox.step(-1)} disabled={jbox.busy || status.currentIndex <= 0} aria-label="Previous track">
+        <button
+          className="icon-button bar-only"
+          onClick={() => jbox.step(-1)}
+          disabled={jbox.busy || status.currentIndex <= 0}
+          aria-label="Previous track"
+          title="Previous track"
+        >
           <PrevIcon size={18} />
         </button>
-        <button className="nowbar-play" onClick={jbox.togglePlay} disabled={jbox.busy} aria-label={status.playing ? 'Pause' : 'Play'}>
+        <button
+          className="nowbar-play"
+          onClick={jbox.togglePlay}
+          disabled={jbox.busy}
+          aria-label={status.playing ? 'Pause' : 'Play'}
+          title={status.playing ? 'Pause' : 'Play'}
+        >
           {status.playing ? <PauseIcon size={20} filled /> : <PlayIcon size={20} filled />}
         </button>
         <button
@@ -87,6 +98,7 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
           onClick={() => jbox.step(1)}
           disabled={jbox.busy || status.currentIndex >= entries.length - 1}
           aria-label="Next track"
+          title="Next track"
         >
           <NextIcon size={18} />
         </button>
@@ -98,6 +110,7 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
           onClick={() => jbox.toggleFavorite(current)}
           aria-pressed={jbox.favoriteIds.has(current.id)}
           aria-label="Favorite this track"
+          title={jbox.favoriteIds.has(current.id) ? 'Remove from favorites' : 'Add to favorites'}
         >
           <HeartIcon size={18} filled={jbox.favoriteIds.has(current.id)} />
         </button>
@@ -105,6 +118,7 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
           className="icon-button bar-only"
           onClick={() => current && openActions([current], { step: 'playlists' })}
           aria-label="Add this track to a playlist"
+          title="Add to a playlist"
         >
           <AddToPlaylistIcon size={18} />
         </button>
@@ -118,17 +132,16 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
             value={gain}
             onChange={(event) => onVolume(Number(event.target.value))}
             aria-label="Volume"
+            title="Volume"
             aria-valuetext={`${Math.round(gain * 100)}%`}
             style={{ ['--progress' as string]: `${gain * 100}%` }}
           />
         </label>
-        <button className="icon-button bar-only" onClick={() => navigate('/queue')} aria-label="Open the queue">
-          <QueueIcon size={18} />
-        </button>
         <button
           className="icon-button bar-only"
           onClick={() => (expanded ? goBack() : navigate('/player'))}
           aria-label={expanded ? 'Close the lyrics view' : 'Open the lyrics view'}
+          title={expanded ? 'Close the lyrics view' : 'Show lyrics'}
         >
           {/* on wide screens the player is essentially the lyrics view */}
           <MicIcon size={18} />

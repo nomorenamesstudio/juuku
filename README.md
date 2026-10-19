@@ -8,13 +8,18 @@ Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: b
 
 Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juuku is that remote.
 
-![The library, with the player docked at the bottom](docs/screenshot.jpg)
+![The artist wall in the Modern theme, with the player docked at the bottom](docs/screenshot.jpg)
 
 <p align="center">
   <img src="docs/mobile-player.jpg" width="30%" alt="Player: cover, title, scrubber, transport and volume" />
   <img src="docs/mobile-lyrics.jpg" width="30%" alt="Lyrics in the cover's place, the singing line lit" />
   <img src="docs/mobile-album.jpg" width="30%" alt="Album page: cover, facts, actions and the track list" />
 </p>
+
+Three themes, one layout — Classic, Modern and Geek differ in colour, type and icons,
+not in what they show:
+
+![Classic, Modern and Geek](docs/themes.jpg)
 
 ## Run it
 
@@ -54,6 +59,7 @@ website.
 - **Queue** — its own view, opened when you want it: skip to an entry, remove one, shuffle, or clear the lot.
 - **Favorites** — the heart writes to a `Favorites` playlist in Navidrome, so other clients see it too.
 - **Lyrics** — synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none.
+- **Themes** — Classic (amber, serif, Lucide), Modern (turquoise, sans, Phosphor) and Geek (green mono, pixel icons); the UI and its data are identical in all three.
 
 Works on a phone first and gets a sidebar on wide screens, and installs to a home
 screen as a PWA — [that needs HTTPS, which is easy on a private network](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).

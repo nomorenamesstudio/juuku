@@ -54,6 +54,7 @@ export function SongRow({
         onClick={onFavorite}
         aria-pressed={favorite}
         aria-label={favorite ? `Remove ${song.title} from favorites` : `Favorite ${song.title}`}
+        title={favorite ? 'Remove from favorites' : 'Add to favorites'}
       >
         <HeartIcon filled={favorite} size={18} />
       </button>
@@ -61,6 +62,7 @@ export function SongRow({
         className="row-icon"
         onClick={onMenu ?? (() => openActions([song]))}
         aria-label={`More actions for ${song.title}`}
+        title="More actions"
       >
         <MoreIcon size={18} />
       </button>
@@ -88,7 +90,12 @@ export function QueueRow({ song, index, active, played, playing, onSkip, onRemov
         <span className="row-sub">{song.artist}</span>
       </button>
       <span className="row-time">{formatTime(song.duration)}</span>
-      <button className="row-icon" onClick={onRemove} aria-label={`Remove ${song.title} from queue`}>
+      <button
+        className="row-icon"
+        onClick={onRemove}
+        aria-label={`Remove ${song.title} from queue`}
+        title="Remove from queue"
+      >
         <CloseIcon size={18} />
       </button>
     </li>

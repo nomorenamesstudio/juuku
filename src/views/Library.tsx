@@ -175,7 +175,7 @@ export function Library({ tab }: { tab: LibraryTab }) {
           )}
         </>
       ) : (
-        <ul className="plain-list">
+        <ul className="plain-list artists">
           {artists.map((artist) => (
             <li key={artist.id}>
               <button className="link-row with-art" onClick={() => navigate(`/artist/${artist.id}`)}>
