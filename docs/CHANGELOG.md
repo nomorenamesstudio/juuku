@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.5.3 — 2026-10-19
+
+- **Fix** — the watchdog threw `listSockets is not defined` instead of cleaning up, because the restart routine still asked for a helper the status endpoint had stopped importing. The restart response reports the live player count again.
+
 ## v0.5.2 — 2026-10-19
 
 - **Fix** — the player count only counts sockets that actually answer: a dead player leaves its socket file behind, so the watchdog still reported "2 running" after cleaning up. Dead files are swept; a live player is never touched by the housekeeping path.

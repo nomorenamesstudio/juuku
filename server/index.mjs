@@ -281,7 +281,7 @@ async function restartPlayback() {
     invalidateState();
   }
 
-  return { ...killed, players: (await listSockets()).length, restored: index >= 0 };
+  return { ...killed, players: await livePlayers(), restored: index >= 0 };
 }
 
 app.post('/api/player/restart', wrap(async (_req, res) => serialWrite(async () => {
