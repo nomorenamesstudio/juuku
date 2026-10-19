@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.6.2 — 2026-10-19
+
+- **Change** — Classic's album titles grow to 1.18rem (18.9px against the sans 13.8px): Instrument Serif reads smaller at the same size, so equal pixels looked unequal.
+- **Change** — Geek's corners are 2px everywhere, not 3.
+
 ## v0.6.1 — 2026-10-19
 
 - **Change** — Classic sets library album titles in the serif; the grid reads like a record shelf.

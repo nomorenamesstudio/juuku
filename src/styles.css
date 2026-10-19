@@ -171,7 +171,7 @@
   .view-head .display,
   .settings-block
 ) {
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 * {
@@ -3313,7 +3313,8 @@ h1.display {
 /* classic sets library album titles in the serif: the grid is the record shelf */
 [data-theme='classic'] .album-name {
   font-family: var(--font-display);
-  font-size: 1.04rem;
+  /* Instrument Serif sits optically smaller than the sans at the same size */
+  font-size: 1.18rem;
   letter-spacing: 0;
-  line-height: 1.25;
+  line-height: 1.3;
 }
