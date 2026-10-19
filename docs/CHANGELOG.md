@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.5.1 — 2026-10-19
+
+- **Feature** — a watchdog for the duplicate player: every five seconds juuku counts the mpv sockets and, if more than one is alive, runs the restart routine itself (clear, quit the leftovers, restore the queue and index), at most once a minute. `JUUKU_MPV_WATCHDOG=0` turns it off.
+- **Change** — Navidrome runs with `TMPDIR=/mpv-sockets` shared into this container so its players are visible, and the debugging log level is on for a day to catch the double spawn at its source.
+
 ## v0.5.0 — 2026-10-18
 
 - **Feature** — a kill switch for a lost player: Settings gains a **Players** line (`2 running`) and a **Restart playback** button. It clears the queue so Navidrome quits the player it knows about, sends `quit` to every mpv socket still alive, then restores the queue and the index. No ssh. It only appears when Navidrome's socket directory is shared with this container (`JUUKU_MPV_SOCKETS`, see SETUP) — without that the page says `not shared`.

@@ -254,12 +254,13 @@ app.get('/api/player/status', wrap(async (_req, res) => {
   res.json({ shared: socketsShared(), players: (await listSockets()).length });
 }));
 
+let lastHealAt = 0;
+
 /**
- * Kill switch: clear the queue (Navidrome quits the player it knows about), then
- * `quit` every socket still alive — those are the orphans — and put the queue back
- * where it was.
+ * Clear the queue (Navidrome quits the player it knows), quit every socket still
+ * alive — those are the orphans — then put the queue and the index back.
  */
-app.post('/api/player/restart', wrap(async (_req, res) => serialWrite(async () => {
+async function restartPlayback() {
   const before = await readState();
   const index = before.status.currentIndex;
   const wasPlaying = before.status.playing;
@@ -280,8 +281,34 @@ app.post('/api/player/restart', wrap(async (_req, res) => serialWrite(async () =
     invalidateState();
   }
 
-  res.json({ ...killed, players: (await listSockets()).length, restored: index >= 0 });
+  return { ...killed, players: (await listSockets()).length, restored: index >= 0 };
+}
+
+app.post('/api/player/restart', wrap(async (_req, res) => serialWrite(async () => {
+  lastHealAt = Date.now();
+  res.json(await restartPlayback());
 })));
+
+/**
+ * Watchdog: Navidrome leaks a player now and then, and two at once is audible. Every
+ * few seconds, if more than one socket is alive, clean up without being asked.
+ */
+const HEAL_COOLDOWN_MS = 60_000;
+setInterval(() => {
+  if (process.env.JUUKU_MPV_WATCHDOG === '0') return;
+  if (Date.now() - lastHealAt < HEAL_COOLDOWN_MS) return;
+  void (async () => {
+    const sockets = await listSockets();
+    if (sockets.length < 2) return;
+    lastHealAt = Date.now();
+    try {
+      const result = await serialWrite(restartPlayback);
+      console.log('watchdog: quit', result.quit, 'extra players');
+    } catch (err) {
+      console.log('watchdog failed:', err.message);
+    }
+  })();
+}, 5000).unref();
 
 // preferences belong to the Navidrome account, not to one browser
 app.get('/api/prefs', wrap(async (_req, res) => {
