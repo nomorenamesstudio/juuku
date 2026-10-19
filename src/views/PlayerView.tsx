@@ -339,7 +339,6 @@ export function PlayerView({
                 ) : (
                   current.artist
                 )}
-                {current.year ? <span className="year">{'\u00a0· '}{current.year}</span> : null}
               </span>
               <span className="byline-album">
                 {current.albumId ? (
@@ -349,6 +348,7 @@ export function PlayerView({
                 ) : (
                   current.album
                 )}
+                {current.year ? <span className="year"> ({current.year})</span> : null}
               </span>
             </p>
           </div>

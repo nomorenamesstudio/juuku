@@ -16,7 +16,10 @@ const SHELVES: { key: AlbumShelfKey; title: string; sort: AlbumSort }[] = [
   { key: 'dailyPicks', title: 'Daily picks', sort: 'daily' },
 ];
 
-let cache: HomeRows | null = null;
+// the shelves are re-read when the screen is opened after a while: Last played only
+// moves when something plays, and a cached first load hid that
+let cache: { at: number; rows: HomeRows } | null = null;
+const CACHE_MS = 30_000;
 
 function Shelf({ title, albums, sort }: { title: string; albums: Album[]; sort: AlbumSort }) {
   if (albums.length === 0) return null;
@@ -88,18 +91,27 @@ function ArtistShelf({ artists, onSeeAll }: { artists: Artist[]; onSeeAll: () =>
 }
 
 export function HomeView() {
-  const [rows, setRows] = useState<HomeRows | null>(cache);
+  const [rows, setRows] = useState<HomeRows | null>(cache?.rows ?? null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (cache) return;
+    if (cache && Date.now() - cache.at < CACHE_MS) {
+      setRows(cache.rows);
+      return;
+    }
+    let alive = true;
     getHome().then(
       (payload) => {
-        cache = payload;
-        setRows(payload);
+        cache = { at: Date.now(), rows: payload };
+        if (alive) setRows(payload);
       },
-      () => setFailed(true),
+      () => {
+        if (alive) setFailed(true);
+      },
     );
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const rowsOf = (key: AlbumShelfKey) => rows?.[key] ?? [];

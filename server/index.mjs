@@ -363,6 +363,33 @@ app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
   if ((action === 'set' || action === 'add') && !Array.isArray(ids)) throw badRequest('ids must be an array');
   if (action === 'setGain' && !(gain >= 0 && gain <= 1)) throw badRequest('gain must be between 0 and 1');
 
+  /**
+   * A `start` is what puts two tracks out of the speakers. Navidrome switches tracks
+   * without a lock: between closing the finished track and loading the next one its
+   * `ActiveTrack` is nil, and `Start` in that window spawns a second mpv beside the
+   * one the switcher just started. The `get` below reports `playing: false` in exactly
+   * that window, so the answer is not to believe the first read but to wait for the
+   * switch to land — the client's stale `start` then finds the queue already playing
+   * and is dropped, while a genuine start on a stopped queue still goes through.
+   */
+  if (action === 'start' || action === 'stop') {
+    // `get` answers with the playlist object, not with jukeboxStatus
+    const queueStatus = async () =>
+      playlistOf((await call('jukeboxControl', { action: 'get' })).jukeboxPlaylist ?? {}).status;
+
+    let fresh = await queueStatus();
+    if (action === 'start' && !fresh.playing) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      fresh = await queueStatus();
+    }
+    if ((action === 'start' && fresh.playing) || (action === 'stop' && !fresh.playing)) {
+      console.log(`[control] dropped ${action}: queue is already ${fresh.playing ? 'playing' : 'stopped'}`);
+      invalidateState();
+      return res.json(fresh);
+    }
+  }
+
+  console.log(`[control] ${action}${Number.isInteger(index) ? ` index=${index}` : ''}`);
   const response = await call(
     'jukeboxControl',
     { action, index, offset, id: ids, gain },

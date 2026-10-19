@@ -1802,6 +1802,16 @@ h1.display {
   color: var(--dim);
 }
 
+/* the artist is the anchor, the album the detail: one step brighter, one step back */
+.player-meta .byline-artist {
+  color: var(--text);
+}
+
+.player-meta .byline-album,
+.player-meta .byline-album .year {
+  color: var(--dim);
+}
+
 /* ----------------------------------------------------------------- lyrics */
 
 /* the lyrics fill the stage and scroll inside it. The cover is a square, so it is

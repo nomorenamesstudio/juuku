@@ -7,6 +7,17 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.5 — 2026-10-19
+
+- **Fix** — the double playback, at its source. Navidrome's debug log shows the same pattern every time: `Track switching detected` → `Executing mpv command`, and in the same second `action=start` with `Loaded track: %!s(<nil>)` → a second `Executing mpv command`. Between closing the finished track and loading the next one Navidrome's `ActiveTrack` is nil, and `Start` in that window spawns another mpv beside the one the switcher just started — then the watchdog cleans up. `/api/control` no longer takes a `start` at face value: it reads the queue, waits 350ms for a switch to land, reads again, and drops the write when the queue is already playing (a genuine start on a stopped queue still goes through, ~380ms). The same guard drops a `stop` on an already stopped queue. Writes are logged as `[control] …` so the next occurrence is attributable.
+
+## v0.7.5 — 2026-10-19
+
+- **Fix** — the double playback, at its source. Navidrome's debug log shows the same pattern every time: `Track switching detected` → `Executing mpv command`, and in the same second `action=start` with `Loaded track: %!s(<nil>)` → a second `Executing mpv command`; the watchdog then cleans up. Between closing the finished track and loading the next one Navidrome's `ActiveTrack` is nil, and `Start` in that window spawns another mpv beside the one the switcher just started. `/api/control` no longer takes a `start` at face value: it reads the queue, waits 350ms for a switch to land, reads again, and drops the write when the queue is already playing (a real start on a stopped queue still goes through, ~380ms). The same guard drops a `stop` on a stopped queue, and writes log as `[control] …` so the next occurrence is attributable.
+- **Fix** — the player byline: the year sits with the album (`The Inevitable End (2014)`) instead of after the artist, and the artist is set in the foreground colour with the album one step back, so the two are easy to tell apart.
+- **Fix** — the home screen cached its first load for the whole session, so a shelf that filled later (Last played) never appeared until a reload; it re-reads on revisit with a 30 second cache.
+- **Fix** — `/data` is a named volume in the shipped stack. A rootless Docker cannot write an owner-owned bind mount from the container's root, which is why `prefs.json` and `recent.json` were silently failing with `EACCES`.
+
 ## v0.7.4 — 2026-10-19
 
 - **Fix** — coming back from an album kept only the first page of the library: the shell remounts the content element per route, and the remount refetched page one, dropping whatever you had loaded — which is also why the restored scroll landed inside the first thirty. The cached list is reused when the sort has not changed, re-picking the current order no longer empties the grid, and changing the sort starts at the top.
