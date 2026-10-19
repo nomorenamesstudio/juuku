@@ -7,6 +7,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.6.1 — 2026-10-19
+
+- **Change** — Classic sets library album titles in the serif; the grid reads like a record shelf.
+- **Change** — Modern is a neutral dark grey canvas: the accent wash at the top of the page is gone (`--wash`), so green appears only on controls and accents, and the cover glow sits back at 0.42.
+- **Change** — Geek uses **Geist Mono** (self-hosted, 23 kB, OFL) everywhere — UI, titles and lyrics — with corners forced to 3px, including the parts that hardcode a pill.
+
 ## v0.6.0 — 2026-10-19
 
 - **Feature** — three themes, picked in Settings and kept per device (a theme is about the screen you are holding, not the account): **Classic** — the current look, serif titles and lyrics, amber, cover glow; **Modern** — bold sans titles, green accent on near-black, flatter surfaces, sans lyrics; **Geek** — monospace everywhere, terminal green, 2px corners, no glow. The whole sheet now reads from tokens (`--bg`, `--panel`, `--line`, `--text`, `--accent`, `--radius`, `--font-display`, `--lyric-face`, `--glow`), and the 43 hardcoded brand tints became `color-mix()` of them, so a theme repaints everything — accent chips, row highlights, glass, glow included. Applied before the first paint, so nothing flashes.

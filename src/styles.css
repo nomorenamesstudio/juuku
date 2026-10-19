@@ -17,6 +17,14 @@
 }
 
 @font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/geist-mono.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Instrument Serif';
   src: url('/fonts/instrument-serif.woff2') format('woff2');
   font-weight: 400;
@@ -64,6 +72,8 @@
   --lyric-weight: 400;
   /* how present the cover glow is: a terminal does not glow */
   --glow: 0.42;
+  /* the tint at the top of the page; themes that want a flat canvas drop it */
+  --wash: color-mix(in srgb, var(--accent) 16%, transparent);
   /* legacy aliases so the rest of the sheet keeps reading the same names */
   --cream: var(--text);
   --amber: var(--accent);
@@ -109,7 +119,9 @@
   --display-weight: 700;
   --lyric-face: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --lyric-weight: 600;
-  --glow: 0.5;
+  --glow: 0.42;
+  /* no accent wash: the page is neutral grey and green is for controls only */
+  --wash: transparent;
 }
 
 [data-theme='geek'] {
@@ -124,13 +136,42 @@
   --accent-ink: #04140b;
   --danger: #ff6b6b;
   --radius: 2px;
-  --font-body: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
-  --font-display: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --font-body: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-display: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --display-weight: 600;
-  --lyric-face: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --lyric-face: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --lyric-weight: 500;
-  /* no soft blur, no glow: a terminal shows text */
+  /* no soft blur, no glow, no accent wash: a terminal shows text */
   --glow: 0;
+  --wash: transparent;
+}
+
+/* geek keeps corners to a few pixels, including the parts that hardcode a pill */
+[data-theme='geek'] :is(
+  .icon-button,
+  .primary,
+  .secondary,
+  .chip,
+  .badge,
+  .count-pill,
+  .segmented,
+  .segmented button,
+  .search-field,
+  .theme-choice,
+  .theme-swatch,
+  .sort-select select,
+  .nowbar,
+  .row,
+  .link-row,
+  .album-art,
+  .album-art img,
+  .artist-avatar,
+  .playlist-art-fallback,
+  .tabbar,
+  .view-head .display,
+  .settings-block
+) {
+  border-radius: 3px;
 }
 
 * {
@@ -156,7 +197,7 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(90% 60% at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 65%),
+    radial-gradient(90% 60% at 50% -10%, var(--wash) 0%, transparent 65%),
     var(--bg);
   color: var(--cream);
   -webkit-font-smoothing: antialiased;
@@ -3267,4 +3308,12 @@ h1.display {
     repeating-linear-gradient(0deg, rgba(70, 242, 139, 0.14) 0 1px, transparent 1px 4px),
     #05070a;
   border-radius: 3px;
+}
+
+/* classic sets library album titles in the serif: the grid is the record shelf */
+[data-theme='classic'] .album-name {
+  font-family: var(--font-display);
+  font-size: 1.04rem;
+  letter-spacing: 0;
+  line-height: 1.25;
 }
