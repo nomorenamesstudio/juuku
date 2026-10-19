@@ -7,6 +7,13 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.0 — 2026-10-19
+
+- **Feature** — the modern theme gets its own icons: 26 **Phosphor** glyphs in the fill weight (MIT), solid and slightly bolder, which is the shape language a Spotify-like surface wants. Classic keeps lucide strokes, geek keeps pixels, each set subscribes to the theme.
+- **Fix** — the queue's remove button was a plus rotated 45°, so geek drew a rotated pixel plus; it is a real close glyph now and geek shows the pixel ✕.
+- **Fix** — geek's corners are **1px**, and the now-playing bars lost their rounding: everything from rows, covers, chips and inputs to the play button and the player artwork sits square.
+- **Docs** — Phosphor credited next to Pixelarticons.
+
 ## v0.7.0 — 2026-10-19
 
 - **Feature** — the geek theme draws **pixel icons** instead of the stroke set: 26 glyphs from [Pixelarticons](https://github.com/halfmage/pixelarticons) (MIT) — play, pause, skip, shuffle, repeat, trash, heart, close, search, settings and the rest — bundled as components on the same 24 grid, filled with `currentColor` so they inherit the theme's ink, and rendered with `crispEdges` so the pixels stay sharp at 18px. Icons subscribe to the theme, so the swap happens with the rest of the repaint and no call site changed; classic and modern keep lucide.

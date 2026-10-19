@@ -131,9 +131,9 @@ Free, MIT, no telemetry, no accounts. If Juuku earns a place in your setup:
 MIT — see [LICENSE](LICENSE).
 
 Bundled assets keep their own licenses: Bricolage Grotesque, Instrument Serif and
-Geist Mono are SIL OFL (license files in `public/fonts/`), and the geek theme's pixel
-icons come from [Pixelarticons](https://github.com/halfmage/pixelarticons) by Gerrit
-Halfmann, MIT.
+Geist Mono are SIL OFL (license files in `public/fonts/`), and the icon sets are
+[Pixelarticons](https://github.com/halfmage/pixelarticons) by Gerrit Halfmann (geek,
+MIT) and [Phosphor Icons](https://phosphoricons.com) (modern, fill weight, MIT).
 
 ## Built with AI
 

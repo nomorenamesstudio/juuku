@@ -1,6 +1,6 @@
 import type { Song } from './api';
 import { formatTime } from './format';
-import { HeartIcon, MoreIcon, PlusIcon } from './icons';
+import { CloseIcon, HeartIcon, MoreIcon } from './icons';
 import { useTrackActions } from './TrackActions';
 
 export function Eq({ playing }: { playing: boolean }) {
@@ -89,7 +89,7 @@ export function QueueRow({ song, index, active, played, playing, onSkip, onRemov
       </button>
       <span className="row-time">{formatTime(song.duration)}</span>
       <button className="row-icon" onClick={onRemove} aria-label={`Remove ${song.title} from queue`}>
-        <PlusIcon size={18} style={{ transform: 'rotate(45deg)' }} />
+        <CloseIcon size={18} />
       </button>
     </li>
   );
