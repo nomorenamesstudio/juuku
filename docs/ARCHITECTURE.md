@@ -12,6 +12,25 @@ Navidrome (:4533)  ── IPC ──▶  mpv  ──▶  speakers on the Navidro
 
 Navidrome's jukebox is not exposed by its own web UI. The only interface is Subsonic's `jukeboxControl`, and it is a **poll-and-command** API: there is no event stream, no websocket, no long-poll. That single fact shapes the whole design.
 
+## Sorting
+
+Two album orders are juuku's own, not Navidrome's: `alphabeticalByName` and
+`alphabeticalByArtist`. `server/sort.mjs` builds the key from the first letter or
+digit, folding accents, so leading quotes, ellipses and brackets do not decide the
+order (`“Heroes”` is an H, `...I Care Because You Do` an I) and a symbols-only name
+keys to empty and stays in front. Because that cannot be expressed in a Subsonic
+filter, `/api/albums` fetches the whole list in pages of 500, sorts it and slices
+(the result is cached for five minutes); `/api/artists` sorts its single response
+the same way.
+
+## Controls
+
+Every standalone control — search field, create-playlist capsule, the browse
+switch, the sort dropdown — is built from `--field-h` (3rem), `--field-bg`,
+`--field-radius` and `--field-font` (1rem, so iOS never zooms on focus). They, the
+section labels and the rows all start on the same content edge: the head carries no
+horizontal padding of its own.
+
 ## Themes
 
 One attribute on `<html>`, `data-theme="classic|modern|geek"`, set from

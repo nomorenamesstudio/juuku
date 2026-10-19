@@ -49,7 +49,9 @@ export function clean(patch) {
         .filter((entry) => entry && typeof entry.id === 'string' && (entry.kind === 'album' || entry.kind === 'artist'))
         .slice(0, 10);
     } else if (key === 'juuku.library.sort' && typeof value === 'string') {
-      out[key] = ['alphabeticalByName', 'newest', 'recent', 'byYear'].includes(value) ? value : 'newest';
+      out[key] = ['alphabeticalByName', 'alphabeticalByArtist', 'newest', 'recent', 'byYear'].includes(value)
+        ? value
+        : 'newest';
     }
   }
   return out;

@@ -234,6 +234,9 @@ export default function App() {
   }, [route.name, lyricsOpen]);
   // the badge counts what is still ahead of the current track, not the whole queue
   const count = Math.max(jbox.entries.length - (jbox.status?.currentIndex ?? -1) - 1, 0);
+  // the deck follows the track that is playing, not the tracks still ahead: on the
+  // last one there are none ahead, and the whole player used to vanish
+  const hasTrack = jbox.entries.length > 0 && (jbox.status?.currentIndex ?? -1) >= 0;
 
   useEffect(() => {
     applySettings(settings);
@@ -330,7 +333,7 @@ export default function App() {
   return (
     <TrackActionsProvider value={(songs, options) => setTrackActions({ songs, ...options })}>
     <div
-      className={`shell ${isPlayer ? 'shell-player' : ''} ${count > 0 && !isPlayer ? 'has-deck' : ''}`}
+      className={`shell ${isPlayer ? 'shell-player' : ''} ${hasTrack && !isPlayer ? 'has-deck' : ''}`}
     >
       <aside className="rail" aria-label="Main">
         <button className="wordmark" onClick={() => navigate('/library/albums')}>
@@ -430,7 +433,7 @@ export default function App() {
       {isLibrary ? null : view}
         </main>
 
-        {count > 0 && (
+        {hasTrack && (
           <NowBar
             jbox={jbox}
             expanded={isPlayer}

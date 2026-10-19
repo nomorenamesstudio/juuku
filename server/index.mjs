@@ -6,6 +6,7 @@ import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMar
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketsShared } from './player.mjs';
+import { alphabeticalBy } from './sort.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
 try {
@@ -441,10 +442,39 @@ app.get('/api/search', wrap(async (req, res) => {
   });
 }));
 
+/**
+ * The two alphabetical orders are juuku's own: Navidrome collates the literal title,
+ * so `"Heroes"` and `…I Care Because You Do` land on top. Sorting the whole list here
+ * (pages of 500, cached for five minutes) lets the deck strips decoration first.
+ */
+const ALPHABETICAL_CACHE = new Map();
+const ALPHABETICAL_TTL_MS = 5 * 60_000;
+
+async function allAlbumsAlphabetical(type) {
+  const cached = ALPHABETICAL_CACHE.get(type);
+  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+
+  const all = [];
+  for (let offset = 0; offset < 5000; offset += 500) {
+    const response = await call('getAlbumList2', { type, size: 500, offset });
+    const page = (response.albumList2?.album ?? []).map(album);
+    all.push(...page);
+    if (page.length < 500) break;
+  }
+  const sorted = alphabeticalBy(all, type === 'alphabeticalByArtist' ? 'artist' : 'name');
+  ALPHABETICAL_CACHE.set(type, { at: Date.now(), albums: sorted });
+  return sorted;
+}
+
 app.get('/api/albums', wrap(async (req, res) => {
   const type = String(req.query.type ?? 'newest');
   const size = Math.min(Number(req.query.size ?? 30), 100);
   const offset = Number(req.query.offset ?? 0);
+  if (type === 'alphabeticalByName' || type === 'alphabeticalByArtist') {
+    const albums = await allAlbumsAlphabetical(type);
+    const page = albums.slice(offset, offset + size);
+    return res.json({ albums: page, offset, hasMore: offset + size < albums.length });
+  }
   // Navidrome has no release-date order, and byYear walks the range in the direction
   // it is given: newest year first means asking for this year down to 1900
   const years = type === 'byYear' ? { fromYear: new Date().getFullYear(), toYear: 1900 } : {};
@@ -491,7 +521,8 @@ app.get('/api/artists', wrap(async (_req, res) => {
       coverArt: artist.coverArt,
     })),
   );
-  res.json({ artists });
+  // same rule as the albums: `"Heroes"` sorts under H, symbols-only first
+  res.json({ artists: alphabeticalBy(artists, 'name') });
 }));
 
 app.get('/api/artists/:id', wrap(async (req, res) => {

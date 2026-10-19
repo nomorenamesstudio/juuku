@@ -217,3 +217,11 @@ export function PixelGithubIcon({ size = 18, ...rest }: PixelIconProps) {
     </svg>
   );
 }
+
+export function PixelAlbumsIcon({ size = 18, ...rest }: PixelIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden {...rest}>
+      <path d="M8 2h8v1H8zM6 3h5v1H6zM13 3h5v1H13zM5 4h3v1H5zM16 4h3v1H16zM4 5h2v1H4zM8 5h8v1H8zM18 5h2v1H18zM3 6h2v1H3zM7 6h10v1H7zM19 6h2v1H19zM3 7h2v1H3zM6 7h12v1H6zM19 7h2v1H19zM2 8h2v1H2zM5 8h14v1H5zM20 8h2v1H20zM2 9h2v1H2zM5 9h6v1H5zM13 9h6v1H13zM20 9h2v1H20zM2 10h2v1H2zM5 10h5v1H5zM14 10h5v1H14zM20 10h2v1H20zM2 11h1v1H2zM5 11h4v1H5zM15 11h4v1H15zM21 11h1v1H21zM2 12h1v1H2zM5 12h4v1H5zM15 12h4v1H15zM21 12h1v1H21zM2 13h2v1H2zM5 13h5v1H5zM14 13h5v1H14zM20 13h2v1H20zM2 14h2v1H2zM5 14h6v1H5zM13 14h6v1H13zM20 14h2v1H20zM2 15h2v1H2zM5 15h14v1H5zM20 15h2v1H20zM3 16h2v1H3zM6 16h12v1H6zM19 16h2v1H19zM3 17h2v1H3zM7 17h10v1H7zM19 17h2v1H19zM4 18h2v1H4zM8 18h8v1H8zM18 18h2v1H18zM5 19h3v1H5zM16 19h3v1H16zM6 20h5v1H6zM13 20h5v1H13zM8 21h8v1H8z" />
+    </svg>
+  );
+}

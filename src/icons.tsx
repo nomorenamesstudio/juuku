@@ -1,6 +1,7 @@
 import { type ComponentType, useSyncExternalStore } from 'react';
 import {
   PixelAddToPlaylistIcon,
+  PixelAlbumsIcon,
   PixelArtistIcon,
   PixelChevronDownIcon,
   PixelChevronLeftIcon,
@@ -30,6 +31,7 @@ import {
 } from './pixel-icons';
 import {
   SolidAddToPlaylistIcon,
+  SolidAlbumsIcon,
   SolidArtistIcon,
   SolidChevronDownIcon,
   SolidChevronLeftIcon,
@@ -62,6 +64,7 @@ import {
   ChevronDown,
   ChevronLeft,
   Heart,
+  Disc3,
   Library,
   ListMusic,
   ListPlus,
@@ -152,6 +155,7 @@ export const PlusIcon = icon(Plus, PixelPlusIcon, SolidPlusIcon);
 export const QueueIcon = icon(ListMusic, PixelQueueIcon, SolidQueueIcon);
 export const PlaylistIcon = icon(ListMusic, PixelPlaylistIcon, SolidPlaylistIcon);
 export const AddToPlaylistIcon = icon(ListPlus, PixelAddToPlaylistIcon, SolidAddToPlaylistIcon);
+export const AlbumsIcon = icon(Disc3, PixelAlbumsIcon, SolidAlbumsIcon);
 export const LibraryIcon = icon(Library, PixelLibraryIcon, SolidLibraryIcon);
 export const ArtistIcon = icon(UserRound, PixelArtistIcon, SolidArtistIcon);
 export const SearchIcon = icon(Search, PixelSearchIcon, SolidSearchIcon);

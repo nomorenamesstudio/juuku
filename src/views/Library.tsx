@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronDownIcon, RefreshIcon } from '../icons';
+import { AlbumsIcon, ArtistIcon, ChevronDownIcon, RefreshIcon } from '../icons';
 import { type Album, type AlbumSort, coverUrl, getAlbums } from '../api';
 import { Cover } from '../Cover';
 import { useCounts } from '../useCounts';
@@ -10,6 +10,7 @@ type Tab = 'albums' | 'artists';
 
 const SORTS = [
   { type: 'alphabeticalByName', label: 'Alphabetical' },
+  { type: 'alphabeticalByArtist', label: 'By artist' },
   { type: 'newest', label: 'Last added' },
   { type: 'recent', label: 'Last played' },
   { type: 'byYear', label: 'Last released' },
@@ -80,12 +81,24 @@ export function Library({ tab }: { tab: Tab }) {
           <h1 className="display">{tab === 'albums' ? 'Albums' : 'Artists'}</h1>
           <div className="library-controls">
             <div className="segmented" role="tablist" aria-label="Browse">
-              <button role="tab" aria-selected={tab === 'albums'} onClick={() => navigate('/library/albums')}>
-                Albums
+              <button
+                role="tab"
+                aria-selected={tab === 'albums'}
+                aria-label="Albums"
+                title="Albums"
+                onClick={() => navigate('/library/albums')}
+              >
+                <AlbumsIcon size={17} />
                 {albumTotal !== null && <span className="count-pill">{albumTotal}</span>}
               </button>
-              <button role="tab" aria-selected={tab === 'artists'} onClick={() => navigate('/library/artists')}>
-                Artists
+              <button
+                role="tab"
+                aria-selected={tab === 'artists'}
+                aria-label="Artists"
+                title="Artists"
+                onClick={() => navigate('/library/artists')}
+              >
+                <ArtistIcon size={17} />
                 {artists.length > 0 && <span className="count-pill">{artists.length}</span>}
               </button>
             </div>

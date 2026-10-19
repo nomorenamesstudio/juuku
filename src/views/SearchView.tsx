@@ -82,6 +82,28 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
     });
   };
 
+  /**
+   * With the keyboard up, iOS shrinks the visual viewport while the page keeps
+   * scrolling under the fixed deck and tab bar, so the list looked like it ran on
+   * past the footer. Scrolling the list, or tapping anywhere but the field, drops
+   * the keyboard and gives the page its height back.
+   */
+  useEffect(() => {
+    const dismiss = () => {
+      if (document.activeElement === input.current) input.current?.blur();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('.search-field')) dismiss();
+    };
+    window.addEventListener('scroll', dismiss, { passive: true });
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('scroll', dismiss);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, []);
+
   const openAlbum = (album: Album) => {
     remember({ kind: 'album', id: album.id, name: album.name, sub: `Album · ${album.artist}`, coverArt: album.coverArt });
     navigate(`/album/${album.id}`);
@@ -109,33 +131,32 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
 
   return (
     <div className="view">
-      <header className="view-head">
+      <header className="view-head head-search">
         <h1 className="display">Search</h1>
+        <div className="search-field">
+          <SearchIcon size={18} />
+          <input
+            ref={input}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Songs, albums, artists"
+            aria-label="Search the library"
+          />
+          {query && (
+            <button
+              className="search-clear"
+              onClick={() => {
+                setQuery('');
+                input.current?.focus();
+              }}
+              aria-label="Clear search"
+            >
+              <CloseIcon size={16} />
+            </button>
+          )}
+        </div>
       </header>
-
-      <div className="search-field">
-        <SearchIcon size={18} />
-        <input
-          ref={input}
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Songs, albums, artists"
-          aria-label="Search the library"
-        />
-        {query && (
-          <button
-            className="search-clear"
-            onClick={() => {
-              setQuery('');
-              input.current?.focus();
-            }}
-            aria-label="Clear search"
-          >
-            <CloseIcon size={16} />
-          </button>
-        )}
-      </div>
 
       {results ? (
         <div className="search-results">

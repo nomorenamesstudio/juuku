@@ -7,6 +7,19 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.0 — 2026-10-19
+
+- **Feature** — the Albums/Artists switch is icons now: a record for albums, a person for artists, each with its album count. The words stay in `aria-label`/`title`. Freeing that width put the full sort labels back — *Alphabetical, By artist, Last added, Last played, Last released*. The record is lucide `Disc3` in classic, Phosphor `vinyl-record` in modern, and a hand-drawn 24px pixel disc in geek (Pixelarticons has no vinyl).
+- **Feature** — **By artist** sorts albums by artist name, grouped together, then by album.
+- **Feature** — alphabetical order ignores decoration: `sortKey()` starts at the first letter or digit and folds accents, so `“Heroes”` sorts under H and `...I Care Because You Do` under I, while a name with nothing but symbols (`★`, `✝`) stays in front. Navidrome collates the literal title, so juuku fetches the two alphabetical album orders itself (pages of 500, cached five minutes) and slices them; the Artists list sorts the same way. Tested.
+- **Change** — one control recipe: the search field, the create-playlist capsule, the browse switch and the sort dropdown are all 48px tall, `--panel` on a 1px `--line` border, `--field-radius` (12px, 1px in geek) and 16px type. Every control, label, row and title now starts on the same 18px left edge.
+- **Change** — the create row is one capsule: input and **Create** share a border, the button stretches to the field height and the border warms to the accent on focus.
+- **Fix** — the mini player and the deck's bottom clearance were gated on "tracks ahead", so both vanished on the last track of a queue while the music played.
+- **Fix** — the lyrics pane was a square (sized like the cover), which left the words in a narrow centred strip whenever the stage was shorter than the column; in lyrics mode it fills the stage instead.
+- **Fix** — the search page's field, labels and rows had three different edges, and "Recent" sat twice as far below the field as "Artists" (a flex container does not collapse its children's margins, and baseline alignment against a larger Clear link pushed it down another 4px).
+- **Fix** — the search field keeps the keyboard up while the page scrolls under the fixed deck and tab bar; scrolling or tapping outside the field now dismisses it.
+- **Docs** — the alphabetical rule and the control recipe are in ARCHITECTURE.
+
 ## v0.6.0 — 2026-10-19
 
 One release for the theme work: three themes, three icon sets, and the small UI
