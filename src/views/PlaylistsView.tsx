@@ -31,7 +31,6 @@ export function PlaylistsView() {
     <div className="view">
       <header className="view-head">
         <h1 className="display">Playlists</h1>
-        <p className="fineprint">Built here or in any Subsonic client</p>
         <form
           className="playlist-new"
           onSubmit={(event) => {

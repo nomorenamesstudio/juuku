@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.4 — 2026-10-19
+
+- **Change** — the Playlists page drops its "Built here or in any Subsonic client" line: the title sits 9px above the create field and says enough.
+
 ## v0.8.3 — 2026-10-19
 
 - **Change** — the create-playlist row is one capsule: the field and its **Create** button share a single border, the button sits flush at the right edge and stretches to the field's height (39px inside a 48px row, so it is an easy target), the border warms to the accent on focus, and it submits on Enter as before. Geek squares it with everything else.
