@@ -16,10 +16,13 @@ Navidrome's own web UI cannot drive the jukebox — the feature is only reachabl
   <img src="docs/mobile-album.jpg" width="30%" alt="Album page: cover, facts, actions and the track list" />
 </p>
 
-Three themes, one layout — Classic, Modern and Geek differ in colour, type and icons,
+Three themes, one layout — Mocha, Modern and Geek differ in colour, type and icons,
 not in what they show:
 
-![Classic, Modern and Geek](docs/themes.jpg)
+![Mocha, Modern and Geek](docs/themes.jpg)
+
+The same three themes, the same screenshots and a short FAQ live on the landing page:
+<https://juuku.nomorenames.studio> ([source](site/)).
 
 ## Run it
 
@@ -59,7 +62,7 @@ website.
 - **Queue** — its own view, opened when you want it: skip to an entry, remove one, shuffle, or clear the lot.
 - **Favorites** — the heart writes to a `Favorites` playlist in Navidrome, so other clients see it too.
 - **Lyrics** — synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none.
-- **Themes** — Classic (amber, serif, Lucide), Modern (turquoise, sans, Phosphor) and Geek (green mono, pixel icons); the UI and its data are identical in all three.
+- **Themes** — Mocha (amber, serif, Lucide), Modern (turquoise, sans, Phosphor) and Geek (green mono, pixel icons); the UI and its data are identical in all three.
 
 Works on a phone first and gets a sidebar on wide screens, and installs to a home
 screen as a PWA — [that needs HTTPS, which is easy on a private network](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).
@@ -125,6 +128,7 @@ scripts/         sandbox-up.sh — compose + seed music + create admin + scan
                  audio-dev.sh — route the container's mpv to your speakers
 docker-compose.yml   the throwaway Navidrome with jukebox enabled
 docs/            INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
+site/            the landing page (GitHub Pages), static, no build step
 ```
 
 ## Support

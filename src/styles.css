@@ -108,7 +108,7 @@
 
 /* ---------------------------------------------------------------- themes */
 
-/* classic is what the variables above already describe; these two swap them */
+/* mocha is what the variables above already describe; these two swap them */
 
 [data-theme='modern'] {
   /* glacier: turquoise accent on a cool grey canvas, chosen over the green that
@@ -3678,7 +3678,7 @@ h1.display {
   border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
 }
 
-.theme-swatch-classic {
+.theme-swatch-mocha {
   background:
     radial-gradient(120% 120% at 30% 20%, #f0a24a 0%, #8a4a1f 45%, #14100b 100%);
 }
@@ -3694,8 +3694,8 @@ h1.display {
   border-radius: 3px;
 }
 
-/* classic sets library album titles in the serif: the grid is the record shelf */
-[data-theme='classic'] .album-name {
+/* mocha sets library album titles in the serif: the grid is the record shelf */
+[data-theme='mocha'] .album-name {
   font-family: var(--font-display);
   /* Instrument Serif sits optically smaller than the sans at the same size */
   font-size: 1.18rem;

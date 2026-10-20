@@ -1,0 +1,1338 @@
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('fonts/bricolage-grotesque.woff2') format('woff2');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('fonts/geist-mono.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('fonts/instrument-serif.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  /* only ジューク, subset and self-hosted, the way the app does it */
+  font-family: 'Noto Sans JP Kana';
+  src: url('fonts/noto-sans-jp-kana.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+30AF-30B0, U+30B7-30B8, U+30E5, U+30FC, U+3099;
+}
+
+/* the app's own tokens, so the page speaks the same design language as the product */
+
+:root {
+  color-scheme: dark;
+  --bg: #14100b;
+  --panel: #1c1712;
+  --line: #352a1f;
+  --text: #f4ead9;
+  --muted: #b6a68c;
+  --accent: #f0a24a;
+  --accent-ink: #201505;
+  --radius: 18px;
+  --font-body: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --display-weight: 400;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --wash: color-mix(in srgb, var(--accent) 16%, transparent);
+  --maxw: 68rem;
+  --wrap-pad: clamp(1.25rem, 4vw, 2.5rem);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* the three faces do not carry the same mass at the same px: the serif is thin
+     and narrow, the sans bold, the mono wide and tracked out. These three numbers
+     are tuned per theme so the headline reads at one weight and one size. */
+  --display-scale: 1.111;
+  --display-tracking: -0.02em;
+  /* the hero size, and the rest of the headline scale as fractions of it */
+  --h1-size: calc(clamp(2.35rem, 6.2vw, 4.5rem) * var(--display-scale));
+  --h2-ratio: 0.578;
+  --pull-ratio: 0.578;
+  /* the three theme swatches, from the app's settings picker */
+  --grad-mocha: radial-gradient(120% 120% at 30% 20%, #f0a24a 0%, #8a4a1f 45%, #14100b 100%);
+  --grad-modern: linear-gradient(150deg, #3adbc9 0%, #12181a 55%, #0e1213 100%);
+  --grad-geek: repeating-linear-gradient(0deg, rgba(70, 242, 139, 0.14) 0 1px, transparent 1px 4px),
+    #05070a;
+  /* what the dropdown's dot shows: the theme you are in */
+  --grad: var(--grad-mocha);
+}
+
+[data-theme='modern'] {
+  --bg: #0e1213;
+  --panel: #151b1d;
+  --line: #2a3436;
+  --text: #ffffff;
+  --muted: #b3b3b9;
+  --accent: #3adbc9;
+  --accent-ink: #04231f;
+  --radius: 12px;
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --display-weight: 700;
+  --display-scale: 0.925;
+  --display-tracking: -0.02em;
+  --grad: var(--grad-modern);
+  --wash: transparent;
+}
+
+[data-theme='geek'] {
+  --bg: #05070a;
+  --panel: #0a0f14;
+  --line: #1d2a36;
+  --text: #c9f7e2;
+  --muted: #7fb99f;
+  --accent: #46f28b;
+  --accent-ink: #04140b;
+  --radius: 2px;
+  --font-body: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-display: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --display-weight: 400;
+  --display-scale: 0.875;
+  --display-tracking: -0.05em;
+  --grad: var(--grad-geek);
+  --wash: transparent;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -3.5rem;
+  z-index: 20;
+  padding: 0.5rem 0.9rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: top 0.2s var(--ease);
+}
+
+.skip:focus {
+  top: 0.8rem;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--wrap-pad);
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+/* the header and the hero share one warm wash, so there is no seam between them */
+
+.top {
+  position: relative;
+  isolation: isolate;
+}
+
+/* the library wall, faded: the same cover cloud the README header uses */
+.covers {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  /* bounded: .top wraps the whole page, and a 100%-tall cover wall would scale the
+     artwork to a handful of giant covers */
+  height: min(46rem, 115vw);
+  background-image: url('images/covers.jpg');
+  background-position: center top;
+  /* same density as the name block, so the two walls read as one texture */
+  background-size: 100% auto;
+  opacity: 0.18;
+  filter: saturate(0.75) contrast(0.9);
+  /* fade out at the bottom, and stay off the headline: the covers belong to the
+     corners, the words stay on the page's own dark */
+  mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 94%),
+    radial-gradient(64% 60% at 38% 48%, transparent 0%, #000 82%);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+
+/* bounded on purpose: the wash belongs to the header and the hero, not the page */
+.wash {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: min(64rem, 150vw);
+  background: radial-gradient(110% 60% at 50% 0%, var(--wash), transparent 70%);
+  pointer-events: none;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: clamp(0.9rem, 1.8vw, 1.2rem) clamp(0.9rem, 1.6vw, 1.2rem);
+  padding-inline: max(var(--wrap-pad), calc((100vw - var(--maxw)) / 2 + var(--wrap-pad)));
+  transition: color 0.35s var(--ease);
+}
+
+/* the full lockup: the repo's outline SVG, coloured by the theme. Never re-set in
+   another face — the app draws this lockup in Instrument Serif and Noto kana always */
+
+.logo-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  /* the mark sits a step lower than the bar's top edge: the selector hugs the
+     corner, the wordmark keeps air above it */
+  margin-top: clamp(0.9rem, 1.9vw, 1.5rem);
+  color: var(--text);
+  text-decoration: none;
+  --logo-kana: var(--muted);
+}
+
+.brand .logo {
+  display: block;
+  height: 42px;
+  width: auto;
+}
+
+/* wide screens give the mark the room a wordmark wants */
+@media (min-width: 44rem) {
+  .brand .logo {
+    height: 84px;
+  }
+}
+
+/* the two controls share one height, one type size and one padding */
+
+.bar-tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.swatch-dot {
+  position: absolute;
+  left: 0.62rem;
+  top: 50%;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--grad);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 16%, transparent);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: background 0.35s var(--ease);
+}
+
+.themeselect select {
+  display: inline-flex;
+  align-items: center;
+  height: 2.3rem;
+  padding-block: 0;
+  padding-inline: 0.8rem 0.8rem;
+  padding-left: 2.05rem;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 6px);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* the theme dropdown: native, so the list is the platform's own */
+
+.themeselect {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.themeselect select {
+  appearance: none;
+  padding-right: 1.85rem;
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), background-color 0.35s var(--ease);
+}
+
+.themeselect select:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.themeselect select option {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.themeselect .chev {
+  position: absolute;
+  right: 0.5rem;
+  width: 13px;
+  height: 13px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.72rem 1.05rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: filter 0.18s var(--ease);
+}
+
+.btn:hover {
+  filter: brightness(1.08);
+}
+
+.btn .arrow {
+  transition: transform 0.18s var(--ease);
+}
+
+.btn:hover .arrow {
+  transform: translateX(3px);
+}
+
+.btn-secondary {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: color-mix(in srgb, var(--panel) 60%, transparent);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  filter: none;
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--line));
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+}
+
+.btn-secondary .arrow {
+  transition: transform 0.18s var(--ease);
+}
+
+.btn-secondary:hover .arrow {
+  transform: translateY(3px);
+}
+
+
+/* ---------------------------------------------------------------- hero */
+
+.hero {
+  padding-block: clamp(2.2rem, 5vw, 4.2rem) clamp(2.5rem, 5vw, 4rem);
+}
+
+.hero-grid {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3rem);
+  align-items: center;
+}
+
+@media (min-width: 60rem) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 17.5rem);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+}
+
+
+
+.hero h1 {
+  max-width: 22ch;
+  margin: 0 0 1.15rem;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: var(--h1-size);
+  line-height: 1.02;
+  letter-spacing: var(--display-tracking);
+  text-wrap: balance;
+}
+
+[data-theme='geek'] .hero h1 {
+  line-height: 1.12;
+}
+
+.pitch {
+  max-width: 56ch;
+  margin: 0 0 1.9rem;
+  font-size: clamp(1rem, 1.35vw, 1.1rem);
+  line-height: 1.62;
+  color: color-mix(in srgb, var(--text) 82%, var(--bg));
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+
+/* ---------------------------------------------------------------- shots */
+
+html[data-pending] .shot img {
+  opacity: 0;
+}
+
+.shot {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.shot img {
+  width: 100%;
+}
+
+.shot figcaption {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.62rem 0.9rem;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.shot figcaption.narrow {
+  display: none;
+}
+
+.shot figcaption b {
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 88%, var(--bg));
+}
+
+/* the phone in the hero: beside the copy on a wide screen, under it on a phone.
+   A second screen sits behind it, turned slightly, so it reads as a stack */
+.hero-shot {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 20rem);
+}
+
+.hero-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+/* 90% of the front screen, centred on it: `.hero-shot img` sets width: 100%, so this
+   needs the extra specificity to shrink at all */
+img.hero-back,
+img.hero-left {
+  position: absolute;
+  top: 50%;
+  z-index: 0;
+  width: 90%;
+  transform: translate(0, -50%);
+}
+
+img.hero-back {
+  right: 0;
+  transform: translate(10%, -50%);
+}
+
+img.hero-left {
+  left: 0;
+  transform: translate(-10%, -50%);
+}
+
+.hero-front {
+  position: relative;
+  z-index: 1;
+  /* the front screen lays its shadow across the one behind it */
+  box-shadow: 0 14px 44px rgb(0 0 0 / 55%);
+}
+
+@media (min-width: 60rem) {
+  img.hero-back {
+    transform: translate(17%, -50%);
+  }
+
+  img.hero-left {
+    transform: translate(-17%, -50%);
+  }
+}
+
+/* ---------------------------------------------------------------- sections */
+
+.section {
+  padding-block: clamp(3rem, 6.5vw, 5.5rem);
+  border-top: 1px solid var(--line);
+  transition: border-color 0.35s var(--ease);
+}
+
+.section h2 {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  /* the ratio, but never below the size a phone needs for a clear step */
+  font-size: max(calc(1.7rem * var(--display-scale)), calc(var(--h1-size) * var(--h2-ratio)));
+  line-height: 1.08;
+  letter-spacing: var(--display-tracking);
+}
+
+.note {
+  max-width: 62ch;
+  margin: 0 0 clamp(1.5rem, 3vw, 2.4rem);
+  color: color-mix(in srgb, var(--text) 76%, var(--bg));
+}
+
+.note a {
+  color: color-mix(in srgb, var(--accent) 85%, var(--text));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.08em 0.32em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+}
+
+/* ---------------------------------------------------------------- features */
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: clamp(1.4rem, 3vw, 2.2rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.features li {
+  padding: 1.35rem 0 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.fc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.fc-head h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* one slot holds one glyph per theme; the rules below pick the theme's own set.
+   They do not depend on the wrapper class, so a rewritten slot still behaves. */
+.icon,
+.fc-icon,
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.icon svg,
+.fc-icon svg,
+.btn-icon svg {
+  display: block;
+}
+
+.ic {
+  display: none;
+}
+
+[data-theme='mocha'] .ic-mocha,
+[data-theme='modern'] .ic-modern,
+[data-theme='geek'] .ic-geek {
+  display: block;
+}
+
+.fc-icon {
+  color: var(--accent);
+}
+
+.fc-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.features p {
+  max-width: 46ch;
+  margin: 0;
+  font-size: 0.96rem;
+  color: color-mix(in srgb, var(--text) 76%, var(--bg));
+}
+
+@media (min-width: 52rem) {
+  .features {
+    grid-template-columns: 1fr 1fr;
+    column-gap: clamp(2rem, 5vw, 4rem);
+  }
+}
+
+/* ---------------------------------------------------------------- themes */
+
+/* screenshots: one slide at a time, desktop and phone of the same screen side by
+   side, auto-advancing with a progress bar per slide under it */
+
+.gallery {
+  margin-top: clamp(1.4rem, 3vw, 2.2rem);
+}
+
+.gviewport {
+  overflow: hidden;
+}
+
+.gtrack {
+  display: flex;
+  transition: transform 0.6s var(--ease);
+  will-change: transform;
+}
+
+.gslide {
+  flex: 0 0 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.gpair {
+  display: flex;
+  align-items: center;
+}
+
+/* 1688/780 is the phone shot, 1000/1600 the desktop one: at 21.3% the phone comes out
+   at 90% of the desktop's height, and it slides back over the desktop's edge by 15% of
+   its own width, so the two read as one stack with the phone on top */
+.shot-desktop {
+  width: 81.9%;
+}
+
+.shot-phone {
+  position: relative;
+  z-index: 1;
+  width: 21.3%;
+  margin-left: -3.2%;
+  box-shadow: -20px 26px 64px rgb(0 0 0 / 85%), -4px 2px 18px rgb(0 0 0 / 70%),
+    0 30px 40px rgb(0 0 0 / 55%);
+}
+
+.shot-desktop,
+.shot-phone {
+  display: block;
+  height: auto;
+}
+
+
+
+.gslide figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.gbars {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.95rem;
+}
+
+.gbar {
+  flex: 1;
+  /* 24px tall to be a legal touch target; the visible track is the 4px band inside */
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+      color-mix(in srgb, var(--text) 14%, transparent),
+      color-mix(in srgb, var(--text) 14%, transparent)
+    )
+    center / 100% 4px no-repeat;
+  cursor: pointer;
+}
+
+.gbar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.gbar-fill {
+  display: block;
+  width: 0;
+  height: 4px;
+  margin-block: 10px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.gbar.is-done .gbar-fill {
+  width: 100%;
+}
+
+@media (max-width: 44rem) {
+  .gpair {
+    display: block;
+  }
+
+  .shot-desktop {
+    display: none;
+  }
+
+  .shot-phone {
+    width: 100%;
+    max-width: 22rem;
+    margin: 0 auto;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gtrack {
+    transition: none;
+  }
+}
+
+.phones figcaption {
+  justify-content: center;
+}
+
+@media (max-width: 44rem) {
+  .shot figcaption.wide {
+    display: none;
+  }
+
+  .shot figcaption.narrow {
+    display: flex;
+  }
+
+  .phones {
+    grid-template-columns: repeat(3, minmax(10.5rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.6rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .phones .shot {
+    scroll-snap-align: start;
+  }
+}
+
+/* the app's settings picker, reused: swatch, name, note */
+
+.picker {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  max-width: 26rem;
+  margin: 0 0 clamp(1.6rem, 3vw, 2.2rem);
+}
+
+@media (min-width: 40rem) {
+  .picker {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: none;
+  }
+}
+
+.theme-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), background-color 0.18s var(--ease);
+}
+
+.theme-choice:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.theme-choice[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.theme-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.theme-text b {
+  font-weight: 600;
+}
+
+.theme-text small {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.swatch {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.swatch-mocha {
+  background: var(--grad-mocha);
+}
+
+.swatch-modern {
+  background: var(--grad-modern);
+}
+
+.swatch-geek {
+  border-radius: 3px;
+  background: var(--grad-geek);
+}
+
+/* ---------------------------------------------------------------- pull */
+
+.pull {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: clamp(2.8rem, 6vw, 5rem);
+}
+
+/* the name block gets the same wall of covers, faded into a band */
+.covers-band {
+  inset: 0;
+  height: auto;
+  opacity: 0.15;
+  background-position: center 32%;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
+}
+
+.pull-text {
+  max-width: 30ch;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: max(calc(1.55rem * var(--display-scale)), calc(var(--h1-size) * var(--pull-ratio)));
+  line-height: 1.24;
+  letter-spacing: var(--display-tracking);
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------------- faq */
+
+/* the rows run the width of the page like every other section; only the prose
+   keeps a reading measure */
+/* questions as cards with the heading beside them: the shape ghosted uses */
+
+.faq {
+  display: grid;
+  gap: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+@media (min-width: 60rem) {
+  .faq {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 40rem);
+    column-gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+
+  .faq-intro {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.faq-intro h2 {
+  margin-bottom: 0.9rem;
+}
+
+.faq-intro .note {
+  margin-bottom: 0;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.faq details {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--panel) 72%, var(--bg));
+  transition: border-color 0.18s var(--ease), background-color 0.35s var(--ease);
+}
+
+.faq details:hover,
+.faq details[open] {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+}
+
+.faq details a {
+  color: color-mix(in srgb, var(--accent) 85%, var(--text));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 1.15rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  list-style: none;
+  transition: color 0.18s var(--ease);
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary:hover {
+  color: var(--accent);
+}
+
+.faq-chev {
+  color: var(--muted);
+  transition: transform 0.2s var(--ease), color 0.18s var(--ease);
+}
+
+.faq-chev svg {
+  width: 18px;
+  height: 18px;
+}
+
+.faq details[open] .faq-chev {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.faq details > p {
+  max-width: 62ch;
+  margin: 0;
+  padding: 0 3rem 1.15rem 1.15rem;
+  color: color-mix(in srgb, var(--text) 76%, var(--bg));
+}
+
+/* ---------------------------------------------------------------- run it */
+
+.code {
+  margin: clamp(1.2rem, 2.5vw, 1.8rem) 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.4rem 0.45rem 0.4rem 0.95rem;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 55%, var(--bg));
+}
+
+.code-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.code-tabs [role='tab'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 24px;
+  padding: 0.32rem 0.55rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 8px);
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.18s var(--ease), background-color 0.18s var(--ease);
+}
+
+.code-tabs [role='tab']:hover {
+  color: var(--text);
+}
+
+.tab-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.code-tabs [role='tab'][aria-selected='true'] {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 8px);
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.18s var(--ease), background-color 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+.copy:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.copy .icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.copy .done-icon {
+  display: none;
+}
+
+.copy[data-copied] {
+  color: var(--accent);
+}
+
+.copy[data-copied] .copy-icon {
+  display: none;
+}
+
+.copy[data-copied] .done-icon {
+  display: inline-flex;
+}
+
+.code [role='tabpanel']:focus-visible {
+  outline-offset: -3px;
+}
+
+.code pre {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: color-mix(in srgb, var(--text) 92%, var(--bg));
+}
+
+.code pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.help {
+  max-width: 62ch;
+  margin: 2.2rem 0 0;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--text) 74%, var(--bg));
+}
+
+.help a {
+  color: color-mix(in srgb, var(--accent) 85%, var(--text));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+/* the one transient message on the page, shown when the address is copied */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.6rem;
+  z-index: 15;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--wrap-pad));
+  margin: 0;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 0.8rem);
+  transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+
+.toast .toast-icon {
+  margin-top: 0.1em;
+}
+
+.toast .toast-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+#toast-message {
+  /* the box hugs the message at every width; max-width on .toast caps a long one */
+  max-width: none;
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.foot {
+  padding-block: clamp(2.2rem, 4vw, 3.2rem);
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 45%, transparent);
+  transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.foot-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.foot-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-block: 0.2rem;
+}
+
+.foot-icon {
+  color: inherit;
+  opacity: 0.9;
+}
+
+.foot-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.foot-links a:hover {
+  color: var(--text);
+}
+
+.colophon {
+  max-width: 72ch;
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.credit {
+  margin: 1.3rem 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.credit a {
+  color: color-mix(in srgb, var(--text) 88%, var(--bg));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.credit .heart {
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- small screens */
+
+@media (max-width: 36rem) {
+  .bar {
+    gap: 0.6rem;
+  }
+
+  .themeselect select {
+    /* keep room for the dot, which does not shrink with the control */
+    padding-left: 1.95rem;
+    padding-right: 1.55rem;
+  }
+
+
+  .hero-shot {
+    margin-top: 0.5rem;
+  }
+
+  .code pre {
+    font-size: 0.74rem;
+  }
+
+  /* the hero img swaps to a portrait shot, so reserve a portrait box */
+  .hero-shot img {
+    aspect-ratio: 780 / 1688;
+  }
+}
+
+/* one entrance, not a reveal on every section */
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1,
+  .hero .pitch,
+  .hero .cta,
+  .hero .hero-shot {
+    animation: rise 0.7s var(--ease) both;
+  }
+
+  .hero .pitch {
+    animation-delay: 0.06s;
+  }
+
+  .hero .cta {
+    animation-delay: 0.12s;
+  }
+
+  .hero .hero-shot {
+    animation-delay: 0.18s;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+}

@@ -1,14 +1,14 @@
-export type Theme = 'classic' | 'modern' | 'geek';
+export type Theme = 'mocha' | 'modern' | 'geek';
 
 export const THEMES: { id: Theme; name: string; note: string }[] = [
-  { id: 'classic', name: 'Classic', note: 'Serif, amber, cover glow' },
+  { id: 'mocha', name: 'Mocha', note: 'Serif, amber, cover glow' },
   { id: 'modern', name: 'Modern', note: 'Sans, turquoise, flat' },
   { id: 'geek', name: 'Geek', note: 'Monospace terminal' },
 ];
 
 const KEY = 'juuku.theme';
 
-let current: Theme = 'classic';
+let current: Theme = 'mocha';
 const listeners = new Set<() => void>();
 
 export const getTheme = () => current;
@@ -24,11 +24,11 @@ export function subscribeTheme(listener: () => void) {
 export function loadTheme(): Theme {
   try {
     const stored = localStorage.getItem(KEY);
-    if (stored === 'modern' || stored === 'geek' || stored === 'classic') return stored;
+    if (stored === 'modern' || stored === 'geek' || stored === 'mocha') return stored;
   } catch {
-    // private mode: classic it is
+    // private mode: mocha it is
   }
-  return 'classic';
+  return 'mocha';
 }
 
 export function applyTheme(theme: Theme) {

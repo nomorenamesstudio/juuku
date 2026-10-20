@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en" data-theme="mocha">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juuku — the remote for the jukebox in the room</title>
+    <meta
+      name="description"
+      content="A web remote for Navidrome's jukebox mode: browse the library, queue, skip, favorite and set the volume from any phone on your network. One container, three themes, MIT."
+    />
+    <link rel="canonical" href="https://juuku.nomorenames.studio/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Juuku" />
+    <meta property="og:title" content="Juuku — the remote for the jukebox in the room" />
+    <meta
+      property="og:description"
+      content="Navidrome's jukebox mode has no remote of its own. Juuku is one: queue, skip, favorite, volume, from any phone on the network."
+    />
+    <meta property="og:url" content="https://juuku.nomorenames.studio/" />
+    <meta property="og:image" content="https://juuku.nomorenames.studio/social-og.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#14100b" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <!-- the stored theme is painted before the first frame, so a reload does not flash
+         mocha: the colour is set here, and the screenshots stay hidden until
+         script.js has swapped them (never, if the browser runs no scripts) -->
+    <script>
+      try {
+        var t = localStorage.getItem('juuku.theme');
+        if (t === 'modern' || t === 'geek') {
+          document.documentElement.dataset.theme = t;
+          document.documentElement.dataset.pending = '';
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'modern' ? '#0e1213' : '#05070a');
+        }
+      } catch (e) {}
+    </script>
+    <link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="style.css?v=58" />
+    <script src="script.js?v=43" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <svg class="logo-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <symbol id="juuku-logo" viewBox="0 0 555.65 274.36">
+        <defs>
+        <radialGradient id="juuku-led" cx="50%" cy="50%" r="50%">
+        <stop offset="0" style="stop-color: var(--accent, #f0a24a)" stop-opacity="0.7"/>
+        <stop offset="1" style="stop-color: var(--accent, #f0a24a)" stop-opacity="0"/>
+        </radialGradient>
+        </defs>
+        <g transform="translate(13.60 -19.00)">
+        <g fill="currentColor"><path d="M22.8 47Q18.4 47 15.6 43.9Q12.8 40.8 12.8 36.4Q12.8 31.8 15.6 28.9Q18.4 26 22.8 26Q27.2 26 29.9 28.9Q32.6 31.8 32.6 36.4Q32.6 41 29.8 44Q27 47 22.8 47ZM0.8 211Q-5 211 -8.8 208Q-12.6 205 -12.6 200.2Q-12.6 196.8 -10.5 194.3Q-8.4 191.8 -4.8 191.8Q-1.6 191.8 -0.2 193.5Q1.2 195.2 2 197.4Q2.8 199.6 4.1 201.3Q5.4 203 8 203Q11.8 203 13.8 198.6Q15.8 194.2 15.8 186.2V87.4Q15.8 83.8 14.7 82.5Q13.6 81.2 10.8 80.8L6.6 80.2Q4 80 4 78Q4 76.4 7.2 75.8Q13.4 74.8 17.2 72.6Q21 70.4 24.6 67.2Q26.4 65.4 27.6 65.4Q29.4 65.4 29.4 67.8V159.2Q29.4 183.2 21.6 197.1Q13.8 211 0.8 211Z M77.03 169.8Q72.03 169.8 67.43 167.6Q62.83 165.4 59.83 160.6Q56.83 155.8 56.83 147.8V78.2Q56.83 74.6 55.73 73.2Q54.63 71.8 51.83 71.6L48.43 71.2Q45.03 70.8 45.03 68.6Q45.03 66 48.83 66H67.43Q70.43 66 70.43 69V143.6Q70.43 152.8 73.93 156.7Q77.43 160.6 83.63 160.6Q89.83 160.6 94.63 157.1Q99.43 153.6 102.33 147.7Q105.23 141.8 105.23 134.8V78.2Q105.23 74.6 104.13 73.2Q103.03 71.8 100.23 71.6L96.83 71.2Q93.43 70.8 93.43 68.6Q93.43 66 97.23 66H115.83Q118.83 66 118.83 69V146.6Q118.83 150.2 119.93 151.5Q121.03 152.8 123.83 153.2L128.03 153.8Q130.63 154 130.63 155.8Q130.63 157.6 127.43 158.2Q121.23 159 117.53 161.4Q113.83 163.8 111.03 167.2Q109.23 169 108.03 169Q106.23 169 106.23 166.6V157.4Q106.23 155.8 105.13 155.5Q104.03 155.2 102.83 156.4Q95.43 163.8 89.73 166.8Q84.03 169.8 77.03 169.8Z M167.87 169.8Q162.87 169.8 158.27 167.6Q153.67 165.4 150.67 160.6Q147.67 155.8 147.67 147.8V78.2Q147.67 74.6 146.57 73.2Q145.47 71.8 142.67 71.6L139.27 71.2Q135.87 70.8 135.87 68.6Q135.87 66 139.67 66H158.27Q161.27 66 161.27 69V143.6Q161.27 152.8 164.77 156.7Q168.27 160.6 174.47 160.6Q180.67 160.6 185.47 157.1Q190.27 153.6 193.17 147.7Q196.07 141.8 196.07 134.8V78.2Q196.07 74.6 194.97 73.2Q193.87 71.8 191.07 71.6L187.67 71.2Q184.27 70.8 184.27 68.6Q184.27 66 188.07 66H206.67Q209.67 66 209.67 69V146.6Q209.67 150.2 210.77 151.5Q211.87 152.8 214.67 153.2L218.87 153.8Q221.47 154 221.47 155.8Q221.47 157.6 218.27 158.2Q212.07 159 208.37 161.4Q204.67 163.8 201.87 167.2Q200.07 169 198.87 169Q197.07 169 197.07 166.6V157.4Q197.07 155.8 195.97 155.5Q194.87 155.2 193.67 156.4Q186.27 163.8 180.57 166.8Q174.87 169.8 167.87 169.8Z M229.92 168Q227.52 168 227.52 165.8Q227.52 163.8 229.72 163.4L232.52 163Q236.72 162.4 238.02 160.6Q239.32 158.8 239.32 154.6V40Q239.32 36.4 238.22 35.1Q237.12 33.8 234.32 33.4L230.12 32.8Q227.92 32.4 227.92 30.4Q227.92 28.4 230.12 28Q235.72 26.8 239.52 25.2Q243.32 23.6 245.92 22Q249.12 20 250.72 20Q252.92 20 252.92 23.2V107Q252.92 109 254.62 109.5Q256.32 110 257.92 108.2L281.32 83Q285.52 78.4 284.82 75.3Q284.12 72.2 280.12 71.4L275.52 70.6Q272.92 70 272.92 68Q272.92 66 275.72 66H310.12Q312.92 66 312.92 68.2Q312.92 70.4 310.32 70.6L308.52 70.8Q303.92 71.2 299.32 74.3Q294.72 77.4 288.32 84L275.92 97.2Q271.72 101.8 273.92 106.2L299.12 154.6Q301.32 158.6 303.92 160.4Q306.52 162.2 310.32 163L312.32 163.4Q314.72 164 314.72 165.8Q314.72 168 311.92 168H277.12Q274.32 168 274.32 165.8Q274.32 163.8 276.92 163.4L280.32 163Q287.92 162 283.52 153.2L264.52 116.2Q263.52 114.2 261.62 114Q259.72 113.8 258.12 115.4L255.92 117.6Q254.12 119.4 253.52 121.2Q252.92 123 252.92 125.2V154.6Q252.92 158.8 254.22 160.6Q255.52 162.4 259.72 162.8L265.12 163.4Q267.32 163.8 267.32 165.8Q267.32 168 264.92 168Z M341.56 169.8Q336.56 169.8 331.96 167.6Q327.36 165.4 324.36 160.6Q321.36 155.8 321.36 147.8V78.2Q321.36 74.6 320.26 73.2Q319.16 71.8 316.36 71.6L312.96 71.2Q309.56 70.8 309.56 68.6Q309.56 66 313.36 66H331.96Q334.96 66 334.96 69V143.6Q334.96 152.8 338.46 156.7Q341.96 160.6 348.16 160.6Q354.36 160.6 359.16 157.1Q363.96 153.6 366.86 147.7Q369.76 141.8 369.76 134.8V78.2Q369.76 74.6 368.66 73.2Q367.56 71.8 364.76 71.6L361.36 71.2Q357.96 70.8 357.96 68.6Q357.96 66 361.76 66H380.36Q383.36 66 383.36 69V146.6Q383.36 150.2 384.46 151.5Q385.56 152.8 388.36 153.2L392.56 153.8Q395.16 154 395.16 155.8Q395.16 157.6 391.96 158.2Q385.76 159 382.06 161.4Q378.36 163.8 375.56 167.2Q373.76 169 372.56 169Q370.76 169 370.76 166.6V157.4Q370.76 155.8 369.66 155.5Q368.56 155.2 367.36 156.4Q359.96 163.8 354.26 166.8Q348.56 169.8 341.56 169.8Z"/></g>
+        <g fill="var(--logo-kana, #b6a68c)"><path d="M83.27 224.72Q84.34 226.37 85.74 228.63Q87.14 230.89 88.5 233.2Q89.85 235.5 90.76 237.47L84.34 240.27Q83.19 237.8 82.08 235.66Q80.97 233.52 79.73 231.43Q78.5 229.33 77.02 227.35ZM94.46 220.77Q95.7 222.33 97.09 224.51Q98.49 226.7 99.85 229Q101.21 231.3 102.2 233.11L95.86 235.99Q94.63 233.52 93.39 231.43Q92.16 229.33 90.88 227.35Q89.61 225.38 88.13 223.4ZM47.64 223.24Q49.62 224.31 52.17 225.87Q54.72 227.44 57.35 229.12Q59.98 230.81 62.33 232.33Q64.67 233.85 66.16 235.01L60.72 243.07Q59.08 241.92 56.73 240.35Q54.39 238.79 51.84 237.15Q49.29 235.5 46.82 233.98Q44.35 232.46 42.37 231.3ZM33.24 281.74Q37.85 280.92 42.62 279.69Q47.39 278.45 52.08 276.64Q56.77 274.83 61.14 272.45Q68.05 268.5 74.05 263.6Q80.06 258.7 84.88 253.15Q89.69 247.6 92.9 241.75L98.58 251.71Q92.98 260.19 84.59 267.84Q76.19 275.49 66.16 281.25Q61.96 283.64 57.02 285.69Q52.08 287.75 47.27 289.27Q42.46 290.8 38.75 291.45ZM35.05 241.92Q37.11 242.99 39.66 244.51Q42.21 246.03 44.84 247.68Q47.48 249.32 49.82 250.8Q52.17 252.29 53.65 253.44L48.3 261.67Q46.57 260.43 44.27 258.91Q41.96 257.39 39.37 255.74Q36.78 254.1 34.27 252.62Q31.76 251.13 29.78 250.06Z M174.65 248.25Q174.4 248.91 174.2 249.86Q173.99 250.8 173.91 251.38Q173.66 253.19 173.21 256.28Q172.76 259.36 172.22 263.11Q171.69 266.85 171.11 270.55Q170.53 274.26 170.08 277.34Q169.63 280.43 169.3 282.16H159.18Q159.51 280.59 159.96 277.84Q160.41 275.08 160.95 271.75Q161.48 268.41 161.94 265.08Q162.39 261.75 162.76 258.91Q163.13 256.07 163.21 254.51Q161.89 254.51 159.38 254.51Q156.87 254.51 153.83 254.51Q150.79 254.51 147.82 254.51Q144.86 254.51 142.72 254.51Q140.58 254.51 139.84 254.51Q137.95 254.51 135.85 254.59Q133.75 254.67 132.11 254.84V245.04Q133.18 245.21 134.53 245.33Q135.89 245.46 137.29 245.5Q138.69 245.54 139.76 245.54Q140.91 245.54 143.13 245.54Q145.35 245.54 148.07 245.54Q150.79 245.54 153.5 245.54Q156.22 245.54 158.48 245.54Q160.74 245.54 161.98 245.54Q162.8 245.54 163.91 245.46Q165.02 245.37 166.05 245.21Q167.08 245.04 167.49 244.8ZM124.45 278.54Q126.1 278.7 128.12 278.82Q130.13 278.95 132.19 278.95Q133.42 278.95 136.8 278.95Q140.17 278.95 144.74 278.95Q149.3 278.95 154.28 278.95Q159.26 278.95 163.83 278.95Q168.39 278.95 171.65 278.95Q174.9 278.95 175.88 278.95Q177.36 278.95 179.67 278.86Q181.97 278.78 183.54 278.62V288.16Q182.71 288.08 181.31 288.04Q179.91 288 178.52 288Q177.12 288 176.05 288Q174.98 288 171.65 288Q168.31 288 163.7 288Q159.1 288 154.08 288Q149.06 288 144.45 288Q139.84 288 136.55 288Q133.26 288 132.19 288Q130.13 288 128.4 288.04Q126.68 288.08 124.45 288.16Z M215.68 249.98Q217.08 250.06 219.26 250.23Q221.44 250.39 223.82 250.43Q226.21 250.48 228.35 250.48Q230.24 250.48 233.2 250.48Q236.17 250.48 239.79 250.48Q243.41 250.48 247.32 250.48Q251.22 250.48 255.13 250.48Q259.04 250.48 262.5 250.48Q265.95 250.48 268.63 250.48Q271.3 250.48 272.87 250.48Q275.83 250.48 278.25 250.27Q280.68 250.06 282.25 249.98V261.58Q280.85 261.5 278.17 261.34Q275.5 261.17 272.87 261.17Q271.38 261.17 268.67 261.17Q265.95 261.17 262.46 261.17Q258.96 261.17 255.09 261.17Q251.22 261.17 247.32 261.17Q243.41 261.17 239.79 261.17Q236.17 261.17 233.2 261.17Q230.24 261.17 228.35 261.17Q224.89 261.17 221.4 261.3Q217.9 261.42 215.68 261.58Z M376.41 236.16Q375.76 237.23 375.06 238.71Q374.36 240.19 373.86 241.67Q372.79 245.37 370.82 250.11Q368.84 254.84 366.01 259.82Q363.17 264.79 359.46 269.32Q353.62 276.4 345.8 282.11Q337.99 287.83 326.38 292.36L317.74 284.62Q325.89 282.16 331.98 278.95Q338.07 275.74 342.64 272.03Q347.2 268.33 350.82 264.14Q353.79 260.76 356.25 256.56Q358.72 252.37 360.49 248.17Q362.26 243.98 362.92 240.77H334.37L337.82 232.46Q338.89 232.46 341.44 232.46Q343.99 232.46 347.16 232.46Q350.33 232.46 353.46 232.46Q356.58 232.46 358.97 232.46Q361.36 232.46 362.1 232.46Q363.99 232.46 365.76 232.21Q367.53 231.96 368.76 231.47ZM349.34 223.32Q348.03 225.3 346.71 227.6Q345.39 229.9 344.73 231.14Q342.02 235.99 338.03 241.3Q334.04 246.61 328.89 251.63Q323.75 256.65 317.66 260.76L309.43 254.67Q314.78 251.38 318.94 247.8Q323.09 244.22 326.18 240.64Q329.26 237.06 331.49 233.77Q333.71 230.48 335.19 227.76Q336.01 226.45 337.04 224.1Q338.07 221.76 338.56 219.78Z"/></g>
+        <circle cx="478.20" cy="146.85" r="62.85" fill="url(#juuku-led)"/>
+        <circle cx="478.20" cy="146.85" r="28.57" fill="var(--accent, #f0a24a)"/>
+        </g>
+      </symbol>
+    </svg>
+
+    <div class="top">
+      <div class="covers" aria-hidden="true"></div>
+      <div class="wash" aria-hidden="true"></div>
+      <header class="bar">
+        <a class="brand" href="#top" aria-label="Juuku">
+          <svg class="logo" viewBox="0 0 555.65 274.36" aria-hidden="true" focusable="false"><use href="#juuku-logo" /></svg>
+        </a>
+        <div class="bar-tools">
+          <label class="themeselect">
+            <span class="sr-only">Theme</span>
+            <span class="swatch-dot" aria-hidden="true"></span>
+            <select data-theme-select>
+              <option value="mocha">Mocha</option>
+              <option value="modern">Modern</option>
+              <option value="geek">Geek</option>
+            </select>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
+        </div>
+      </header>
+
+      <main id="main">
+        <section class="hero" id="top">
+          <div class="wrap hero-grid">
+            <div class="hero-copy">
+              <h1>The remote for the jukebox in the room.</h1>
+              <p class="pitch">
+                Want your Navidrome to play the music on the box with the speakers? Jukebox mode does
+                that, but it needs a remote control — so we built Juuku, a full-fledged companion app
+                for jukebox mode. Browse the library, queue a track, skip, favorite, and set the
+                volume from any phone on your network.
+              </p>
+              <div class="cta">
+                <a class="btn" href="https://github.com/nomorenamesstudio/juuku">
+                  <span class="icon btn-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.34-1.3-1.7-1.3-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.04 1.78 2.72 1.27 3.38.97.1-.75.4-1.27.73-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.19a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.19 3.17-1.19.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.2.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M5 2h4v2H7v2H5V2Zm0 10H3V6h2v6Zm2 2H5v-2h2v2Zm2 2v-2H7v2H3v-2H1v2h2v2h4v4h2v-4h2v-2H9Zm0 0v2H7v-2h2Zm6-12v2H9V4h6Zm4 2h-2V4h-2V2h4v4Zm0 6V6h2v6h-2Zm-2 2v-2h2v2h-2Zm-2 2v-2h2v2h-2Zm0 2h-2v-2h2v2Zm0 0h2v4h-2v-4Z" /></svg></span>
+                  </span>
+                  Get Juuku on GitHub<span class="arrow" aria-hidden="true">→</span>
+                </a>
+                <a class="btn btn-secondary" href="#features">
+                  Learn more<span class="arrow" aria-hidden="true">↓</span>
+                </a>
+              </div>
+            </div>
+
+            <figure class="hero-shot">
+              <img
+                class="hero-left"
+                data-shot="phone-lyrics"
+                decoding="async"
+                src="images/mocha/phone-lyrics.jpg"
+                width="780"
+                height="1688"
+                alt=""
+                aria-hidden="true"
+              />
+              <img
+                class="hero-back"
+                data-shot="phone-home"
+                decoding="async"
+                src="images/mocha/phone-home.jpg"
+                width="780"
+                height="1688"
+                alt=""
+                aria-hidden="true"
+              />
+              <img
+                class="hero-front"
+                data-shot="phone-album"
+                decoding="async"
+                src="images/mocha/phone-album.jpg"
+                width="780"
+                height="1688"
+                alt="An album page on a phone: cover, album facts, and the track list with the playing song marked."
+              />
+            </figure>
+          </div>
+        </section>
+        <section class="section" id="features">
+          <div class="wrap">
+            <h2>What it does</h2>
+            <ul class="features">
+              <li>
+                <div class="fc-head">
+                  <span class="icon fc-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M231.65,194.55,198.46,36.75a16,16,0,0,0-19-12.39L132.65,34.42a16.08,16.08,0,0,0-12.3,19l33.19,157.8A16,16,0,0,0,169.16,224a16.25,16.25,0,0,0,3.38-.36l46.81-10.06A16.09,16.09,0,0,0,231.65,194.55ZM136,50.15c0-.06,0-.09,0-.09l46.8-10,3.33,15.87L139.33,66Zm10,47.38-3.35-15.9,46.82-10.06,3.34,15.9Zm70,100.41-46.8,10-3.33-15.87L212.67,182,216,197.85C216,197.91,216,197.94,216,197.94ZM104,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V48A16,16,0,0,0,104,32ZM56,48h48V64H56Zm48,160H56V192h48v16Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M3 4h2v17H3zm4 4h2v13H7zm4-2h2v15h-2zm4 0h2v5h-2zm2 5h2v5h-2zm2 5h2v5h-2z" /></svg></span>
+                  </span>
+                  <h3>Library</h3>
+                </div>
+                <p>Album grid, artist list and playlists, with the covers doing the talking.</p>
+              </li>
+              <li>
+                <div class="fc-head">
+                  <span class="icon fc-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M168,112a56,56,0,1,1-56-56A56,56,0,0,1,168,112Zm61.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88,88,0,1,1,11.32-11.31l50.06,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M22 22h-2v-2h2v2Zm-2-2h-2v-2h2v2Zm-6-2H6v-2h8v2Zm4 0h-2v-2h2v2ZM6 16H4v-2h2v2Zm10 0h-2v-2h2v2ZM4 14H2V6h2v8Zm14 0h-2V6h2v8ZM6 6H4V4h2v2Zm10 0h-2V4h2v2Zm-2-2H6V2h8v2Z" /></svg></span>
+                  </span>
+                  <h3>Search</h3>
+                </div>
+                <p>One field across songs, albums and artists. Tap a track to queue it, ▶ to play it now.</p>
+              </li>
+              <li>
+                <div class="fc-head">
+                  <span class="icon fc-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M15 11h-2V9h2zm0 4h-2v-2h2zm-2 2h-2v-2h2zm0-8h-2V7h2zm-2-2H9V5h2zM9 21H7V3h2zm6-8h2v-2h-2zm-6 4h2v2H9z" /></svg></span>
+                  </span>
+                  <h3>Player</h3>
+                </div>
+                <p>Artwork, scrubber, transport, volume, favorite. It shrinks to a bar so the library keeps the room.</p>
+              </li>
+              <li>
+                <div class="fc-head">
+                  <span class="icon fc-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5H3"/><path d="M11 12H3"/><path d="M11 19H3"/><path d="M21 16V5"/><circle cx="18" cy="16" r="3"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M28,64A12,12,0,0,1,40,52H216a12,12,0,0,1,0,24H40A12,12,0,0,1,28,64Zm104,52H40a12,12,0,0,0,0,24h92a12,12,0,0,0,0-24Zm0,64H40a12,12,0,0,0,0,24h92a12,12,0,0,0,0-24Zm120-20a12,12,0,0,1-5.64,10.18l-64,40A12,12,0,0,1,164,200V120a12,12,0,0,1,18.36-10.18l64,40A12,12,0,0,1,252,160Zm-34.64,0L188,141.65v36.7Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M4 2h16v2H4zm2 5h2v2H6zm4 0h8v2h-8zm-4 4h2v2H6zm4 0h8v2h-8zm-4 4h2v2H6zm4 0h8v2h-8zm-6 5h16v2H4zM2 4h2v16H2zm18 0h2v16h-2z" /></svg></span>
+                  </span>
+                  <h3>Queue</h3>
+                </div>
+                <p>Jump to a track, pull one out, shuffle, or clear the lot. The queue belongs to the room, not your phone.</p>
+              </li>
+              <li>
+                <div class="fc-head">
+                  <span class="icon fc-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M115.06,46.36a4,4,0,0,0-6.11.54A71.54,71.54,0,0,0,96,88a73.29,73.29,0,0,0,.63,9.42L27.12,192.22A15.93,15.93,0,0,0,28.71,213L43,227.29a15.93,15.93,0,0,0,20.78,1.59l94.81-69.53A73.29,73.29,0,0,0,168,160a71.54,71.54,0,0,0,41.09-12.93,4,4,0,0,0,.54-6.11Zm2.61,103.28-16,16a8,8,0,1,1-11.31-11.31l16-16a8,8,0,0,1,11.31,11.31Zm109.4-20.56a4,4,0,0,1-6.12.54L126.38,35.05a4,4,0,0,1,.54-6.12A71.93,71.93,0,0,1,227.07,129.08Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M6 4H4v16h2zm10-2H6v2h10zm4 4h-2v14h2zm-2 14H6v2h12zM16 4h2v2h-2zm-4 0h2v6h-2z"/> <path d="M12 8h6v2h-6zm-4 8h8v2H8zm0-4h8v2H8zm0-4h2v2H8z"/></svg></span>
+                  </span>
+                  <h3>Lyrics</h3>
+                </div>
+                <p>Synced from the file's own tags or a <code>.lrc</code>, from LRCLIB when the file has none. The line being sung lights up.</p>
+              </li>
+              <li>
+                <div class="fc-head">
+                  <span class="icon fc-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/></svg></span>
+                    <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M13 22h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 16H5v-2h2v2Zm12 0h-2v-2h2v2ZM5 14H3v-2h2v2Zm16 0h-2v-2h2v2ZM3 12H1V6h2v6Zm20 0h-2V6h2v6ZM13 8h-2V6h2v2ZM5 6H3V4h2v2Zm6 0H9V4h2v2Zm4 0h-2V4h2v2Zm6 0h-2V4h2v2ZM9 4H5V2h4v2Zm10 0h-4V2h4v2Z" /></svg></span>
+                  </span>
+                  <h3>Favorites</h3>
+                </div>
+                <p>Hearts land in a Favorites playlist, so every other Subsonic client sees them too.</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section pull">
+          <div class="covers covers-band" aria-hidden="true"></div>
+          <div class="wrap">
+            <p class="pull-text">
+              ジューク is how Japanese shortens ジュークボックス — the box, with the middle knocked
+              out.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="screens">
+          <div class="wrap">
+            <h2>Three themes, one layout</h2>
+            <p class="note">
+              Same screens, same data. Pick one — this page and every screenshot follow.
+            </p>
+
+            <div class="picker" role="radiogroup" aria-label="Theme">
+              <button type="button" role="radio" aria-checked="true" class="theme-choice" data-set-theme="mocha">
+                <span class="swatch swatch-mocha" aria-hidden="true"></span>
+                <span class="theme-text"><b>Mocha</b><small>Serif, amber, glow</small></span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" class="theme-choice" data-set-theme="modern">
+                <span class="swatch swatch-modern" aria-hidden="true"></span>
+                <span class="theme-text"><b>Modern</b><small>Sans, turquoise, flat</small></span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" class="theme-choice" data-set-theme="geek">
+                <span class="swatch swatch-geek" aria-hidden="true"></span>
+                <span class="theme-text"><b>Geek</b><small>Monospace terminal</small></span>
+              </button>
+            </div>
+
+            <div
+              class="gallery"
+              data-gallery
+              role="group"
+              aria-roledescription="carousel"
+              aria-label="Screenshots, desktop and phone"
+            >
+              <div class="gviewport" data-gviewport>
+                <div class="gtrack" data-gtrack>
+            <figure class="gslide" data-slide aria-hidden="false">
+              <div class="gpair">
+                <img
+                  class="shot shot-desktop"
+                  data-shot="album"
+                  loading="lazy"
+                  decoding="async"
+                  src="images/mocha/album.jpg"
+                  width="1600"
+                  height="1000"
+                  alt="An album page: cover art, album facts, Play album and Add to queue buttons, then the track list."
+                />
+                <img
+                  class="shot shot-phone"
+                  data-shot="phone-album"
+                  loading="lazy"
+                  decoding="async"
+                  src="images/mocha/phone-album.jpg"
+                  width="780"
+                  height="1688"
+                  alt="An album page on a phone: cover, track list with the playing track marked, mini player."
+                />
+              </div>
+              <figcaption>An album · <b data-theme-name>Mocha</b> theme</figcaption>
+            </figure>
+            <figure class="gslide" data-slide aria-hidden="true">
+              <div class="gpair">
+                <img
+                  class="shot shot-desktop"
+                  data-shot="home"
+                  loading="lazy"
+                  decoding="async"
+                  src="images/mocha/home.jpg"
+                  width="1600"
+                  height="1000"
+                  alt="The library on a wide screen: shelves of last played, last added and newest release albums, player docked at the bottom."
+                />
+                <img
+                  class="shot shot-phone"
+                  data-shot="phone-home"
+                  loading="lazy"
+                  decoding="async"
+                  src="images/mocha/phone-home.jpg"
+                  width="780"
+                  height="1688"
+                  alt="The library on a phone: the same shelves, with the mini player and the tab bar at the bottom."
+                />
+              </div>
+              <figcaption>The library · <b data-theme-name>Mocha</b> theme</figcaption>
+            </figure>
+            <figure class="gslide" data-slide aria-hidden="true">
+              <div class="gpair">
+                <img
+                  class="shot shot-desktop"
+                  data-shot="player"
+                  loading="lazy"
+                  decoding="async"
+                  src="images/mocha/player.jpg"
+                  width="1600"
+                  height="1000"
+                  alt="Now playing on a wide screen: cover beside the synced lyrics, with the singing line lit."
+                />
+                <img
+                  class="shot shot-phone"
+                  data-shot="phone-lyrics"
+                  loading="lazy"
+                  decoding="async"
+                  src="images/mocha/phone-lyrics.jpg"
+                  width="780"
+                  height="1688"
+                  alt="Lyrics on a phone: the current line lit, the rest dimmed."
+                />
+              </div>
+              <figcaption>Lyrics · <b data-theme-name>Mocha</b> theme</figcaption>
+            </figure>
+                </div>
+              </div>
+
+              <div class="gbars" data-gbars role="tablist" aria-label="Screenshots">
+              <button
+                type="button"
+                class="gbar is-active"
+                data-gbar
+                role="tab"
+                aria-selected="true"
+                aria-label="An album"
+              ><span class="gbar-fill"></span></button>
+              <button
+                type="button"
+                class="gbar"
+                data-gbar
+                role="tab"
+                aria-selected="false"
+                aria-label="The library"
+              ><span class="gbar-fill"></span></button>
+              <button
+                type="button"
+                class="gbar"
+                data-gbar
+                role="tab"
+                aria-selected="false"
+                aria-label="Lyrics"
+              ><span class="gbar-fill"></span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="faq">
+          <div class="wrap">
+            <div class="faq">
+              <div class="faq-intro">
+                <h2>Questions, answered</h2>
+                <p class="note">
+                  The short answers to the ones that come up before installing. Everything longer
+                  lives in the setup docs.
+                </p>
+              </div>
+              <div class="faq-list">
+              <details open>
+                <summary>Do I have to run another server?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  A small container next to your Navidrome, on the same machine or the same network.
+                  No database, no cloud, no account.
+                </p>
+              </details>
+              <details>
+                <summary>Why not just use Navidrome's own UI?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  Jukebox control lives behind the Subsonic <code>jukeboxControl</code> endpoint, and
+                  Navidrome's player never calls it. Juuku does — and keeps the Navidrome password on
+                  the server, where the browser cannot see it.
+                </p>
+              </details>
+              <details>
+                <summary>Who can queue songs?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  Whoever can reach the port. Leave <code>JUUKU_PASSWORD</code> unset and that is your
+                  LAN; set it and everyone needs the password once, for 30 days. Either way the port
+                  stays private — no router forwarding.
+                </p>
+              </details>
+              <details>
+                <summary>Does it need its own Navidrome account?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  No — any account works, yours included. One catch: Navidrome refuses jukebox
+                  control from non-admins unless you set <code>ND_JUKEBOX_ADMINONLY=false</code> on
+                  the server. So either hand it an admin account, or flip that setting and use a
+                  normal one. A second account is tidier if you would rather not put your own
+                  password in a container, but it is optional.
+                </p>
+              </details>
+              <details>
+                <summary>Why not a native app?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  Building and shipping phone apps is more work: slower to iterate, two more codebases
+                  to keep alive, and the stores charge for it — Apple wants $99 a year before you ship
+                  anything. So no, not planned. If enough people
+                  <a href="https://buymeacoffee.com/nomorenames">chip in that developer fee</a>
+                  though, it probably happens — and until then the web app does the job, especially
+                  installed as a PWA.
+                </p>
+              </details>
+              <details>
+                <summary>Does it work on a phone?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  It was built for the phone — that is the intended use — but it works flawlessly on
+                  anything with a browser; wide screens get a sidebar instead of the tab bar. It
+                  installs to a home screen as a PWA as well, which needs HTTPS:
+                  <a href="https://github.com/nomorenamesstudio/juuku/blob/main/docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it">that part of the setup docs</a>
+                  covers it.
+                </p>
+              </details>
+              <details>
+                <summary>Why is it free?
+                  <span class="icon faq-chev" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg></span>
+                  </span>
+                </summary>
+                <p>
+                  Because we built it for ourselves. The remotes that existed were stale — the iOS
+                  ones especially — and the gap was annoying enough to fix. It came out fun, fun
+                  enough that someone else might get some use out of it. No account, no upsell,
+                  nothing to buy.
+                </p>
+              </details>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="run">
+          <div class="wrap">
+            <h2>Run it</h2>
+            <p class="note">
+              One container, next to the Navidrome that owns the speakers. Point it at the server, give
+              it a jukebox account, open the port on your phone.
+            </p>
+            <div class="code">
+              <div class="code-head">
+                <div class="code-tabs" role="tablist" aria-label="Install method">
+                  <button type="button" role="tab" id="tab-shell" aria-selected="true" aria-controls="panel-shell" data-tab="panel-shell"><span class="icon tab-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19h8"/><path d="m4 17 6-6-6-6"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM77.66,173.66a8,8,0,0,1-11.32-11.32L100.69,128,66.34,93.66A8,8,0,0,1,77.66,82.34l40,40a8,8,0,0,1,0,11.32ZM192,176H128a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM6 16h2v2H6zm2-2h2v2H8zm-2-2h2v2H6z"/></svg></span>
+                  </span>shell</button>
+                  <button type="button" role="tab" id="tab-agents" aria-selected="false" aria-controls="panel-agents" data-tab="panel-agents" tabindex="-1"><span class="icon tab-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48ZM172,96a12,12,0,1,1-12,12A12,12,0,0,1,172,96ZM96,184H80a16,16,0,0,1,0-32H96ZM84,120a12,12,0,1,1,12-12A12,12,0,0,1,84,120Zm60,64H112V152h32Zm32,0H160V152h16a16,16,0,0,1,0,32Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M5 7h14v2H5zm0 12h14v2H5zM3 9h2v10H3zm16 0h2v10h-2zM1 13h2v2H1zm20 0h2v2h-2zM11 5h2v2h-2zM7 3h4v2H7zm1 9h2v4H8zm6 0h2v4h-2z"/></svg></span>
+                  </span>AI agents</button>
+                </div>
+                <button type="button" class="copy" data-copy>
+                  <span class="icon copy-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-8,128H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h2v14H4zm2 14h12v2H6zM18 6h2v14h-2zM6 4h2v2H6zm10 0h2v2h-2zm-6-2h4v2h-4zm0 4h4v2h-4zM8 2h2v6H8zm6 0h2v6h-2z"/></svg></span>
+                  </span>
+                  <span class="icon done-icon" aria-hidden="true">
+                    <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                    <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg></span>
+                    <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M10 18H8v-2h2v2Zm-2-2H6v-2h2v2Zm4-2v2h-2v-2h2Zm-6 0H4v-2h2v2Zm8 0h-2v-2h2v2Zm2-2h-2v-2h2v2Zm2-2h-2V8h2v2Zm2-2h-2V6h2v2Z"/></svg></span>
+                  </span>
+                  <span data-copy-label>Copy</span>
+                </button>
+              </div>
+              <div id="panel-shell" role="tabpanel" aria-labelledby="tab-shell" tabindex="0">
+                <pre><code id="cmd-shell">docker run -d \
+  --name juuku \
+  -p 3101:3101 \
+  --read-only --cap-drop ALL \
+  -e NAVIDROME_URL=http://navidrome:4533 \
+  -e NAVIDROME_USER=juuku \
+  -e NAVIDROME_PASSWORD=change-me \
+  ghcr.io/nomorenamesstudio/juuku:latest</code></pre>
+              </div>
+              <div id="panel-agents" role="tabpanel" aria-labelledby="tab-agents" tabindex="0" hidden>
+                <pre><code id="cmd-agents">Install Juuku, a web remote for Navidrome's jukebox mode.
+Repository: https://github.com/nomorenamesstudio/juuku (MIT, Node + Docker, no build step).
+
+1. Read docs/SETUP.md first; it is the source of truth for the rest.
+2. Ask the user for the Navidrome URL instead of guessing it: it is the base URL of
+   the Navidrome that owns the speakers (default port 4533). `http://navidrome:4533`
+   is the compose example, not a real address, and only resolves if this container
+   joins that Docker network.
+3. Run the container with those values:
+   docker run -d --name juuku \
+     -p 3101:3101 \
+     --read-only --cap-drop ALL \
+     -e NAVIDROME_URL=&lt;navidrome-url&gt; \
+     -e NAVIDROME_USER=&lt;account&gt; \
+     -e NAVIDROME_PASSWORD=&lt;that-account-password&gt; \
+     ghcr.io/nomorenamesstudio/juuku:latest
+4. Jukebox control is admin-only in Navidrome by default: give Juuku an admin
+   account, or set ND_JUKEBOX_ADMINONLY=false and use a plain one.
+5. Open http://&lt;host&gt;:3101 on a phone. Keep it on the LAN; for HTTPS, a path
+   prefix or a home-screen install, follow docs/SETUP.md.
+
+Ask before exposing a port or changing Navidrome settings.</code></pre>
+              </div>
+            </div>
+            <p class="note">
+              Then open <code>http://&lt;host&gt;:3101</code>. A compose file with the read-only
+              hardening, path-prefix recipes and the HTTPS/PWA notes are in
+              <a href="https://github.com/nomorenamesstudio/juuku/blob/main/docs/SETUP.md">the setup docs</a>.
+            </p>
+            <p class="help">
+              Stuck on something the docs don't cover? Open an
+              <a href="https://github.com/nomorenamesstudio/juuku/issues">issue on GitHub</a> or write to
+              <a href="mailto:hey@nomorenames.studio" data-copy="hey@nomorenames.studio">hey@nomorenames.studio</a> — happy to help. It is
+              a hobby project, not a support desk: answers come when they come, and the setup docs
+              already cover the usual suspects.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot-top">
+          <a class="brand" href="#top" aria-label="Juuku">
+          <svg class="logo" viewBox="0 0 555.65 274.36" aria-hidden="true" focusable="false"><use href="#juuku-logo" /></svg>
+        </a>
+          <nav class="foot-links" aria-label="Elsewhere">
+            <a href="https://github.com/nomorenamesstudio/juuku"><span class="icon foot-icon" aria-hidden="true">
+                <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.34-1.3-1.7-1.3-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.04 1.78 2.72 1.27 3.38.97.1-.75.4-1.27.73-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.19a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.19 3.17-1.19.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.2.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg></span>
+                <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg></span>
+                <span class="ic ic-geek"><svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges"><path d="M5 2h4v2H7v2H5V2Zm0 10H3V6h2v6Zm2 2H5v-2h2v2Zm2 2v-2H7v2H3v-2H1v2h2v2h4v4h2v-4h2v-2H9Zm0 0v2H7v-2h2Zm6-12v2H9V4h6Zm4 2h-2V4h-2V2h4v4Zm0 6V6h2v6h-2Zm-2 2v-2h2v2h-2Zm-2 2v-2h2v2h-2Zm0 2h-2v-2h2v2Zm0 0h2v4h-2v-4Z" /></svg></span>
+              </span>GitHub</a>
+            <a href="https://github.com/nomorenamesstudio/juuku/blob/main/docs/SETUP.md"><span class="icon foot-icon" aria-hidden="true">
+                <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg></span>
+                <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M240,56V200a8,8,0,0,1-8,8H160a24,24,0,0,0-24,23.94,7.9,7.9,0,0,1-5.12,7.55A8,8,0,0,1,120,232a24,24,0,0,0-24-24H24a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H88a32,32,0,0,1,32,32v87.73a8.17,8.17,0,0,0,7.47,8.25,8,8,0,0,0,8.53-8V80a32,32,0,0,1,32-32h64A8,8,0,0,1,240,56Z"/></svg></span>
+                <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3h9v2H2zM0 19h11v2H0zM13 3h9v2h-9zm0 16h11v2H13zM11 5h2v18h-2zM0 5h2v14H0zm22 0h2v14h-2z"/></svg></span>
+              </span>Docs</a>
+            <a href="https://github.com/nomorenamesstudio/juuku/blob/main/SECURITY.md"><span class="icon foot-icon" aria-hidden="true">
+                <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,56v56c0,52.72-25.52,84.67-46.93,102.19-23.06,18.86-46,25.27-47,25.53a8,8,0,0,1-4.2,0c-1-.26-23.91-6.67-47-25.53C57.52,196.67,32,164.72,32,112V56A16,16,0,0,1,48,40H208A16,16,0,0,1,224,56Z"/></svg></span>
+                <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2h16v2H4zM2 4h2v10H2zm18 0h2v10h-2zM4 14h2v2H4zm2 2h2v2H6zm4 4h4v2h-4zm10-6h-2v2h2zm-4 2h-2v2h2zm-2 2h-2v2h2z"/></svg></span>
+              </span>Security</a>
+            <a href="https://buymeacoffee.com/nomorenames"><span class="icon foot-icon" aria-hidden="true">
+                <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg></span>
+                <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M208,80H32a8,8,0,0,0-8,8v48a96.3,96.3,0,0,0,32.54,72H32a8,8,0,0,0,0,16H208a8,8,0,0,0,0-16H183.46a96.59,96.59,0,0,0,27-40.09A40,40,0,0,0,248,128v-8A40,40,0,0,0,208,80Zm24,48a24,24,0,0,1-17.2,23,95.78,95.78,0,0,0,1.2-15V97.38A24,24,0,0,1,232,120ZM112,56V24a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Zm32,0V24a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Z"/></svg></span>
+                <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v2H4zm0 2h2v8H4zm2 8h10v2H6zm14-8h2v4h-2zm-2 4h2v2h-2zm-2-4h2v8h-2zM2 18h18v2H2z"/></svg></span>
+              </span>Buy me a coffee</a>
+          </nav>
+        </div>
+        <p class="colophon">
+          MIT licensed. Screenshots are of the running app; the fonts are Bricolage Grotesque,
+          Instrument Serif and Geist Mono (SIL OFL), the icons Lucide, Phosphor and Pixelarticons.
+        </p>
+        <p class="credit">
+          Made with <span class="heart" aria-hidden="true">♥</span> by
+          <a href="https://nomorenames.studio" target="_blank" rel="noreferrer noopener">No More Names Studio</a>
+        </p>
+      </div>
+    </footer>
+    <p class="toast" id="toast" role="status" aria-live="polite">
+                <span class="icon toast-icon" aria-hidden="true">
+                  <span class="ic ic-mocha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
+                  <span class="ic ic-modern"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-8,144H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z"/></svg></span>
+                  <span class="ic ic-geek"><svg shape-rendering="crispEdges" viewBox="0 0 24 24" fill="currentColor"><path d="M6 8h2v2H6zm2 2h2v2H8zm10-2h-2v2h2zm-2 2h-2v2h2zm-6 2h4v2h-4zM2 6h2v12H2zm18 0h2v12h-2zM4 4h16v2H4zm0 14h16v2H4z"/></svg></span>
+                </span>
+                <span id="toast-message" data-toast-message></span>
+              </p>
+  </body>
+</html>

@@ -8,4 +8,5 @@ dist
 .tmp
 sandbox
 docs
+site
 *.log

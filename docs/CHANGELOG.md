@@ -7,6 +7,18 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.7.7 — 2026-10-19
+
+- **Themes** — the Classic theme is now **Mocha**: same amber serif look, a better name. The id moved with it (`data-theme="mocha"`, `localStorage['juuku.theme']`), so a browser that had `classic` stored lands on Mocha, which is the default anyway.
+
+- **Landing page** — `site/` is a static page for GitHub Pages: what Juuku is, what it does, the three themes and the real screenshots of each per theme. Mocha is the default; the dropdown in the header and the cards in the themes section restyle the page *and* swap every screenshot, and the choice persists across visits (and matches the app's own `juuku.theme`). The feature list draws each glyph from the theme's own icon set, and the page makes no third-party requests: fonts are the app's own, self-hosted.
+- **Landing page, screenshots** — the gallery is a timed carousel: one slide per screen with desktop and phone side by side, phone only on a phone, and a progress bar per slide underneath (pauses on hover, focus or off screen, and stays put under `prefers-reduced-motion`). The phone sits on top of the desktop shot at 90% of its height, overlapping its edge by 15% of its own width, and casts a shadow on it.
+- **Landing page, hero** — the copy sits beside three phone screens: the album page in front, the library and the lyrics tucked behind it at 90% height, peeking left and right. Behind all of it, a faded wall of album covers (`images/covers.jpg`, 64 covers) that the name block reuses as a band.
+- **Landing page, copy** — the hero leads with the need (jukebox mode needs a remote) instead of an accusation, "Learn more" scrolls to *What it does*, the FAQ gained *Why not a native app?* with an honest answer and a link to the dev-fee donation, and the email address copies to the clipboard with a one-line toast instead of opening a mail client.
+- **Landing page, icons** — every glyph comes from the theme's own set, now including the footer links (GitHub, docs, security, coffee) and the shell / AI agents tabs.
+- **Landing page, accessibility** — every touch target is at least 24×24 (the carousel bars keep their 4px look with a 24px hit area), and a measured pass checks the contrast of all 77 text runs per theme against the pixels actually painted behind them, cloud included.
+- **CI** — `.github/workflows/pages.yml` publishes `site/` to Pages on any push that touches it.
+
 ## v0.7.6 — 2026-10-19
 
 Wide screens got the pass they needed; the phone layout is unchanged.

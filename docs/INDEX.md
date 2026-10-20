@@ -16,6 +16,7 @@ Entry point for everything about Juuku.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Pieces, data flow, and the decisions behind them |
 | [SETUP.md](SETUP.md) | Ports, the throwaway Navidrome, credentials, environment traps |
 | [CHANGELOG.md](CHANGELOG.md) | Dated Feature / Fix / Break entries |
-| [screenshot.png](screenshot.png) | The POC UI |
+| [../site](../site/README.md) | The landing page, and how its screenshots are made |
+| [screenshot.jpg](screenshot.jpg) | The library on a wide screen |
 
 Also: the project [README](../README.md) for quick start.

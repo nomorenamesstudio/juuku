@@ -124,7 +124,7 @@ function icon(
   defaultSize = 18,
 ) {
   return function Wrapped({ size = defaultSize, filled, ...rest }: Props) {
-    const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'classic' as const);
+    const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'mocha' as const);
     if (theme === 'geek' && pixel) {
       const Pixel = pixel;
       return <Pixel size={size} {...rest} />;
@@ -173,7 +173,7 @@ export const SettingsIcon = icon(Settings, PixelSettingsIcon, SolidSettingsIcon)
 
 /** lucide dropped brand marks, so this one is a plain path */
 export function GithubIcon({ size = 18, ...rest }: { size?: number } & React.SVGProps<SVGSVGElement>) {
-  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'classic' as const);
+  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'mocha' as const);
   if (theme === 'geek') return <PixelGithubIcon size={size} />;
   if (theme === 'modern') return <SolidGithubIcon size={size} />;
   return (
