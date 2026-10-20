@@ -1,6 +1,6 @@
 # Juuku <sub>ジューク</sub>
 
-![Juuku's landing page: the wordmark, the line, and the album screen on a phone over a wall of album covers](docs/hero.jpg)
+![Juuku: the wordmark, the line “The remote for the jukebox in the room.”, and the album, library and lyrics screens on phones](docs/social/og-1200x630.jpg)
 
 *Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`.
 
