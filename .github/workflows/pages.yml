@@ -24,6 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # the Umami tag lives in a secret, not in this public repo; a missing secret
+      # ships the page untracked instead of failing the deploy
+      - name: Add the analytics beacon
+        env:
+          ANALYTICS_TAG: ${{ secrets.ANALYTICS_TAG }}
+        run: node .github/scripts/inject-analytics.mjs
+
       - uses: actions/configure-pages@v5
         with:
           # the first run creates the Pages site itself, so enabling Pages is not a

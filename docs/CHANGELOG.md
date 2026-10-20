@@ -23,6 +23,7 @@ minor, and the tag is what CI builds the published image from.
 - **Landing page, copy** — the hero leads with the need (jukebox mode needs a remote) instead of an accusation, "Learn more" scrolls to *What it does*, the FAQ gained *Why not a native app?* with an honest answer and a link to the dev-fee donation, and the email address copies to the clipboard with a one-line toast instead of opening a mail client.
 - **Landing page, icons** — every glyph comes from the theme's own set, now including the footer links (GitHub, docs, security, coffee) and the shell / AI agents tabs.
 - **Landing page, accessibility** — every touch target is at least 24×24 (the carousel bars keep their 4px look with a 24px hit area), and a measured pass checks the contrast of all 77 text runs per theme against the pixels actually painted behind them, cloud included.
+- **Landing page, analytics** — a self-hosted Umami beacon counts visits to the landing page (cookieless, honours `data-do-not-track`, locked to the production domain). The website id is a repository secret injected at deploy time, so the public repo carries no tag; GitHub Pages site `juuku` = `9b5888ec-82f9-4acf-92f4-dc15ce3aab09` in Umami.
 - **CI** — `.github/workflows/pages.yml` publishes `site/` to Pages on any push that touches it.
 
 ## v0.7.6 — 2026-10-19

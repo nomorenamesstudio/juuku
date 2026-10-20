@@ -50,8 +50,17 @@ cd site && python3 -m http.server 4310
 - **Contact** — the support line at the end copies `hey@nomorenames.studio` to the
   clipboard and confirms with a toast; the `mailto:` href stays only as the no-JS
   fallback.
-- **No third-party requests** — fonts are self-hosted (SIL OFL, licences alongside),
-  and there is no analytics, no CDN.
+- **One third-party request** — the Umami beacon on
+  `ramen.nomorenames.studio` (`script.js`, ~2 kB). Self-hosted, cookieless, and
+  `data-do-not-track="true"` means a visitor who sends that signal is not counted at
+  all. `data-domains="juuku.nomorenames.studio"` keeps local previews and the
+  `github.io` address out of the stats. Fonts stay self-hosted (SIL OFL, licences
+  alongside); there is no CDN.
+- **Where the beacon lives** — not in this repo: the website id sits in the
+  `ANALYTICS_TAG` repository secret, and `.github/scripts/inject-analytics.mjs`
+  writes the tag in before Pages uploads `site/`. It accepts either the bare id or a
+  whole `<script>` tag, is idempotent, and no-ops when the secret is absent — so a
+  fork or a missing secret deploys an untracked page rather than failing.
 - **Run it card** — two routes in one card: `shell` (the docker command) and
   `AI agents` (a prompt an agent can follow). The prompt restates the setup steps and
   points at `docs/SETUP.md` as the source of truth — keep the two in step.
