@@ -17,6 +17,6 @@ Entry point for everything about Juuku.
 | [SETUP.md](SETUP.md) | Ports, the throwaway Navidrome, credentials, environment traps |
 | [CHANGELOG.md](CHANGELOG.md) | Dated Feature / Fix / Break entries |
 | [../site](../site/README.md) | The landing page, and how its screenshots are made |
-| [screenshot.jpg](screenshot.jpg) | The library on a wide screen |
+| [screenshot.jpg](screenshot.jpg) | The album page on a wide screen, phone beside it |
 
 Also: the project [README](../README.md) for quick start.

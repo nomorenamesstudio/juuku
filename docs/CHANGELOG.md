@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.1 — 2026-10-20
+
+- **Queue** — each row shows the album beside the artist (`Depeche Mode · Ultra (Deluxe)`), so a queued artist portfolio no longer leaves you guessing which record is playing. The artist stays the brighter of the two, the album one step back, and long names ellipsize on a phone.
+
 ## v0.8.0 — 2026-10-19
 
 - **Queue** — it keeps the playing track on screen instead of making you scroll to it: the already-played history folds away, three tracks stay above the current one, and a muted "65 earlier tracks" row unfolds the rest. The window slides forward as the queue advances, so nothing has to chase it. The queue is treated as transient — it folds again on every visit and the router keeps no offset for it, so coming back starts at the top rather than dropping a remembered offset onto a much shorter list.
@@ -24,6 +28,7 @@ minor, and the tag is what CI builds the published image from.
 - **Landing page, icons** — every glyph comes from the theme's own set, now including the footer links (GitHub, docs, security, coffee) and the shell / AI agents tabs.
 - **Landing page, accessibility** — every touch target is at least 24×24 (the carousel bars keep their 4px look with a 24px hit area), and a measured pass checks the contrast of all 77 text runs per theme against the pixels actually painted behind them, cloud included.
 - **Landing page, analytics** — a self-hosted Umami beacon counts visits to the landing page (cookieless, honours `data-do-not-track`, locked to the production domain). The website id is a repository secret injected at deploy time, so the public repo carries no tag; GitHub Pages site `juuku` = `9b5888ec-82f9-4acf-92f4-dc15ce3aab09` in Umami.
+- **README images** — the hero and the screenshot block are baked from the landing page instead of the app: the hero is its wordmark, line and phone stack over the cover wall, and the screenshots became one mock of the album page on a wide screen with the same screen on a phone. The three separate phone shots are gone.
 - **Social cards** — `docs/social/` renders three banners from the page's own pieces (logo lockup, Instrument Serif headline, the faded cover wall and the phone stack): the 1200×630 link preview, a 1280×640 GitHub preview and a 1080 square. The link preview ships as `site/social-og.jpg` and is the page's `og:image`.
 - **CI** — `.github/workflows/pages.yml` publishes `site/` to Pages on any push that touches it.
 

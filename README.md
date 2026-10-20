@@ -1,6 +1,6 @@
 # Juuku <sub>ジューク</sub>
 
-![Juuku](docs/hero.jpg)
+![Juuku's landing page: the wordmark, the line, and the album screen on a phone over a wall of album covers](docs/hero.jpg)
 
 *Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`.
 
@@ -8,13 +8,7 @@ Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: b
 
 Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juuku is that remote.
 
-![The artist wall in the Modern theme, with the player docked at the bottom](docs/screenshot.jpg)
-
-<p align="center">
-  <img src="docs/mobile-player.jpg" width="30%" alt="Player: cover, title, scrubber, transport and volume" />
-  <img src="docs/mobile-lyrics.jpg" width="30%" alt="Lyrics in the cover's place, the singing line lit" />
-  <img src="docs/mobile-album.jpg" width="30%" alt="Album page: cover, facts, actions and the track list" />
-</p>
+![The album page on a wide screen, with the same screen on a phone beside it](docs/screenshot.jpg)
 
 Three themes, one layout — Mocha, Modern and Geek differ in colour, type and icons,
 not in what they show:
