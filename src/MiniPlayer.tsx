@@ -68,7 +68,10 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
             <span className="nowbar-title">{current.title}</span>
             <span className="nowbar-sub">
               {current.artist}
-              <span className="nowbar-time"> · {formatTime(position)}</span>
+              <span className="nowbar-time">
+                {' '}
+                · {formatTime(position)} / {formatTime(duration)}
+              </span>
             </span>
           </span>
         </button>

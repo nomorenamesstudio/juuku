@@ -7,6 +7,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.0 — 2026-10-19
+
+- **Queue** — it keeps the playing track on screen instead of making you scroll to it: the already-played history folds away, three tracks stay above the current one, and a muted "65 earlier tracks" row unfolds the rest. The window slides forward as the queue advances, so nothing has to chase it. The queue is treated as transient — it folds again on every visit and the router keeps no offset for it, so coming back starts at the top rather than dropping a remembered offset onto a much shorter list.
+- **Mini player and footer** — the time now reads played over length (`3:06 / 4:16`) instead of the elapsed time alone.
+- **Docs** — the theme strip shows the same screen in Mocha, Modern and Geek.
+
 ## v0.7.7 — 2026-10-19
 
 - **Themes** — the Classic theme is now **Mocha**: same amber serif look, a better name. The id moved with it (`data-theme="mocha"`, `localStorage['juuku.theme']`), so a browser that had `classic` stored lands on Mocha, which is the default anyway.

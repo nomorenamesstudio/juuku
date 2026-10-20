@@ -1,12 +1,27 @@
+import { useState } from 'react';
 import { formatTime, formatTotal } from '../format';
 import { RepeatIcon, RepeatOneIcon, ShuffleIcon, TrashIcon } from '../icons';
 import { navigate } from '../router';
 import { QueueRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
 
+// how many already-played tracks stay above the current one before they fold away
+const PAST_KEPT = 3;
+
+
+
 export function QueueView({ jbox }: { jbox: Jukebox }) {
   const { entries, status } = jbox;
   const total = entries.reduce((sum, song) => sum + (song.duration || 0), 0);
+  // the queue is a live list, not a page you come back to: it folds itself again on
+  // every visit, and the router forgets its offset so nothing tries to restore one
+  const [showPast, setShowPast] = useState(false);
+
+  // the queue plays on its own, so the list has to keep the current track visible
+  // without anyone scrolling: it folds the past away and slides forward by itself
+  const index = status?.currentIndex ?? -1;
+  const from = showPast ? 0 : Math.max(0, index - PAST_KEPT);
+  const hidden = from;
 
   return (
     <div className="view">
@@ -46,18 +61,35 @@ export function QueueView({ jbox }: { jbox: Jukebox }) {
         </p>
       ) : (
         <ul className="rows">
-          {entries.map((song, index) => (
+          {hidden > 0 && (
+            <li className="queue-earlier">
+              <button className="inline-link" onClick={() => setShowPast(true)}>
+                {hidden} earlier {hidden === 1 ? 'track' : 'tracks'}
+              </button>
+            </li>
+          )}
+          {hidden === 0 && showPast && index > PAST_KEPT && (
+            <li className="queue-earlier">
+              <button className="inline-link" onClick={() => setShowPast(false)}>
+                Hide the {index - PAST_KEPT} earlier
+              </button>
+            </li>
+          )}
+          {entries.slice(from).map((song, offset) => {
+            const at = from + offset;
+            return (
             <QueueRow
-              key={`${song.id}-${index}`}
+              key={`${song.id}-${at}`}
               song={song}
-              index={index}
-              active={index === status?.currentIndex}
-              played={status ? status.currentIndex >= 0 && index < status.currentIndex : false}
+              index={at}
+              active={at === index}
+              played={index >= 0 && at < index}
               playing={!!status?.playing}
-              onSkip={() => jbox.playAt(index)}
-              onRemove={() => jbox.removeAt(index)}
+              onSkip={() => jbox.playAt(at)}
+              onRemove={() => jbox.removeAt(at)}
             />
-          ))}
+            );
+          })}
         </ul>
       )}
 

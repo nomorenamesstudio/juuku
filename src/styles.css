@@ -335,6 +335,24 @@ h1.display {
   font-variant-numeric: tabular-nums;
 }
 
+/* the folded-away history: a row in the list, not a floating control */
+.queue-earlier {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 0.2rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+
+.queue-earlier .inline-link {
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+
+.queue-earlier .inline-link:hover {
+  color: var(--text);
+}
+
 .fineprint.tail {
   padding: 1.6rem 0.2rem 0.4rem;
   line-height: 1.6;

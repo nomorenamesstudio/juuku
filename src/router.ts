@@ -83,12 +83,19 @@ window.addEventListener(
 // per-view memory below and landed between the two
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 const scrollKey = (hash: string) => hash.replace(/^#/, '') || '/';
+/**
+ * Views that do not keep an offset. The player owns the screen; the queue is a live
+ * list that folds its history away, so a remembered offset would be measured against
+ * a longer list than the one that comes back — it starts at the top instead.
+ */
+const transient = (route: Route) => route.name === 'player' || route.name === 'queue';
 let here: Route = parse(window.location.hash);
 let stack: Route[] = [here];
 let cameFrom: Route = here;
 
 window.addEventListener('hashchange', (event) => {
-  scrollMemory.set(scrollKey(new URL(event.oldURL).hash), trackedY);
+  const left = parse(new URL(event.oldURL).hash);
+  if (!transient(left)) scrollMemory.set(scrollKey(new URL(event.oldURL).hash), trackedY);
   trackedHash = window.location.hash;
   trackedY = window.scrollY;
   depth += 1;
@@ -136,7 +143,7 @@ export function useRoute() {
       setRoute(next);
       // the player owns the screen, so it never carries an offset; every other view
       // returns to where it was left, or starts at the top on a first visit
-      const remembered = next.name === 'player' ? undefined : scrollMemory.get(scrollKey(window.location.hash));
+      const remembered = transient(next) ? undefined : scrollMemory.get(scrollKey(window.location.hash));
       // the view is mounted hidden, so its height arrives a frame or two after the
       // route does: keep asking for the old offset until the page is tall enough
       let tries = 0;
