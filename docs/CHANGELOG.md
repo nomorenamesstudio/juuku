@@ -24,6 +24,7 @@ minor, and the tag is what CI builds the published image from.
 - **Landing page, icons** — every glyph comes from the theme's own set, now including the footer links (GitHub, docs, security, coffee) and the shell / AI agents tabs.
 - **Landing page, accessibility** — every touch target is at least 24×24 (the carousel bars keep their 4px look with a 24px hit area), and a measured pass checks the contrast of all 77 text runs per theme against the pixels actually painted behind them, cloud included.
 - **Landing page, analytics** — a self-hosted Umami beacon counts visits to the landing page (cookieless, honours `data-do-not-track`, locked to the production domain). The website id is a repository secret injected at deploy time, so the public repo carries no tag; GitHub Pages site `juuku` = `9b5888ec-82f9-4acf-92f4-dc15ce3aab09` in Umami.
+- **Social cards** — `docs/social/` renders three banners from the page's own pieces (logo lockup, Instrument Serif headline, the faded cover wall and the phone stack): the 1200×630 link preview, a 1280×640 GitHub preview and a 1080 square. The link preview ships as `site/social-og.jpg` and is the page's `og:image`.
 - **CI** — `.github/workflows/pages.yml` publishes `site/` to Pages on any push that touches it.
 
 ## v0.7.6 — 2026-10-19

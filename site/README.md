@@ -50,6 +50,9 @@ cd site && python3 -m http.server 4310
 - **Contact** — the support line at the end copies `hey@nomorenames.studio` to the
   clipboard and confirms with a toast; the `mailto:` href stays only as the no-JS
   fallback.
+- **Social card** — `social-og.jpg` (1200×630) is the link preview; it is rendered from
+  `docs/social/card.html` and re-exported with `docs/social/make.mjs`, so it stays in
+  step with the hero it is built from.
 - **One third-party request** — the Umami beacon on
   `ramen.nomorenames.studio` (`script.js`, ~2 kB). Self-hosted, cookieless, and
   `data-do-not-track="true"` means a visitor who sends that signal is not counted at
