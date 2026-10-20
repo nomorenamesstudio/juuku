@@ -87,7 +87,12 @@ export function QueueRow({ song, index, active, played, playing, onSkip, onRemov
       <span className="row-number">{active ? <Eq playing={playing} /> : index + 1}</span>
       <button className="row-main" onClick={onSkip} aria-label={`Skip to ${song.title}`}>
         <span className="row-title">{song.title}</span>
-        <span className="row-sub">{song.artist}</span>
+        {/* the album matters here: a whole artist queued means the artist repeats and
+            only the album tells you where in the run you are */}
+        <span className="row-sub">
+          <span className="row-artist">{song.artist}</span>
+          {song.album ? <span className="row-album"> · {song.album}</span> : null}
+        </span>
       </button>
       <span className="row-time">{formatTime(song.duration)}</span>
       <button

@@ -1205,9 +1205,18 @@ h1.display {
 .row-sub {
   font-size: 0.8rem;
   color: var(--dim);
+  /* the artist carries, the album follows: one step back, like the player byline */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.row-artist {
+  color: var(--muted);
+}
+
+.row-album {
+  color: var(--dim);
 }
 
 .row-time {
