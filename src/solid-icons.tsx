@@ -171,6 +171,16 @@ export function SolidMoreIcon({ size = 18, ...rest }: SolidIconProps) {
   );
 }
 
+export function SolidKebabIcon({ size = 18, ...rest }: SolidIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill="currentColor" aria-hidden {...rest}>
+      <g transform="rotate(90 128 128)">
+        <path d="M144,128a16,16,0,1,1-16-16A16,16,0,0,1,144,128ZM60,112a16,16,0,1,0,16,16A16,16,0,0,0,60,112Zm136,0a16,16,0,1,0,16,16A16,16,0,0,0,196,112Z" />
+      </g>
+    </svg>
+  );
+}
+
 export function SolidCloseIcon({ size = 18, ...rest }: SolidIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 256 256" fill="currentColor" aria-hidden {...rest}>

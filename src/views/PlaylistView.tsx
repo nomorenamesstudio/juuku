@@ -3,11 +3,14 @@ import { createPortal } from 'react-dom';
 import { type Playlist, type Song, coverUrl, deletePlaylist, getPlaylist } from '../api';
 import { Cover } from '../Cover';
 import { formatTotal } from '../format';
-import { ChevronLeftIcon, PlayIcon, PlusIcon, TrashIcon } from '../icons';
+import { ChevronLeftIcon, CloseIcon, KebabIcon, PlayIcon, PlusIcon } from '../icons';
 import { navigate, useBack } from '../router';
 import { SongRow } from '../rows';
 import { useTrackActions } from '../TrackActions';
 import type { Jukebox } from '../useJukebox';
+
+/** what the sheet behind the kebab is showing, if anything */
+type Sheet = 'none' | 'menu' | 'confirm';
 
 export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
@@ -15,22 +18,23 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const [error, setError] = useState<string | null>(null);
   const back = useBack('/playlists');
   const openActions = useTrackActions();
-  const [confirming, setConfirming] = useState(false);
-  const confirmRef = useRef<HTMLDivElement>(null);
+  const [sheet, setSheet] = useState<Sheet>('none');
+  const [deleting, setDeleting] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
   // the track sheet removes songs through its own hook, so this view has to ask for
   // the list again — it used to keep showing a row that was already gone
   const [reloadKey, setReloadKey] = useState(0);
 
+  // one sheet at a time: the kebab's menu, then the delete confirmation on top of it
   useEffect(() => {
-    if (!confirming) return;
-    confirmRef.current?.focus();
+    if (sheet === 'none') return;
+    sheetRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setConfirming(false);
+      if (event.key === 'Escape' && !deleting) setSheet('none');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [confirming]);
-  const [deleting, setDeleting] = useState(false);
+  }, [sheet, deleting]);
 
   const remove = async () => {
     setDeleting(true);
@@ -41,7 +45,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
     } catch (err) {
       jbox.notify((err as Error).message);
       setDeleting(false);
-      setConfirming(false);
+      setSheet('none');
     }
   };
 
@@ -98,14 +102,20 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
           <PlusIcon size={18} /> Add to queue
         </button>
         {!playlist?.protected && (
-          <button className="secondary danger" disabled={!playlist} onClick={() => setConfirming(true)}>
-            <TrashIcon size={18} /> Delete
+          <button
+            className="secondary kebab"
+            disabled={!playlist}
+            onClick={() => setSheet('menu')}
+            aria-label="More playlist actions"
+            title="More"
+          >
+            <KebabIcon size={18} />
           </button>
         )}
       </div>
 
       {playlist?.protected && songs.length > 0 && (
-        <p className="fineprint">Filled by the heart button on any track, so this one can’t be deleted.</p>
+        <p className="fineprint">Filled by the heart on any track or in the player, so this one can’t be deleted.</p>
       )}
 
       {songs.length === 0 ? (
@@ -118,45 +128,66 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
             <SongRow
               key={`${song.id}-${index}`}
               song={song}
-              favorite={jbox.favoriteIds.has(song.id)}
               active={jbox.current?.id === song.id}
               playing={jbox.status?.playing}
               onPlay={() => jbox.playFrom(songs, index)}
-              onFavorite={() => jbox.toggleFavorite(song)}
               onMenu={() => openActions([song], { playlistId: id, onDone: () => setReloadKey((n) => n + 1) })}
             />
           ))}
         </ul>
       )}
 
-      {confirming &&
+      {sheet !== 'none' &&
         createPortal(
-          <div className="sheet-layer" onClick={() => !deleting && setConfirming(false)} role="presentation">
-          <div
-            ref={confirmRef}
-            tabIndex={-1}
-            className="sheet confirm"
-            role="alertdialog"
-            aria-modal="true"
-            aria-label="Delete playlist"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="sheet-head">
-              <div>
-                <p className="sheet-eyebrow">Delete “{playlist?.name}”?</p>
-                <p className="sheet-sub">The playlist goes, the tracks stay in your library.</p>
-              </div>
-            </header>
-            <div className="confirm-actions">
-              <button className="secondary" onClick={() => setConfirming(false)} disabled={deleting}>
-                Cancel
-              </button>
-              <button className="danger-solid" onClick={() => void remove()} disabled={deleting}>
-                {deleting ? 'Deleting…' : 'Delete playlist'}
-              </button>
+          <div className="sheet-layer" onClick={() => !deleting && setSheet('none')} role="presentation">
+            <div
+              ref={sheetRef}
+              tabIndex={-1}
+              className={sheet === 'confirm' ? 'sheet confirm' : 'sheet'}
+              role={sheet === 'confirm' ? 'alertdialog' : 'dialog'}
+              aria-modal="true"
+              aria-label={sheet === 'confirm' ? 'Delete playlist' : 'Playlist actions'}
+              onClick={(event) => event.stopPropagation()}
+            >
+              {sheet === 'menu' ? (
+                <>
+                  <header className="sheet-head">
+                    <div>
+                      <p className="sheet-eyebrow">{playlist?.name}</p>
+                      <p className="sheet-sub">
+                        {songs.length} {songs.length === 1 ? 'track' : 'tracks'}
+                      </p>
+                    </div>
+                    <button className="icon-button" onClick={() => setSheet('none')} aria-label="Close">
+                      <CloseIcon size={18} />
+                    </button>
+                  </header>
+                  <div className="sheet-list">
+                    <button className="sheet-action danger" onClick={() => setSheet('confirm')}>
+                      Delete playlist
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <header className="sheet-head">
+                    <div>
+                      <p className="sheet-eyebrow">Delete “{playlist?.name}”?</p>
+                      <p className="sheet-sub">The playlist goes, the tracks stay in your library.</p>
+                    </div>
+                  </header>
+                  <div className="confirm-actions">
+                    <button className="secondary" onClick={() => setSheet('none')} disabled={deleting}>
+                      Cancel
+                    </button>
+                    <button className="danger-solid" onClick={() => void remove()} disabled={deleting}>
+                      {deleting ? 'Deleting…' : 'Delete playlist'}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-        </div>,
+          </div>,
           document.body,
         )}
     </div>

@@ -112,7 +112,6 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             song={song}
             number={song.track ?? index + 1}
             subtitle={null}
-            favorite={jbox.favoriteIds.has(song.id)}
             active={jbox.current?.id === song.id}
             playing={jbox.status?.playing}
             onPlay={() => jbox.playFrom(songs, index)}

@@ -170,6 +170,17 @@ export function PixelMoreIcon({ size = 18, ...rest }: PixelIconProps) {
   );
 }
 
+export function PixelKebabIcon({ size = 18, ...rest }: PixelIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden {...rest}>
+      {/* the horizontal dots, stood up: one glyph, so the two stay optically identical */}
+      <g transform="rotate(90 12 12)">
+        <path d="M3 9h2v2H3zm8 0h2v2h-2zm8 0h2v2h-2zM1 11h2v2H1zm8 0h2v2H9zm8 0h2v2h-2zM3 13h2v2H3zm8 0h2v2h-2zm8 0h2v2h-2zM5 11h2v2H5zm8 0h2v2h-2zm8 0h2v2h-2z" />
+      </g>
+    </svg>
+  );
+}
+
 export function PixelCloseIcon({ size = 18, ...rest }: PixelIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden {...rest}>

@@ -9,6 +9,7 @@ import {
   PixelCloseIcon,
   PixelGithubIcon,
   PixelHeartIcon,
+  PixelKebabIcon,
   PixelLibraryIcon,
   PixelLogOutIcon,
   PixelMicIcon,
@@ -38,6 +39,7 @@ import {
   SolidCloseIcon,
   SolidGithubIcon,
   SolidHeartIcon,
+  SolidKebabIcon,
   SolidLibraryIcon,
   SolidLogOutIcon,
   SolidMicIcon,
@@ -70,6 +72,7 @@ import {
   ListMusic,
   ListPlus,
   MoreHorizontal,
+  MoreVertical,
   MicVocal,
   Pause,
   Play,
@@ -167,6 +170,8 @@ export const ChevronLeftIcon = icon(ChevronLeft, PixelChevronLeftIcon);
 export const VolumeIcon = icon(Volume2, PixelVolumeIcon, SolidVolumeIcon);
 export const MicIcon = icon(MicVocal, PixelMicIcon, SolidMicIcon);
 export const MoreIcon = icon(MoreHorizontal, PixelMoreIcon, SolidMoreIcon);
+/** the vertical dots: a row's menu on the right, and a playlist's behind a kebab */
+export const KebabIcon = icon(MoreVertical, PixelKebabIcon, SolidKebabIcon);
 export const CloseIcon = icon(X, PixelCloseIcon, SolidCloseIcon);
 export const LogOutIcon = icon(LogOut, PixelLogOutIcon, SolidLogOutIcon);
 export const SettingsIcon = icon(Settings, PixelSettingsIcon, SolidSettingsIcon);

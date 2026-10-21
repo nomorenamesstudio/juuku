@@ -15,7 +15,8 @@ export function Eq({ playing }: { playing: boolean }) {
 
 interface SongRowProps {
   song: Song;
-  favorite: boolean;
+  /** the filled heart state; only read when onFavorite is given */
+  favorite?: boolean;
   active?: boolean;
   playing?: boolean;
   number?: number;

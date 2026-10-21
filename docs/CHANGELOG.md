@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.6 — 2026-10-21
+
+- **Playlists** — the track rows lost their heart column and match the album view now: a track is favourited from its ⋯ menu, where Add to favorites / Remove from favorites already lived. One less column, so the titles keep their room on a phone.
+- **Playlists** — Delete moved out of the pill row into a kebab: Play all, Add to queue, ⋯. The kebab opens a sheet with the playlist's name, its track count and **Delete playlist**, which still asks before it does anything. Escape or a tap outside closes it, and the Favorites playlist keeps no kebab at all since it cannot be deleted.
+
 ## v0.8.5 — 2026-10-21
 
 - **Library** — a list that simply stopped read as a broken "Load more" button. It says so now: "That's the whole last-played list — 22 albums." on the recent sort, "That's all N albums." when the library fits in one page, and any order that is not alphabetical offers **Show all albums**, which switches the view to it. Reported against the last-played sort, where twenty-two albums and no button looked like a bug.

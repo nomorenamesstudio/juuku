@@ -841,6 +841,11 @@ h1.display {
 
 /* ----------------------------------------------------------------- albums */
 
+/* a pill with only a glyph in it, next to the labelled ones */
+.actions .kebab {
+  padding: 0.55rem 0.7rem;
+}
+
 .album-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
