@@ -452,6 +452,7 @@ export default function App() {
           <NowBar
             jbox={jbox}
             expanded={isPlayer}
+            lyricsLookup={settings.lyricsLookup}
             onOpen={undefined}
           />
         )}

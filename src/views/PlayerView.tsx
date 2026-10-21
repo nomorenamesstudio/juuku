@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { type Lyrics, type PlaybackStatus, coverUrl, getLyrics } from '../api';
+import { type Lyrics, type PlaybackStatus, coverUrl } from '../api';
 import { Cover } from '../Cover';
 import { formatTime } from '../format';
 import {
@@ -16,6 +16,7 @@ import {
 import { useTrackActions } from '../TrackActions';
 import { goBack, navigate } from '../router';
 import type { Jukebox } from '../useJukebox';
+import { useLyrics } from '../useLyrics';
 
 /**
  * Pull the sheet down to close it. Only the mobile sheet is draggable: the layout
@@ -70,23 +71,6 @@ function usePullToDismiss(onDismiss: () => void) {
       onPointerCancel: endDrag,
     },
   };
-}
-
-function useLyrics(songId: string | undefined, lookup: boolean) {
-  const [lyrics, setLyrics] = useState<Lyrics | null>(null);
-  useEffect(() => {
-    setLyrics(null);
-    if (!songId) return;
-    let live = true;
-    getLyrics(songId, lookup).then(
-      (payload) => live && setLyrics(payload),
-      () => live && setLyrics({ source: 'none', synced: false, lines: [] }),
-    );
-    return () => {
-      live = false;
-    };
-  }, [songId, lookup]);
-  return lyrics;
 }
 
 /**

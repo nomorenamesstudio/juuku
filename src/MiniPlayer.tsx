@@ -14,10 +14,24 @@ import {
 import { goBack, navigate } from './router';
 import { useTrackActions } from './TrackActions';
 import type { Jukebox } from './useJukebox';
+import { useLyrics } from './useLyrics';
 
 /** Bottom bar: compact mini player on phones, full transport bar on wide screens. */
-export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () => void; expanded?: boolean }) {
+export function NowBar({
+  jbox,
+  onOpen,
+  expanded,
+  lyricsLookup = false,
+}: {
+  jbox: Jukebox;
+  onOpen?: () => void;
+  expanded?: boolean;
+  lyricsLookup?: boolean;
+}) {
   const { current, status, entries } = jbox;
+  // the wide bar's lyrics button opens a player whose lyrics column is always there,
+  // so it has to know whether the track has anything to put in it
+  const lyrics = useLyrics(current?.id, lyricsLookup);
   const openActions = useTrackActions();
   const [volumeDraft, setVolumeDraft] = useState<number | null>(null);
   const [positionDraft, setPositionDraft] = useState<number | null>(null);
@@ -33,6 +47,9 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
   );
 
   if (!current || !status) return null;
+
+  // inside the player the same button closes it, which must keep working
+  const noLyrics = !expanded && lyrics !== null && lyrics.lines.length === 0;
 
   const duration = current.duration || 0;
   const position = positionDraft ?? status.position;
@@ -143,8 +160,9 @@ export function NowBar({ jbox, onOpen, expanded }: { jbox: Jukebox; onOpen?: () 
         <button
           className="icon-button bar-only"
           onClick={() => (expanded ? goBack() : navigate('/player'))}
-          aria-label={expanded ? 'Close the lyrics view' : 'Open the lyrics view'}
-          title={expanded ? 'Close the lyrics view' : 'Show lyrics'}
+          disabled={noLyrics}
+          aria-label={expanded ? 'Close the lyrics view' : noLyrics ? 'No lyrics for this track' : 'Open the lyrics view'}
+          title={expanded ? 'Close the lyrics view' : noLyrics ? 'No lyrics for this track' : 'Show lyrics'}
         >
           {/* on wide screens the player is essentially the lyrics view */}
           <MicIcon size={18} />
