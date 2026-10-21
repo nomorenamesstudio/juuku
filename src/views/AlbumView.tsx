@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { type Album, type Song, coverUrl, getAlbum } from '../api';
 import { Cover } from '../Cover';
 import { formatTotal } from '../format';
-import { ChevronLeftIcon, HeartIcon, PlayIcon, PlusIcon } from '../icons';
+import { ChevronLeftIcon, PlayIcon, PlusIcon } from '../icons';
 import { navigate, useBack } from '../router';
 import { SongRow } from '../rows';
 import type { Jukebox } from '../useJukebox';
@@ -96,9 +96,6 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
           <span>Title</span>
           <span className="track-head-time">Time</span>
           <span className="track-head-icon">
-            <HeartIcon size={16} />
-          </span>
-          <span className="track-head-icon">
             <PlusIcon size={16} />
           </span>
         </div>
@@ -119,7 +116,6 @@ export function AlbumView({ id, jbox }: { id: string; jbox: Jukebox }) {
             active={jbox.current?.id === song.id}
             playing={jbox.status?.playing}
             onPlay={() => jbox.playFrom(songs, index)}
-            onFavorite={() => jbox.toggleFavorite(song)}
           />
           </Fragment>
         ))}

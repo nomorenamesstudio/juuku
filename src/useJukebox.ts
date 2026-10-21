@@ -47,6 +47,8 @@ export interface Jukebox {
   playNext: (songs: Song[]) => Promise<void>;
   repeat: RepeatMode;
   cycleRepeat: () => void;
+  /** the queue ran out with repeat off: nothing is playing, the bar should go */
+  ended: boolean;
   playAt: (index: number, offset?: number) => Promise<void>;
   removeAt: (index: number) => Promise<void>;
   clearQueue: () => Promise<void>;
@@ -70,9 +72,15 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     const stored = window.localStorage.getItem(REPEAT_KEY);
     return stored === 'all' || stored === 'one' ? stored : 'off';
   });
+  const [ended, setEnded] = useState(false);
   const toastTimer = useRef<number | undefined>(undefined);
   const repeatRef = useRef(repeat);
   const lastSnapshot = useRef<Snapshot | null>(null);
+  // playback has been seen at some point in this session, so a queue found sitting
+  // at its end on load is history, not an event to react to
+  const armed = useRef(false);
+  // this "ended" already had its repeat handled, so the poll does not loop it again
+  const endHandled = useRef(false);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -91,10 +99,16 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
 
   /**
    * Subsonic has no repeat, so the client watches the poll and restarts. When the
-   * queue runs out Navidrome leaves the last index but resets position to 0 and
-   * stops, which is what separates "finished" from a manual pause (position kept).
+   * queue runs out Navidrome leaves the last index, drops position to 0 and stops
+   * (measured: `playing=false index=last pos=0` for as long as you leave it), which
+   * is what separates "finished" from a manual pause — a pause keeps its position.
+   *
+   * That is a *state*, not an event, and it used to be detected as an event
+   * (`previous.playing && !next.playing`): one poll landing after the end set the
+   * snapshot to `playing=false`, and the transition was gone for good — repeat
+   * worked only when the poll happened to straddle the end.
    */
-  const handleQueueEnd = useCallback(async (next: State, prev: Snapshot) => {
+  const handleQueueEnd = useCallback(async (next: State) => {
     const mode = repeatRef.current;
 
     // No "stalled switch" nudge any more: it fired while a queue change was still
@@ -102,11 +116,10 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     // spawned a second mpv — the same track played twice. The silence it used to
     // patch came from the exclusive sound card, which dmix fixed.
 
-    if (mode === 'off') return;
-
-    const stopped = prev.playing && !next.status.playing;
-    const finished = stopped && next.status.position <= 1 && prev.position > 2;
-    const advanced = prev.playing && next.status.playing && next.status.currentIndex > prev.index;
+    if (mode === 'off') {
+      setEnded(true);
+      return;
+    }
 
     /**
      * A skip already resumes playback in Navidrome (it pauses, switches, then starts
@@ -115,16 +128,31 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
      * stopped and the skip alone would not restart it.
      */
     try {
-      if (mode === 'one' && (finished || (advanced && prev.position >= prev.duration - 5))) {
-        const index = finished ? Math.max(next.status.currentIndex, 0) : prev.index;
-        await control({ action: 'skip', index, offset: 0 });
-        if (finished) await control({ action: 'start' });
-        lastSnapshot.current = null;
-      } else if (mode === 'all' && finished && prev.index >= prev.lastIndex) {
-        await control({ action: 'skip', index: 0, offset: 0 });
-        await control({ action: 'start' });
-        lastSnapshot.current = null;
-      }
+      const index = mode === 'one' ? Math.max(next.status.currentIndex, 0) : 0;
+      await control({ action: 'skip', index, offset: 0 });
+      await control({ action: 'start' });
+      setEnded(false);
+      lastSnapshot.current = null;
+    } catch {
+      // a failed loop is not worth an error banner; the next poll shows reality
+    }
+  }, []);
+
+  /** repeat-one on a queue that keeps going: the finished track is replayed */
+  const handleRepeatOne = useCallback(async (next: State, prev: Snapshot) => {
+    // No "stalled switch" nudge any more: it fired while a queue change was still
+    // in flight (index moved, not playing yet, position 0) and its extra `start`
+    // spawned a second mpv — the same track played twice. The silence it used to
+    // patch came from the exclusive sound card, which dmix fixed.
+
+    if (repeatRef.current !== 'one') return;
+
+    const advanced = prev.playing && next.status.playing && next.status.currentIndex > prev.index;
+    if (!advanced || prev.position < prev.duration - 5) return;
+
+    try {
+      await control({ action: 'skip', index: prev.index, offset: 0 });
+      lastSnapshot.current = null;
     } catch {
       // a failed loop is not worth an error banner; the next poll shows reality
     }
@@ -134,21 +162,43 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     try {
       const next = await getState();
       const previous = lastSnapshot.current;
+      const lastIndex = next.entries.length - 1;
       lastSnapshot.current = {
         playing: next.status.playing,
         index: next.status.currentIndex,
         position: next.status.position,
         duration: next.entries[next.status.currentIndex]?.duration ?? 0,
-        lastIndex: next.entries.length - 1,
+        lastIndex,
       };
       // deliberately not clearing `error` here: a successful poll used to erase the
       // message from a failed action before anyone could read it
       setState(next);
-      if (previous) void handleQueueEnd(next, previous);
+
+      if (next.status.playing) {
+        armed.current = true;
+        endHandled.current = false;
+        setEnded(false);
+      } else if (next.status.currentIndex !== lastIndex) {
+        // left the end by hand (another track, a new queue): re-arm for the next one
+        endHandled.current = false;
+      }
+
+      const atEnd =
+        !next.status.playing &&
+        lastIndex >= 0 &&
+        next.status.currentIndex === lastIndex &&
+        next.status.position <= 0.5;
+
+      if (atEnd && armed.current && !endHandled.current) {
+        endHandled.current = true;
+        void handleQueueEnd(next);
+      } else if (previous) {
+        void handleRepeatOne(next, previous);
+      }
     } catch (err) {
       setError((err as Error).message);
     }
-  }, [handleQueueEnd]);
+  }, [handleQueueEnd, handleRepeatOne]);
 
   useEffect(() => {
     // while the login screen is up there is nothing to poll for, and every call is a 401
@@ -339,6 +389,7 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     state,
     repeat,
     cycleRepeat,
+    ended,
     status,
     entries,
     current,

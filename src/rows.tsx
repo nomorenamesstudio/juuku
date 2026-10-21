@@ -21,7 +21,8 @@ interface SongRowProps {
   number?: number;
   subtitle?: string | null;
   onPlay: () => void;
-  onFavorite: () => void;
+  /** omitted when the view offers favorite in its action menu instead of a column */
+  onFavorite?: () => void;
   /** Overrides the default "more actions" sheet (e.g. to add a playlist context). */
   onMenu?: () => void;
 }
@@ -49,15 +50,17 @@ export function SongRow({
         {subtitle !== null && <span className="row-sub">{subtitle ?? `${song.artist} · ${song.album}`}</span>}
       </button>
       <span className="row-time">{formatTime(song.duration)}</span>
-      <button
-        className={`row-icon fav ${favorite ? 'is-fav' : ''}`}
-        onClick={onFavorite}
-        aria-pressed={favorite}
-        aria-label={favorite ? `Remove ${song.title} from favorites` : `Favorite ${song.title}`}
-        title={favorite ? 'Remove from favorites' : 'Add to favorites'}
-      >
-        <HeartIcon filled={favorite} size={18} />
-      </button>
+      {onFavorite && (
+        <button
+          className={`row-icon fav ${favorite ? 'is-fav' : ''}`}
+          onClick={onFavorite}
+          aria-pressed={favorite}
+          aria-label={favorite ? `Remove ${song.title} from favorites` : `Favorite ${song.title}`}
+          title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <HeartIcon filled={favorite} size={18} />
+        </button>
+      )}
       <button
         className="row-icon"
         onClick={onMenu ?? (() => openActions([song]))}

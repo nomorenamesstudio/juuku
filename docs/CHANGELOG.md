@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.2 — 2026-10-20
+
+- **Fix** — repeat and the end of the queue. Navidrome's end state is stable (`playing=false`, index at the last track, position 0) but it was detected as an *event* (`previous.playing && !playing`), so it only fired when a poll happened to straddle the end: any gap in polling — a hidden tab, a sleeping phone, a slow poll — set the snapshot to stopped first and the transition was gone. The end is read as a state now, armed once playback has been seen in the session and handled once per episode. Repeat off closes the player bar and gives its space back, repeat all starts the queue again from the first track, repeat one replays the last one.
+- **Album view** — the heart column is gone: "Add to favorites" / "Remove from favorites" sits in the track's action menu with the rest, in the row menu the album previously only had for queue and playlist actions. Views that keep a heart column (Favorites, playlists, search) are unchanged, and the album's table header dropped to four columns to match.
+
 ## v0.8.1 — 2026-10-20
 
 - **Queue** — each row shows the album beside the artist (`Depeche Mode · Ultra (Deluxe)`), so a queued artist portfolio no longer leaves you guessing which record is playing. The artist stays the brighter of the two, the album one step back, and long names ellipsize on a phone.

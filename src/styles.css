@@ -2741,7 +2741,7 @@ h1.display {
   .track-head,
   .track-table .row {
     display: grid;
-    grid-template-columns: 2.4rem minmax(0, 1fr) 3.4rem 2.8rem 2.8rem;
+    grid-template-columns: 2.4rem minmax(0, 1fr) 3.4rem 2.8rem;
     column-gap: 0.5rem;
     align-items: center;
   }

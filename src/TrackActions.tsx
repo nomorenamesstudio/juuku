@@ -32,6 +32,8 @@ export function TrackActions({
   const [busy, setBusy] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const single = target.songs.length === 1 ? target.songs[0] : null;
+  // every song already favorited means the action removes them
+  const favorite = target.songs.every((song) => jbox.favoriteIds.has(song.id));
   const title = single ? single.title : `${target.songs.length} tracks`;
 
   // the sheet takes focus so a keyboard user lands inside it, and Escape closes
@@ -97,6 +99,19 @@ export function TrackActions({
             </button>
             <button className="sheet-action" onClick={() => setStep('playlists')}>
               Add to playlist
+            </button>
+            <button
+              className="sheet-action"
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  for (const song of target.songs) {
+                    if (favorite !== jbox.favoriteIds.has(song.id)) await jbox.toggleFavorite(song);
+                  }
+                }, favorite ? 'Removed from favorites' : 'Added to favorites')
+              }
+            >
+              {favorite ? 'Remove from favorites' : 'Add to favorites'}
             </button>
             {target.playlistId && (
               <button

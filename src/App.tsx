@@ -239,7 +239,9 @@ export default function App() {
   const count = Math.max(jbox.entries.length - (jbox.status?.currentIndex ?? -1) - 1, 0);
   // the deck follows the track that is playing, not the tracks still ahead: on the
   // last one there are none ahead, and the whole player used to vanish
-  const hasTrack = jbox.entries.length > 0 && (jbox.status?.currentIndex ?? -1) >= 0;
+  // a queue that ran out is not a track to keep showing: with repeat off the bar
+  // used to sit there on the finished last song until something else was played
+  const hasTrack = jbox.entries.length > 0 && (jbox.status?.currentIndex ?? -1) >= 0 && !jbox.ended;
 
   useEffect(() => {
     applySettings(settings);
