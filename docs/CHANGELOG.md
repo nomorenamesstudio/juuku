@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.8 — 2026-10-21
+
+- **Library** — the note that closes a list is centred under the grid. Left-aligned it read as a stray line rather than the end of the list; only that note centres, the queue's tail note and the rest of the fine print are untouched.
+
 ## v0.8.7 — 2026-10-21
 
 - **Fix** — the kebab from 0.8.6 wrapped into a grid row of its own and stretched to half the width. The action row is a flex row now: the labelled pills share it evenly and the kebab keeps its own width beside them. Measured at 390px — Play all 145px, Add to queue 147px, ⋯ 42px, one line; the album page's two pills are untouched at 137/139.

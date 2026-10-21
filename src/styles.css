@@ -841,6 +841,11 @@ h1.display {
 
 /* ----------------------------------------------------------------- albums */
 
+/* the note that closes a list sits under a centred grid, so it centres with it */
+.end-of-list {
+  text-align: center;
+}
+
 /* a pill with only a glyph in it, next to the labelled ones */
 .actions .kebab {
   padding: 0.55rem 0.7rem;
