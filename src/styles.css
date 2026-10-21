@@ -1071,15 +1071,25 @@ h1.display {
 
 .album-actions {
   margin: 1.5rem 0 0.2rem;
-  /* two buttons sharing the row, not two sizes of pill */
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* the labelled pills share the row evenly; anything else (the kebab) keeps its own
+     width on the same line rather than wrapping into a grid cell of its own */
+  display: flex;
   gap: 0.6rem;
+}
+
+.album-actions .primary,
+.album-actions .secondary:not(.kebab) {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .album-actions .primary,
 .album-actions .secondary {
   justify-content: center;
+}
+
+.album-actions .kebab {
+  flex: none;
 }
 
 .album-facts .fact {
