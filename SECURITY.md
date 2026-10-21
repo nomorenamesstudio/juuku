@@ -11,7 +11,7 @@ room, not like a website.
 |---|---|
 | Navidrome credentials | in the environment (`NAVIDROME_*`), never in the image, never in the repo, never sent to the browser |
 | Browser session | none — the browser talks only to Juuku's own API on the same origin |
-| On-disk state | none. The container filesystem can be read-only |
+| On-disk state | two JSON files in the data volume: `prefs.json` (per-account preferences) and `recent.json` (the albums that played). Nothing else, and the image itself writes nothing |
 
 ## The default posture
 
@@ -23,6 +23,10 @@ room, not like a website.
   SameSite=Lax cookie signed with a key derived from that password, with a
   timing-safe compare on sign-in and per-address throttling of failures. That
   trade only holds while the port stays private either way.
+- **`X-Forwarded-For` is not trusted by default.** The throttle counts failures per
+  address, and that address is the socket's unless `JUUKU_TRUST_PROXY` names the
+  proxy in front (a hop count like `1`, or `loopback`). Left on with nothing in
+  front, a client could send a fake header on every attempt and never be counted.
 - **Dedicated Navidrome user, ideally not an admin.** Navidrome defaults
   `Jukebox.AdminOnly` to true and refuses non-admins with `Jukebox is admin only
   (code 50)`. Set `ND_JUKEBOX_ADMINONLY=false` and give Juuku a plain account —
@@ -34,7 +38,9 @@ room, not like a website.
   tracked; `.env`, `.env.remote` and `.git-token` are ignored, and `.dockerignore`
   keeps them out of build contexts too.
 - **Non-root, read-only, no capabilities.** The image runs as uid 1000 with
-  `cap_drop: ALL`, `no-new-privileges` and a read-only root filesystem.
+  `cap_drop: ALL`, `no-new-privileges` and a read-only root filesystem. The one
+  writable path is the `./data` volume, which has to be owned by that uid:
+  `mkdir -p data && chown 1000:1000 data`.
 
 ## If it has to be reachable from outside
 
@@ -57,10 +63,11 @@ it gives you the app from anywhere without publishing anything.
 
 - **Auth is one shared password, not accounts.** Everyone with it is the same
   user; there is no per-person revocation short of changing the password.
-- **No CSRF token.** Every write is a `POST`/`DELETE` with a JSON body on the
-  same origin, a cross-site form cannot send `application/json`, and the session
-  cookie is `SameSite=Lax` — which together cover the classic attack. A proxy
-  that rewrites content could still break that assumption.
+- **No CSRF token.** Every write is a `POST`/`DELETE` on the same origin and the
+  session cookie is `SameSite=Lax`, and every write is required to carry an
+  `application/json` content type — which a cross-site form cannot send, so the
+  classic attack is covered. A proxy that rewrites content could still break that
+  assumption.
 - **Rate limiting covers sign-in only** (8 failures per address per 10 minutes,
   in memory, so it resets on restart). The rest of the API has none: fine on a
   LAN, not fine on the open internet.

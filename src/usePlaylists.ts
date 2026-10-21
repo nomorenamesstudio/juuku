@@ -4,10 +4,16 @@ import { type Playlist, type Song, addToPlaylist, createPlaylist, getPlaylists, 
 export function usePlaylists() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       setPlaylists((await getPlaylists()).playlists);
+      setError(null);
+    } catch (err) {
+      // a first read that fails is not an unhandled rejection, and "no playlists"
+      // is the wrong thing to show for it
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -42,5 +48,5 @@ export function usePlaylists() {
     [refresh],
   );
 
-  return { playlists, loading, refresh, create, addSongs, removeSong };
+  return { playlists, loading, error, refresh, create, addSongs, removeSong };
 }

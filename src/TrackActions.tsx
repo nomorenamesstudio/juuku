@@ -8,9 +8,14 @@ interface TrackActionsTarget {
   songs: Song[];
   playlistId?: string;
   step?: 'actions' | 'playlists';
+  /** the view that opened the sheet wants to refetch after a successful action */
+  onDone?: () => void;
 }
 
-type OpenActions = (songs: Song[], options?: { playlistId?: string; step?: 'playlists' }) => void;
+type OpenActions = (
+  songs: Song[],
+  options?: { playlistId?: string; step?: 'playlists'; onDone?: () => void },
+) => void;
 
 const ActionsContext = createContext<OpenActions>(() => {});
 export const useTrackActions = () => useContext(ActionsContext);
@@ -51,6 +56,7 @@ export function TrackActions({
     try {
       await action();
       if (message) jbox.notify(message);
+      target.onDone?.();
       onClose();
     } catch (err) {
       jbox.notify((err as Error).message);

@@ -2,12 +2,18 @@
 
 Juuku exposes a small JSON API on `:3101`. The browser never talks to Navidrome directly — the server holds the credentials and translates to Subsonic.
 
-All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "error": "message" }` with `400` (bad request), `401` (Navidrome rejected the credentials), `502` (Navidrome unreachable or refused) or `500`.
+All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "error": "message" }` with `400` (bad request), `401` (Navidrome rejected the credentials), `404` (no such endpoint), `415` (a write that was not sent as `application/json`), `502` (Navidrome unreachable or refused) or `500`. Every write must carry `Content-Type: application/json`, even when it has no body: a cross-site form cannot send that type, which is the whole answer to CSRF here.
+
+With `JUUKU_PASSWORD` set, every route below except `/api/session`, `/api/login`, `/api/logout` and `/api/live` needs the session cookie.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 | --- | --- | --- |
+| GET | `/api/live` | Liveness only — `{ ok, uptime }`, never asks Navidrome |
+| GET | `/api/session` | `{ required, authenticated }` — whether a password is set and whether this browser has it |
+| POST | `/api/login` | `{ password }` → sets the session cookie. Throttled per address |
+| POST | `/api/logout` | Clears the session cookie |
 | GET | `/api/health` | Connection + capability probe (does the instance have jukebox on?) |
 | GET | `/api/state` | Whole remote state: queue plus playback status |
 | POST | `/api/control` | Every write action |
@@ -24,13 +30,16 @@ All responses are JSON except `/api/cover/:id` (image bytes). Errors are `{ "err
 | GET | `/api/albums/:id` | Album plus its songs |
 | GET | `/api/artists` | All artists |
 | GET | `/api/artists/:id` | Artist plus their albums |
+| GET | `/api/artists/:id/songs` | Every track the artist has, album order — what "Play all" queues |
+| GET | `/api/player/status` | `{ shared, players }` — how many mpv players are alive, and whether the sockets are shared |
+| POST | `/api/player/restart` | Quit every leftover player and rebuild the queue where it was |
 | GET | `/api/prefs` | This account's preferences (lyrics settings, recent searches, library sort) |
 | PUT | `/api/prefs` | Merge preferences; unknown keys and wrong shapes are dropped |
 | GET | `/api/lyrics/:id` | Synced or plain lyrics for a song |
 | GET | `/api/favorites` | The `Favorites` playlist as songs |
 | POST | `/api/favorites` | Add songs to it (`{ ids: string[] }`, deduped) |
 | DELETE | `/api/favorites/:songId` | Remove one song from it |
-| GET | `/api/cover/:id?size=300` | Cover art proxy (cached a day) |
+| GET | `/api/cover/:id?size=300` | Cover art proxy (cached a day). `size` is clamped to 16–1200 |
 
 ### `GET /api/home?day=YYYY-MM-DD`
 

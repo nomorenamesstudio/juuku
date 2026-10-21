@@ -33,6 +33,7 @@ export function Library({ tab }: { tab: LibraryTab }) {
   const [hasMore, setHasMore] = useState(albumCache?.sort === readSort() ? albumCache.hasMore : false);
   const counts = useCounts();
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     // the shell remounts this view on every route change (the content element is
@@ -44,12 +45,20 @@ export function Library({ tab }: { tab: LibraryTab }) {
       return;
     }
     let alive = true;
-    getAlbums(0, 30, sort).then((payload) => {
-      albumCache = { albums: payload.albums, hasMore: payload.hasMore, sort };
-      if (!alive) return;
-      setAlbums(payload.albums);
-      setHasMore(payload.hasMore);
-    });
+    setFailed(false);
+    getAlbums(0, 30, sort).then(
+      (payload) => {
+        albumCache = { albums: payload.albums, hasMore: payload.hasMore, sort };
+        if (!alive) return;
+        setAlbums(payload.albums);
+        setHasMore(payload.hasMore);
+      },
+      // a rejection used to escape as an unhandled promise and leave "no albums here"
+      (err: Error) => {
+        if (alive) setFailed(true);
+        console.warn(`albums not read: ${err.message}`);
+      },
+    );
     return () => {
       alive = false;
     };
@@ -82,6 +91,9 @@ export function Library({ tab }: { tab: LibraryTab }) {
         return next;
       });
       setHasMore(payload.hasMore);
+    } catch (err) {
+      setFailed(true);
+      console.warn(`more albums not read: ${(err as Error).message}`);
     } finally {
       setLoading(false);
     }
@@ -148,9 +160,11 @@ export function Library({ tab }: { tab: LibraryTab }) {
         <>
           {albums.length === 0 && (
             <p className="empty">
-              {sort === 'recent'
-                ? 'Nothing played through Navidrome yet — jukebox playback is not scrobbled, so this list stays empty.'
-                : 'No albums here yet.'}
+              {failed
+                ? 'Could not read the library just now.'
+                : sort === 'recent'
+                  ? 'Nothing played through Navidrome yet — jukebox playback is not scrobbled, so this list stays empty.'
+                  : 'No albums here yet.'}
             </p>
           )}
           <div className="album-grid">

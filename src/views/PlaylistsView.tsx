@@ -9,19 +9,23 @@ import { usePlaylists } from '../usePlaylists';
 const isFavorites = (name: string) => name.trim().toLowerCase() === 'favorites';
 
 export function PlaylistsView({ embedded = false }: { embedded?: boolean } = {}) {
-  const { playlists, loading, create } = usePlaylists();
+  const { playlists, loading, error: readError, create } = usePlaylists();
   const ordered = [...playlists].sort((a, b) => Number(isFavorites(b.name)) - Number(isFavorites(a.name)));
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const submit = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     setBusy(true);
+    setCreateError(null);
     try {
       const playlist = await create(trimmed);
       setName('');
       navigate(`/playlist/${playlist.id}`);
+    } catch (err) {
+      setCreateError((err as Error).message);
     } finally {
       setBusy(false);
     }
@@ -48,7 +52,8 @@ export function PlaylistsView({ embedded = false }: { embedded?: boolean } = {})
       </form>
 
       {loading && <p className="empty">Reading playlists…</p>}
-      {!loading && playlists.length === 0 && (
+      {!loading && (createError ?? readError) && <p className="empty">{createError ?? readError}</p>}
+      {!loading && !readError && playlists.length === 0 && (
         <p className="empty">
           No playlists yet. Name one above, or use the ⋯ menu on any track and pick “New playlist”.
         </p>

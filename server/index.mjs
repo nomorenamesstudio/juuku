@@ -1,12 +1,13 @@
 import express from 'express';
 import { existsSync, readFileSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { sep } from 'node:path';
 import { join } from 'node:path';
 import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMarked } from './lyrics.mjs';
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
-import { dropDeadSockets, livePlayers, quitPlayers, socketsShared } from './player.mjs';
+import { jsonWrites } from './json-writes.mjs';
+import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
 import { alphabeticalBy } from './sort.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
 
@@ -113,8 +114,13 @@ const statusOf = (response) => ({
 
 // ---------------------------------------------------------------- connection
 
-// behind a reverse proxy req.secure has to see X-Forwarded-Proto
-app.set('trust proxy', 1);
+// behind a reverse proxy req.secure has to see X-Forwarded-Proto, and the login
+// throttle has to see the client rather than the proxy. But trusting is only right
+// when something real sits in front: with none, `X-Forwarded-For` is whatever the
+// client typed, and trusting it hands the throttle a fresh address per attempt.
+// JUUKU_TRUST_PROXY takes a hop count (1) or an express/proxy-addr name (loopback).
+const TRUST_PROXY = (process.env.JUUKU_TRUST_PROXY ?? '').trim();
+if (TRUST_PROXY) app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY);
 
 const authenticated = (req) => !auth.enabled || auth.valid(readCookie(req.headers.cookie, COOKIE));
 
@@ -154,6 +160,9 @@ app.use('/api', (req, res, next) => {
   if (OPEN_ROUTES.has(req.path) || authenticated(req)) return next();
   res.status(401).json({ error: 'Sign in to control the jukebox' });
 });
+
+// a write has to be JSON, which is also the answer to CSRF here — see json-writes.mjs
+app.use('/api', jsonWrites);
 
 // liveness only: a container is healthy when it is serving, not when Navidrome is
 app.get('/api/live', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
@@ -207,11 +216,25 @@ function loadRecent() {
 
 let recentSaveTimer = null;
 
+/**
+ * The data dir is not guaranteed to exist: `.data` is gitignored, so a fresh
+ * checkout has none, and the old write had no mkdir and an empty error callback —
+ * every save failed with ENOENT and "last played" stayed empty forever.
+ */
+async function saveRecentNow() {
+  try {
+    await mkdir(DATA_DIR, { recursive: true });
+    await writeFile(RECENT_FILE, JSON.stringify(recentAlbums));
+  } catch (err) {
+    console.warn(`recent.json not saved: ${err.message}`);
+  }
+}
+
 function saveRecent() {
   if (recentSaveTimer) return;
   recentSaveTimer = setTimeout(() => {
     recentSaveTimer = null;
-    writeFile(RECENT_FILE, JSON.stringify(recentAlbums), () => {});
+    void saveRecentNow();
   }, 800);
 }
 
@@ -239,10 +262,15 @@ async function recentlyPlayed(size, offset) {
   return albums.filter(Boolean);
 }
 const STATE_TTL_MS = 900;
+/** bumped by every write, so a read that started before it cannot cache its answer */
+let stateEpoch = 0;
 
 function invalidateState() {
+  stateEpoch += 1;
   stateCache.at = 0;
   stateCache.payload = null;
+  // a read started before this write is stale; let the next request start a new one
+  stateCache.inflight = null;
 }
 
 function readState() {
@@ -250,6 +278,7 @@ function readState() {
     return Promise.resolve(stateCache.payload);
   }
   if (stateCache.inflight) return stateCache.inflight;
+  const epoch = stateEpoch;
   stateCache.inflight = call('jukeboxControl', { action: 'get' })
     .catch((err) => {
       // browsing a library whose server has jukebox mode off is fine; just show no queue
@@ -262,12 +291,16 @@ function readState() {
       // actually played are remembered here instead of scrobbling every track.
       noteAlbum(lastObserved, payload);
       lastObserved = payload;
-      stateCache.payload = payload;
-      stateCache.at = Date.now();
+      // a read that overlapped a write answers with the queue from before it, and
+      // caching that is how the UI showed the old order right after a skip
+      if (epoch === stateEpoch) {
+        stateCache.payload = payload;
+        stateCache.at = Date.now();
+      }
       return payload;
     })
     .finally(() => {
-      stateCache.inflight = null;
+      if (epoch === stateEpoch) stateCache.inflight = null;
     });
   return stateCache.inflight;
 }
@@ -277,11 +310,14 @@ app.get('/api/state', wrap(async (_req, res) => {
 }));
 
 /**
- * How many players are actually running. More than one means Navidrome lost a
- * track — it keeps playing but Navidrome no longer knows about it.
+ * How many players we can actually drive. More than one means Navidrome lost a
+ * track — it keeps playing but Navidrome no longer knows about it. `blocked` counts
+ * sockets that exist but refuse us (mpv's 0600 under another uid), which looks
+ * identical to "no players" unless it is reported.
  */
 app.get('/api/player/status', wrap(async (_req, res) => {
-  res.json({ shared: socketsShared(), players: await livePlayers() });
+  const report = await socketReport();
+  res.json({ shared: socketsShared(), players: report.reachable, blocked: report.blocked });
 }));
 
 let lastHealAt = 0;
@@ -361,7 +397,15 @@ app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
     throw badRequest(`${action} needs an integer index`);
   }
   if ((action === 'set' || action === 'add') && !Array.isArray(ids)) throw badRequest('ids must be an array');
-  if (action === 'setGain' && !(gain >= 0 && gain <= 1)) throw badRequest('gain must be between 0 and 1');
+  // `null` and `''` are not volume levels, and `Number(null)` is 0, which would mute
+  const level = action === 'setGain' ? Number(gain) : undefined;
+  const levelGiven = gain !== undefined && gain !== null && gain !== '';
+  if (action === 'setGain' && (!levelGiven || !(level >= 0 && level <= 1))) {
+    throw badRequest('gain must be between 0 and 1');
+  }
+  if (action === 'skip' && offset !== undefined && !(Number.isFinite(Number(offset)) && Number(offset) >= 0)) {
+    throw badRequest('offset must be a number of seconds from the start of the track');
+  }
 
   /**
    * A `start` is what puts two tracks out of the speakers. Navidrome switches tracks
@@ -392,7 +436,13 @@ app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
   console.log(`[control] ${action}${Number.isInteger(index) ? ` index=${index}` : ''}`);
   const response = await call(
     'jukeboxControl',
-    { action, index, offset, id: ids, gain },
+    {
+      action,
+      index,
+      offset: offset === undefined ? undefined : Number(offset),
+      id: ids,
+      gain: gain === undefined ? undefined : Number(gain),
+    },
     { repeat: ['id'] },
   );
     // the next poll must not serve the state from before this action
@@ -436,6 +486,8 @@ app.post('/api/queue/next', wrap(async (req, res) => serialWrite(async () => {
   }
 
   const response = await call('jukeboxControl', { action: 'status' });
+  // same as /api/play: the queue changed, so the cached state is from before it
+  invalidateState();
   res.json(statusOf(response));
 })));
 
@@ -451,6 +503,8 @@ async function waitForQueue(ids, timeoutMs = 2500) {
     if (entries.length === ids.length && entries.every((entry, i) => entry.id === ids[i])) return true;
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
+  // the caller's next `skip` lands on the old queue from here on, so say so
+  console.warn(`[control] queue did not settle within ${timeoutMs}ms (wanted ${ids.length} entries)`);
   return false;
 }
 
@@ -476,6 +530,8 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   await waitForQueue(ids);
   await call('jukeboxControl', { action: 'skip', index });
   const response = await call('jukeboxControl', { action: 'start' });
+  // without this the next poll served the queue from before the play for up to a second
+  invalidateState();
   res.json(statusOf(response));
 })));
 
@@ -548,14 +604,41 @@ function seededShuffle(list, seed) {
 
 /** a list in an order that only changes when the local day does */
 const DAILY_CACHE = new Map();
+/**
+ * `day` is a request parameter and therefore a cache key, so the map needs a ceiling:
+ * an unrecognized string used to leave a whole shuffled library behind, forever.
+ */
+const DAILY_CACHE_MAX = 4;
+
+/**
+ * The client sends its local date so the picks turn over at its midnight, not the
+ * server's. Anything that is not a date is today.
+ */
+function dayOf(value) {
+  const text = String(value ?? '').trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : new Date().toISOString().slice(0, 10);
+}
+
+function cachedDay(key) {
+  const cached = DAILY_CACHE.get(key);
+  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+  return null;
+}
+
+function rememberDay(key, albums) {
+  DAILY_CACHE.set(key, { at: Date.now(), albums });
+  while (DAILY_CACHE.size > DAILY_CACHE_MAX) {
+    DAILY_CACHE.delete(DAILY_CACHE.keys().next().value);
+  }
+}
 
 /** Navidrome's catch-all for compilations; nothing personal to recommend there */
 const isVariousArtists = (name) => /^various( artists)?$/i.test(String(name ?? '').trim());
 
 async function dailyArtists(day) {
-  const key = `artists:${day || new Date().toISOString().slice(0, 10)}`;
-  const cached = DAILY_CACHE.get(key);
-  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+  const key = `artists:${dayOf(day)}`;
+  const cached = cachedDay(key);
+  if (cached) return cached;
   const response = await call('getArtists');
   const artists = (response.artists?.index ?? [])
     .flatMap((index) =>
@@ -570,17 +653,17 @@ async function dailyArtists(day) {
   // the newest artists are the ones worth a nudge; shuffle the whole list instead
   const seed = [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, 11);
   const shuffled = seededShuffle(artists, seed);
-  DAILY_CACHE.set(key, { at: Date.now(), albums: shuffled });
+  rememberDay(key, shuffled);
   return shuffled;
 }
 
 async function dailyAlbums(day) {
-  const key = day || new Date().toISOString().slice(0, 10);
-  const cached = DAILY_CACHE.get(key);
-  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+  const key = dayOf(day);
+  const cached = cachedDay(key);
+  if (cached) return cached;
   const seed = [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, 7);
   const albums = seededShuffle(await allAlbums(), seed);
-  DAILY_CACHE.set(key, { at: Date.now(), albums });
+  rememberDay(key, albums);
   return albums;
 }
 
@@ -600,17 +683,24 @@ async function allAlbumsAlphabetical(type) {
   return sorted;
 }
 
+/** A paging number from the query string, or the fallback when it is not one. */
+function clampCount(value, fallback, min, max) {
+  const number = Math.trunc(Number(value));
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(Math.max(number, min), max);
+}
+
 app.get('/api/albums', wrap(async (req, res) => {
   const type = String(req.query.type ?? 'newest');
-  const size = Math.min(Number(req.query.size ?? 30), 100);
-  const offset = Number(req.query.offset ?? 0);
+  const size = clampCount(req.query.size, 30, 1, 100);
+  const offset = clampCount(req.query.offset, 0, 0, 5000);
   if (type === 'alphabeticalByName' || type === 'alphabeticalByArtist') {
     const albums = await allAlbumsAlphabetical(type);
     const page = albums.slice(offset, offset + size);
     return res.json({ albums: page, offset, hasMore: offset + size < albums.length });
   }
   if (type === 'daily') {
-    const albums = await dailyAlbums(String(req.query.day ?? ''));
+    const albums = await dailyAlbums(req.query.day);
     const page = albums.slice(offset, offset + size);
     return res.json({ albums: page, offset, hasMore: offset + size < albums.length });
   }
@@ -631,7 +721,7 @@ app.get('/api/albums', wrap(async (req, res) => {
  * records jukebox playback), the rest come straight from the library.
  */
 app.get('/api/home', wrap(async (req, res) => {
-  const day = String(req.query.day ?? '');
+  const day = dayOf(req.query.day);
   const list = (response) => (response.albumList2?.album ?? []).map(album);
 
   const [played, added, released, daily, dailyNames] = await Promise.all([
@@ -725,7 +815,8 @@ app.get('/api/artists/:id/songs', wrap(async (req, res) => {
 }));
 
 app.get('/api/cover/:id', wrap(async (req, res) => {
-  const { body, contentType } = await binary('getCoverArt', { id: req.params.id, size: Number(req.query.size ?? 300) });
+  const size = clampCount(req.query.size, 300, 16, 1200);
+  const { body, contentType } = await binary('getCoverArt', { id: req.params.id, size });
   res.setHeader('Content-Type', contentType);
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.end(body);
@@ -735,6 +826,11 @@ app.get('/api/cover/:id', wrap(async (req, res) => {
 
 const lyricsCache = new Map();
 const LYRIC_TTL = 24 * 60 * 60 * 1000;
+/**
+ * One entry per song ever asked for, each holding its whole lyric text. Bounded, so
+ * a long-lived container on a large library does not grow by one song per listen.
+ */
+const LYRICS_CACHE_MAX = 400;
 
 const LRCLIB_HEADERS = { 'User-Agent': 'juuku/0.1 (local jukebox remote)' };
 
@@ -837,6 +933,10 @@ app.get('/api/lyrics/:id', wrap(async (req, res) => {
     }
   }
 
+  if (lyricsCache.size >= LYRICS_CACHE_MAX) {
+    // insertion order: the least recently added lyric set goes first
+    lyricsCache.delete(lyricsCache.keys().next().value);
+  }
   lyricsCache.set(id, { value: payload, expires: Date.now() + LYRIC_TTL });
   res.json(payload);
 }));
@@ -896,7 +996,9 @@ app.delete('/api/playlists/:id', wrap(async (req, res) => {
   res.json({ deleted: req.params.id, name });
 }));
 
-app.delete('/api/playlists/:id/songs/:songId', wrap(async (req, res) => {
+// the index is resolved here and the write follows, so two devices removing at once
+// used to resolve the same index and delete the same slot twice
+app.delete('/api/playlists/:id/songs/:songId', wrap(async (req, res) => serialWrite(async () => {
   const response = await call('getPlaylist', { id: req.params.id });
   const songs = (response.playlist.entry ?? []).map(song);
   const index = songs.findIndex((entry) => entry.id === req.params.songId);
@@ -905,7 +1007,7 @@ app.delete('/api/playlists/:id/songs/:songId', wrap(async (req, res) => {
   }
   const after = await call('getPlaylist', { id: req.params.id });
   res.json({ playlist: playlistMeta(after.playlist), songs: (after.playlist.entry ?? []).map(song) });
-}));
+})));
 
 // ----------------------------------------------------------------- favourites
 
@@ -942,14 +1044,20 @@ app.post('/api/favorites', wrap(async (req, res) => {
   res.json(await favoritesPayload());
 }));
 
-app.delete('/api/favorites/:id', wrap(async (req, res) => {
+// same read-then-write pair as the playlist rows: the heart is one playlist, so two
+// deletes racing here lose a different track than the one that was asked for
+app.delete('/api/favorites/:id', wrap(async (req, res) => serialWrite(async () => {
   const { playlistId, songs } = await favoritesPayload();
   const index = songs.findIndex((entry) => entry.id === req.params.id);
   if (playlistId && index >= 0) {
     await call('updatePlaylist', { playlistId, songIndexToRemove: index });
   }
   res.json(await favoritesPayload());
-}));
+})));
+
+// an unknown /api path is not a page of the app: without this the SPA catch-all
+// answered it with index.html and a 200, which reads as "expected JSON" far away
+app.use('/api', (_req, res) => res.status(404).json({ error: 'No such endpoint' }));
 
 const dist = join(process.cwd(), 'dist');
 if (existsSync(dist)) {

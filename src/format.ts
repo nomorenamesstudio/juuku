@@ -5,9 +5,10 @@ export const formatTime = (seconds: number | undefined) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
+/** Hours and minutes from a rounded total, so 59.98 minutes reads as 1 hr 0 min. */
 export const formatTotal = (seconds: number) => {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.round((seconds % 3600) / 60);
-  if (h > 0) return `${h} hr ${m} min`;
-  return `${m} min`;
+  const minutes = Math.max(0, Math.round((Number.isFinite(seconds) ? seconds : 0) / 60));
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h} hr ${m} min` : `${m} min`;
 };

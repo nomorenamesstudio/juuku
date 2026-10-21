@@ -61,13 +61,13 @@ theme from the subscription in `theme.ts`, so components never pass a theme down
 
 **The server owns the credentials.** The browser could call Subsonic directly, but then the Navidrome password would live in the page and CORS would have to be opened on the Navidrome instance. A thin proxy keeps both problems away and gives one place to add auth later, when this is not just a LAN toy.
 
-**One poll target.** `/api/state` returns queue *and* status from a single `jukeboxControl?action=get` call, because Navidrome's `get` already embeds `jukeboxStatus`. One request per second, ~15 entries of JSON, no cache layer needed. The UI pauses polling while the tab is hidden.
+**One poll target.** `/api/state` returns queue *and* status from a single `jukeboxControl?action=get` call, because Navidrome's `get` already embeds `jukeboxStatus`. One request per second, ~15 entries of JSON, cached for 900 ms on the server and shared between devices. The UI pauses polling while the tab is hidden and never lets two polls overlap — a stuck player takes up to ten seconds, and the ticks used to stack up behind it.
 
 **Progress needs the queue.** Subsonic's status has `position` but no `duration`, so the progress bar divides the position by the duration of the entry at `currentIndex`.
 
 **No optimistic status.** Control actions return the authoritative status, and the UI then refetches state. Both round trips are local, so this is cheaper than reconciling optimistic state that mpv may not honour (a `skip` past the end is clamped, for example).
 
-**The UI is a player, not a control panel.** Four routes (`#/library`, `#/album/:id`, `#/favorites`, `#/queue`) plus a full-screen `#/player` that collapses into a fixed mini player. Routes are hash-based so the phone's back gesture closes what it should, and the mini player is the only chrome that is always there. The queue is a view, not a permanent column.
+**The UI is a player, not a control panel.** Eleven hash routes — `#/home`, `#/library/{albums,artists,playlists}`, `#/album/:id`, `#/artist/:id`, `#/playlist/:id`, `#/favorites`, `#/queue`, `#/search`, `#/settings` — plus a full-screen `#/player` that collapses into a fixed mini player. Routes are hash-based so the phone's back gesture closes what it should, and the mini player is the only chrome that is always there. The queue is a view, not a permanent column.
 
 **Motion is CSS-only and short.** Two durations and one spring easing on `:root`; entrances are keyframes on the view, the deck and the player's inner shell, everything else is a transition on hover/active. The player sheet is the one place with gesture code: a pointer handler tracks vertical travel and sets a transform, so the gesture cannot fight the CSS animation (the animation lives on the inner shell, the transform on the outer element). `prefers-reduced-motion` flattens all of it.
 

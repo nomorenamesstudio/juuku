@@ -15,9 +15,15 @@ function flush() {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  }).catch(() => {
-    // offline: localStorage still has it, the next write retries
-  });
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(`prefs not saved (${response.status})`);
+    })
+    .catch(() => {
+      // offline: put them back so the next write carries them too. Dropping them
+      // here meant the value never reached the server unless that key changed again
+      pending = { ...body.prefs, ...pending };
+    });
 }
 
 export function readPref<T>(key: string, fallback: T): T {

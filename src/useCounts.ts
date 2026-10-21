@@ -18,8 +18,11 @@ function load() {
       return cached;
     })
     .catch(() => {
-      cached = { albums: null, playlists: null, artists: [] };
-      return cached;
+      // keep the empty answer for this render, but do not cache it: one transient
+      // failure used to leave the pills and the Artists tab empty for the session
+      cached = null;
+      inflight = null;
+      return { albums: null, playlists: null, artists: [] };
     });
   return inflight;
 }

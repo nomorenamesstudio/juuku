@@ -17,6 +17,9 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const openActions = useTrackActions();
   const [confirming, setConfirming] = useState(false);
   const confirmRef = useRef<HTMLDivElement>(null);
+  // the track sheet removes songs through its own hook, so this view has to ask for
+  // the list again — it used to keep showing a row that was already gone
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!confirming) return;
@@ -51,7 +54,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
       },
       (err: Error) => setError(err.message),
     );
-  }, [id]);
+  }, [id, reloadKey]);
 
   if (error) return <p className="empty">{error}</p>;
 
@@ -120,7 +123,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
               playing={jbox.status?.playing}
               onPlay={() => jbox.playFrom(songs, index)}
               onFavorite={() => jbox.toggleFavorite(song)}
-              onMenu={() => openActions([song], { playlistId: id })}
+              onMenu={() => openActions([song], { playlistId: id, onDone: () => setReloadKey((n) => n + 1) })}
             />
           ))}
         </ul>

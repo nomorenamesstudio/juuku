@@ -46,6 +46,7 @@ Configuration is environment only — nothing is baked into the image:
 | `NAVIDROME_PASSWORD` | that user's password |
 | `HOST` / `PORT` | bind address and port inside the container (`0.0.0.0:3101`) |
 | `JUUKU_PASSWORD` | optional shared password; unset means no login at all |
+| `JUUKU_TRUST_PROXY` | only when a proxy is in front: a hop count (`1`) or `loopback`. See below |
 | `NODE_EXTRA_CA_CERTS` | optional, for a Navidrome behind a private CA |
 
 ### The Navidrome account, and `Jukebox.AdminOnly`
@@ -132,6 +133,13 @@ user: "0:0"
 
 Without the directory Settings shows `Players: not shared` and hides the button.
 
+Share the directory but skip `user: "0:0"` and you get the worst of both: the
+sockets are visible, mpv's files are not, and Settings says `0 running, 1 not
+reachable`. Juuku will not touch what it cannot open — deleting an unreachable socket
+used to cut Navidrome's only handle on a live player, which is exactly how you end up
+with two `mpv` processes playing over each other — but it also cannot quit it, so set
+the uid or leave `JUUKU_MPV_SOCKETS` unset.
+
 Preferences are kept per Navidrome account in one JSON file, so they survive a
 redeploy and follow a person from phone to desktop: lyrics settings, the recent
 search list, the library sort and the albums that played. Put a volume on
@@ -167,6 +175,25 @@ That works because the build is prefix-agnostic: `vite` emits relative asset URL
 and every API call is relative to the document rather than the host root. Nothing
 in the server knows about the prefix — the proxy removes it. See
 `docs/ARCHITECTURE.md` before adding an absolute URL back.
+
+### Tell it that a proxy is there
+
+`X-Forwarded-For` and `X-Forwarded-Proto` are **not trusted by default**, because
+with nothing in front they are just headers the client typed, and trusting them lets
+anyone hand the login throttle a fresh address per attempt. Behind a proxy the app
+therefore needs to be told, or two things go wrong: the session cookie is issued
+without `Secure` (the proxy terminated the TLS, the app cannot see it) and every
+browser looks like the same address, so eight failed sign-ins from anywhere lock out
+everyone.
+
+```sh
+# one proxy hop (Caddy, nginx, tailscale serve)
+JUUKU_TRUST_PROXY=1
+```
+
+A hop count is right when exactly one proxy appends the header. `JUUKU_TRUST_PROXY=loopback`
+trusts anything from 127.0.0.1 instead, which suits a proxy on the same host,
+including `tailscale serve` pointing at `127.0.0.1:3101`.
 
 ### Installing it as a PWA, and why HTTPS is worth it
 

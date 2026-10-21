@@ -10,12 +10,21 @@ export function ArtistView({ id, jbox }: { id: string; jbox: Jukebox }) {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loadingAll, setLoadingAll] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    getArtist(id).then((payload) => {
-      setArtist(payload.artist);
-      setAlbums(payload.albums);
-    });
+    setFailed(false);
+    getArtist(id).then(
+      (payload) => {
+        setArtist(payload.artist);
+        setAlbums(payload.albums);
+      },
+      // without this the page sat on "…" forever and the rejection went unhandled
+      (err: Error) => {
+        setFailed(true);
+        console.warn(`artist not read: ${err.message}`);
+      },
+    );
   }, [id]);
 
   const playAll = async () => {
@@ -23,6 +32,8 @@ export function ArtistView({ id, jbox }: { id: string; jbox: Jukebox }) {
     try {
       const { songs } = await getArtistSongs(id);
       if (songs.length) await jbox.playNow(songs);
+    } catch (err) {
+      jbox.notify((err as Error).message);
     } finally {
       setLoadingAll(false);
     }
@@ -33,6 +44,7 @@ export function ArtistView({ id, jbox }: { id: string; jbox: Jukebox }) {
       <button className="back" onClick={back.go}>
         <ChevronLeftIcon size={18} /> {back.label}
       </button>
+      {failed && <p className="empty">Could not read this artist just now.</p>}
       <header className="view-head artist-head">
         <div className="artist-heading">
           <h1 className="display">{artist?.name ?? '…'}</h1>

@@ -42,7 +42,14 @@ export function readCookie(header, name) {
   if (typeof header !== 'string') return undefined;
   for (const part of header.split(';')) {
     const [key, ...rest] = part.trim().split('=');
-    if (key === name) return decodeURIComponent(rest.join('='));
+    if (key !== name) continue;
+    try {
+      return decodeURIComponent(rest.join('='));
+    } catch {
+      // `juuku_session=%` is not a session, but the throw came out of a synchronous
+      // route, so every caller answered 500 where it should have answered 401
+      return undefined;
+    }
   }
   return undefined;
 }
@@ -50,6 +57,16 @@ export function readCookie(header, name) {
 /** Failed sign-ins per address, so a shared password is not brute-forceable. */
 export function createThrottle({ limit = 8, windowMs = 10 * 60 * 1000 } = {}) {
   const attempts = new Map();
+  // an address only left the map when that same address came back, so a client that
+  // never repeats one grew it for the life of the process
+  const PRUNE_ABOVE = 512;
+
+  const prune = () => {
+    const now = Date.now();
+    for (const [address, entry] of attempts) {
+      if (entry.resetAt < now) attempts.delete(address);
+    }
+  };
 
   return {
     blocked(address) {
@@ -62,6 +79,7 @@ export function createThrottle({ limit = 8, windowMs = 10 * 60 * 1000 } = {}) {
       return entry.count >= limit;
     },
     fail(address) {
+      if (attempts.size >= PRUNE_ABOVE) prune();
       const entry = attempts.get(address);
       if (!entry || entry.resetAt < Date.now()) {
         attempts.set(address, { count: 1, resetAt: Date.now() + windowMs });

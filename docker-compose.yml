@@ -19,7 +19,11 @@ services:
       # (the container cannot reach the socket's directory). scripts/audio-dev.sh
       # loads the module; unload it to cut the container off again.
       PULSE_SERVER: "tcp:172.17.0.1:4713"
-      ND_MPVCMDTEMPLATE: "mpv --ao=pulse --no-audio-display --pause %f --input-ipc-server=%s"
+      # `pulse,null` is a priority list: sound when the bridge is up, a silent player
+      # when it is not. Without the fallback a host with no audio daemon answers every
+      # play with `can't connect to mpv's socket: connection refused`, because mpv
+      # exits the moment it cannot open its output.
+      ND_MPVCMDTEMPLATE: "mpv --ao=pulse,null --no-audio-display --pause %f --input-ipc-server=%s"
     volumes:
       - navidrome-data:/data
       - navidrome-music:/music

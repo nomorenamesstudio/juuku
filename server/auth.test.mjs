@@ -44,3 +44,12 @@ test('cookies parse and the throttle locks an address after repeated failures', 
   throttle.clear('10.0.0.5');
   assert.equal(throttle.blocked('10.0.0.5'), false);
 });
+
+// A cookie the browser mangled is not a session. decodeURIComponent threw out of a
+// synchronous route, so a `juuku_session=%` header answered 500 on every call,
+// starting with the session check the app boots on.
+test('a malformed session cookie is not a session', () => {
+  assert.equal(readCookie('juuku_session=%', 'juuku_session'), undefined);
+  assert.equal(readCookie('juuku_session=%E0%A4%A', 'juuku_session'), undefined);
+  assert.equal(readCookie('juuku_session=abc%20def', 'juuku_session'), 'abc def');
+});

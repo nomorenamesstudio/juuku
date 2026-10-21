@@ -19,6 +19,8 @@ export function SettingsView({
   const [players, setPlayers] = useState<PlayerStatus | null>(null);
   const [restarting, setRestarting] = useState(false);
   const [restartNote, setRestartNote] = useState<string | null>(null);
+  // sockets that exist but refuse us, so "0 running" is not the whole story
+  const blocked = players?.blocked ?? 0;
 
   useEffect(() => {
     getHealth().then(setHealth, () => setHealth(null));
@@ -33,7 +35,7 @@ export function SettingsView({
       setRestartNote(
         `Killed ${result.quit} leftover ${result.quit === 1 ? 'player' : 'players'}${
           result.restored ? ', queue restored' : ''
-        }.`,
+        }.${result.blocked ? ` ${result.blocked} socket${result.blocked === 1 ? '' : 's'} could not be opened.` : ''}`,
       );
     } catch (err) {
       setRestartNote((err as Error).message);
@@ -146,7 +148,11 @@ export function SettingsView({
           <dd>{health?.user ?? '…'}</dd>
           <dt>Players</dt>
           <dd>
-            {players ? (players.shared ? `${players.players} running` : 'not shared') : '…'}
+            {players
+              ? players.shared
+                ? `${players.players} running${blocked ? `, ${blocked} not reachable` : ''}`
+                : 'not shared'
+              : '…'}
           </dd>
           <dt>Jukebox</dt>
           <dd>{health ? ('enabled' in health.jukebox && health.jukebox.enabled ? 'enabled' : 'off') : '…'}</dd>
@@ -155,6 +161,13 @@ export function SettingsView({
           <button className="secondary" onClick={() => void restart()} disabled={restarting}>
             {restarting ? 'Restarting…' : 'Restart playback'}
           </button>
+        )}
+        {players?.shared && blocked > 0 && (
+          <p className="fineprint settings-note">
+            {blocked === 1 ? 'A player socket is' : `${blocked} player sockets are`} visible but not
+            readable, so it cannot be quit from here: mpv creates its socket 0600 under its own uid, and this container
+            has to run as that uid (usually root) to open it. See SETUP.md.
+          </p>
         )}
         {restartNote && <p className="fineprint settings-note">{restartNote}</p>}
       </section>

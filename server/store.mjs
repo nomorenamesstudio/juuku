@@ -15,9 +15,9 @@ const FILE = join(DATA_DIR, 'prefs.json');
 const DEFAULT_PROFILE = { 'juuku.settings': null, 'juuku.search.recent': [], 'juuku.library.sort': 'newest' };
 
 let store = null;
+let loading = null;
 
-async function load() {
-  if (store) return store;
+async function readStore() {
   try {
     store = JSON.parse(await readFile(FILE, 'utf8'));
   } catch {
@@ -27,11 +27,33 @@ async function load() {
   return store;
 }
 
-async function persist() {
-  await mkdir(dirname(FILE), { recursive: true });
-  const temporary = `${FILE}.tmp`;
-  await writeFile(temporary, JSON.stringify(store, null, 2));
-  await rename(temporary, FILE);
+/**
+ * One load, however many requests arrive at once. This used to test `store` before
+ * awaiting the file, so twenty concurrent first calls all missed, built twenty
+ * separate stores and kept only the last — every other patch was written into an
+ * object nobody read again.
+ */
+function load() {
+  loading ??= readStore();
+  return loading;
+}
+
+/**
+ * One write at a time. Every save uses the same `.tmp` path, so two overlapping
+ * requests (a phone and a desktop both saving a setting) interleaved on it: the
+ * loser's rename failed, or the file was renamed mid-write.
+ */
+let saving = Promise.resolve();
+
+function persist() {
+  const run = saving.then(async () => {
+    await mkdir(dirname(FILE), { recursive: true });
+    const temporary = `${FILE}.tmp`;
+    await writeFile(temporary, JSON.stringify(store, null, 2));
+    await rename(temporary, FILE);
+  });
+  saving = run.catch(() => {});
+  return run;
 }
 
 /** Only the keys the client owns, and only in shapes it can read back. */

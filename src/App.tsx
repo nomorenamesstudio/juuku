@@ -57,6 +57,13 @@ const TABS = [
 function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
   const [pull, setPull] = useState(0);
   const pullRef = useRef(0);
+  // the caller's callback is a new closure on every render (the poll re-renders every
+  // second), and re-subscribing that often threw away a pull already in progress
+  const latest = useRef(onRefresh);
+
+  useEffect(() => {
+    latest.current = onRefresh;
+  }, [onRefresh]);
 
   useEffect(() => {
     if (!enabled || !window.matchMedia('(max-width: 899px)').matches) return;
@@ -88,7 +95,7 @@ function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
     };
 
     const onUp = () => {
-      if (armed && pullRef.current > 0.75) onRefresh();
+      if (armed && pullRef.current > 0.75) latest.current();
       reset();
     };
 
@@ -102,7 +109,7 @@ function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
       window.removeEventListener('pointerup', onUp, true);
       window.removeEventListener('pointercancel', reset, true);
     };
-  }, [enabled, onRefresh]);
+  }, [enabled]);
 
   return pull;
 }
@@ -225,6 +232,7 @@ export default function App() {
     songs: Song[];
     playlistId?: string;
     step?: 'playlists';
+    onDone?: () => void;
   } | null>(null);
   const isPlayer = route.name === 'player';
   // the full-screen player owns the screen, lyrics mode included: nothing but the

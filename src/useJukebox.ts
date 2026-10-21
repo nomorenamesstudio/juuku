@@ -81,6 +81,9 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   const armed = useRef(false);
   // this "ended" already had its repeat handled, so the poll does not loop it again
   const endHandled = useRef(false);
+  // the number of the newest state read, so a slow one cannot overwrite a fast one
+  const readSeq = useRef(0);
+  const polling = useRef(false);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -159,8 +162,12 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   }, []);
 
   const refresh = useCallback(async () => {
+    const mine = (readSeq.current += 1);
     try {
       const next = await getState();
+      // a read that started earlier can answer later: only the newest one may land,
+      // or the queue and its position jump back to where they were
+      if (mine !== readSeq.current) return;
       const previous = lastSnapshot.current;
       const lastIndex = next.entries.length - 1;
       lastSnapshot.current = {
@@ -196,7 +203,7 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
         void handleRepeatOne(next, previous);
       }
     } catch (err) {
-      setError((err as Error).message);
+      if (mine === readSeq.current) setError((err as Error).message);
     }
   }, [handleQueueEnd, handleRepeatOne]);
 
@@ -207,7 +214,13 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     getFavorites().then((payload) => setFavorites(payload.songs), () => {});
     refresh();
     const timer = window.setInterval(() => {
-      if (!document.hidden) refresh();
+      // a poll that is still waiting for a stuck server must not be joined by the
+      // next tick: ten of them used to stack up behind one hanging request
+      if (document.hidden || polling.current) return;
+      polling.current = true;
+      void refresh().finally(() => {
+        polling.current = false;
+      });
     }, POLL_MS);
     return () => {
       window.clearInterval(timer);
