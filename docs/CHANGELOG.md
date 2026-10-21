@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.5 — 2026-10-21
+
+- **Library** — a list that simply stopped read as a broken "Load more" button. It says so now: "That's the whole last-played list — 22 albums." on the recent sort, "That's all N albums." when the library fits in one page, and any order that is not alphabetical offers **Show all albums**, which switches the view to it. Reported against the last-played sort, where twenty-two albums and no button looked like a bug.
+- **Docs** — SETUP.md gained the migration note for anyone coming from the old `user: "0:0"` recipe: own Navidrome's data tree first, or its artwork store and image cache stay root-owned and cached covers disappear.
+
 ## v0.8.4 — 2026-10-21
 
 - **Fix** — no root anywhere, for real. The mpv sockets `Restart playback` uses are created `0600` under mpv's uid, so the docs asked for `user: "0:0"` — a root container that can overwrite anything inside the directories it mounts. Matching the uids removes the need: Navidrome and juuku both run as uid 1000, mpv's socket comes out owned by 1000, and juuku opens it as a normal user. `deploy/compose.yml` now ships that (`user: "1000:1000"`, the socket mount back on) and the two directories are owned by the same uid.

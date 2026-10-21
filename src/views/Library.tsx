@@ -187,6 +187,20 @@ export function Library({ tab }: { tab: LibraryTab }) {
               {loading ? 'Loading…' : 'Load more albums'}
             </button>
           )}
+          {!hasMore && !loading && albums.length > 0 && (
+            // a list that simply stops reads as a broken button, which is exactly how
+            // "last played" (twenty-something albums, no more to load) was reported
+            <p className="fineprint tail">
+              {sort === 'recent'
+                ? `That's the whole last-played list — ${albums.length} ${albums.length === 1 ? 'album' : 'albums'}.`
+                : `That's all ${albums.length} ${albums.length === 1 ? 'album' : 'albums'}.`}{' '}
+              {sort !== 'alphabeticalByName' && (
+                <button className="inline-link" onClick={() => changeSort('alphabeticalByName')}>
+                  Show all albums
+                </button>
+              )}
+            </p>
+          )}
         </>
       ) : (
         <ul className="plain-list artists">
