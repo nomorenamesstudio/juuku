@@ -163,6 +163,27 @@ that only needs to read its own files — which is a bad default to hand a stran
 copies the compose file, so it is gone. A root container here can overwrite anything
 inside the two directories it mounts, whatever their owner.
 
+### Coming from the root recipe
+
+The earlier version of this page asked for `user: "0:0"`. Navidrome wrote its
+database, its artwork store and its image cache as root, and ownership survives the
+switch — so the first non-root start cannot write artwork, and the covers *disappear*
+rather than error: the image cache is `0600 root`, a uid 1000 process cannot read it,
+and the app shows nothing where the picture was. Own the trees before the switch,
+once:
+
+```sh
+# navidrome's own data and sockets (from the host, no sudo needed if you are in docker)
+docker run --rm -v /path/to/navidrome/data:/d alpine chown -R 1000:1000 /d
+docker run --rm -v /path/to/navidrome/mpv-sockets:/s alpine chown -R 1000:1000 /s
+# juuku's two directories
+chown -R 1000:1000 /path/to/juuku/data /path/to/juuku/mpv-sockets
+```
+
+Navidrome's log is explicit about the first half of that: `Error retrieving coverArt
+… permission denied` for the cache, `Artwork: Failed to persist resolved image` for
+the store.
+
 Without the directory Settings shows `Players: not shared` and hides the button.
 
 Share the directory but give the containers different uids and you get the worst of
