@@ -114,31 +114,63 @@ clear the queue (Navidrome quits the player it knows about), quit whatever socke
 are left, then put the queue back and start again.
 
 For that to work the sockets have to be visible from this container, and mpv creates
-them `0600 root`:
+them `0600` under its own uid — so the two containers have to run as the **same** uid.
+That is the whole trick, and it needs no privileges: 1000 is what both images use by
+default, so name it explicitly on both and own the two directories with it.
 
 ```yaml
 # navidrome
 environment:
   - TMPDIR=/mpv-sockets
+user: "1000:1000"
 volumes:
   - ./mpv-sockets:/mpv-sockets
 # juuku
 environment:
   JUUKU_MPV_SOCKETS: /mpv-sockets
+user: "1000:1000"
 volumes:
   - ./mpv-sockets:/mpv-sockets
-# the sockets are root-only, so this container has to run as root to open them
-user: "0:0"
 ```
+
+```sh
+# once, next to the compose files, before the first start
+mkdir -p data mpv-sockets && chown 1000:1000 data mpv-sockets
+```
+
+If your host user is not uid 1000, use that uid on both containers instead of 1000 —
+the number matters only in that both sides agree. `deploy/compose.yml` already runs
+juuku this way.
+
+**Navidrome needs its audio access back too**, since root used to cover that as well.
+If it plays into a USB DAC or a sound card (`--audio-device=alsa/default`, or a
+`dmix` in `/etc/asound.conf`), give it the audio group — the `/dev/snd` nodes are
+`root:audio`, so a plain uid cannot open them:
+
+```yaml
+# navidrome
+user: "1000:1000"
+group_add:
+  - "29"          # the audio gid on the host: `getent group audio`
+```
+
+With `PULSE_SERVER`/`PIPEWIRE_REMOTE` pointing at a socket instead, that socket has
+to be readable by that uid for the same reason.
+
+Running juuku as root (`user: "0:0"`) also opens the sockets, and that is what this
+page used to recommend. It works, and it costs nothing but a root process on a box
+that only needs to read its own files — which is a bad default to hand a stranger who
+copies the compose file, so it is gone. A root container here can overwrite anything
+inside the two directories it mounts, whatever their owner.
 
 Without the directory Settings shows `Players: not shared` and hides the button.
 
-Share the directory but skip `user: "0:0"` and you get the worst of both: the
-sockets are visible, mpv's files are not, and Settings says `0 running, 1 not
-reachable`. Juuku will not touch what it cannot open — deleting an unreachable socket
-used to cut Navidrome's only handle on a live player, which is exactly how you end up
-with two `mpv` processes playing over each other — but it also cannot quit it, so set
-the uid or leave `JUUKU_MPV_SOCKETS` unset.
+Share the directory but give the containers different uids and you get the worst of
+both: the sockets are visible, mpv's files are not, and Settings says `0 running, 1
+not reachable`. Juuku will not touch what it cannot open — deleting an unreachable
+socket used to cut Navidrome's only handle on a live player, which is exactly how you
+end up with two `mpv` processes playing over each other — but it also cannot quit it,
+so match the uid or leave `JUUKU_MPV_SOCKETS` unset.
 
 Preferences are kept per Navidrome account in one JSON file, so they survive a
 redeploy and follow a person from phone to desktop: lyrics settings, the recent

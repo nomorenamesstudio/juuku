@@ -7,6 +7,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.4 — 2026-10-21
+
+- **Fix** — no root anywhere, for real. The mpv sockets `Restart playback` uses are created `0600` under mpv's uid, so the docs asked for `user: "0:0"` — a root container that can overwrite anything inside the directories it mounts. Matching the uids removes the need: Navidrome and juuku both run as uid 1000, mpv's socket comes out owned by 1000, and juuku opens it as a normal user. `deploy/compose.yml` now ships that (`user: "1000:1000"`, the socket mount back on) and the two directories are owned by the same uid.
+- **Proven without privileges** on the sandbox, both as the host app and as the built image with `--read-only --cap-drop ALL --no-new-privileges`: uid 1000 processes, sockets `srw------- 1000 1000`, `players: 1, blocked: 0`, and a leaked idle mpv beside Navidrome's own → `Restart playback` reported `quit: 1`, restored the queue at the same index and left one player and one socket.
+- **Docs** — SETUP.md's kill-switch section gives the uid-matched recipe (and why not root), including the audio group a non-root Navidrome needs for `/dev/snd`; SECURITY.md states the same in its hardening list.
+
 ## v0.8.3 — 2026-10-21
 
 Full code review, own pass plus an independent one from GLM through OpenRouter. Every item below was verified while fixing it.

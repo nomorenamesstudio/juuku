@@ -38,9 +38,12 @@ room, not like a website.
   tracked; `.env`, `.env.remote` and `.git-token` are ignored, and `.dockerignore`
   keeps them out of build contexts too.
 - **Non-root, read-only, no capabilities.** The image runs as uid 1000 with
-  `cap_drop: ALL`, `no-new-privileges` and a read-only root filesystem. The one
-  writable path is the `./data` volume, which has to be owned by that uid:
-  `mkdir -p data && chown 1000:1000 data`.
+  `cap_drop: ALL`, `no-new-privileges` and a read-only root filesystem. The writable
+  paths are the `./data` and `./mpv-sockets` volumes, which have to be owned by that
+  uid: `mkdir -p data mpv-sockets && chown 1000:1000 data mpv-sockets`. Quitting a
+  player Navidrome lost track of works through that shared directory and a matching
+  uid, not through privileges — an earlier version of these docs asked for
+  `user: "0:0"` and it is not needed.
 
 ## If it has to be reachable from outside
 

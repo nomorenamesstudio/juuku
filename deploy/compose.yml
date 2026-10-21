@@ -1,6 +1,10 @@
 # Juuku, deployed. Copy this file and .env.example next to it, fill in .env, run
-# `docker compose up -d`. The rootfs stays read-only; the one writable path is the
-# ./data volume, which holds the per-account preferences.
+# `docker compose up -d`. The rootfs stays read-only; the writable paths are the two
+# directories next to this file, both owned by uid 1000.
+#
+# No root anywhere: this container runs as uid 1000, the same uid Navidrome's mpv
+# runs as, so the 0600 IPC sockets mpv leaves behind can be opened — and quit — with
+# plain file ownership instead of privileges. See docs/SETUP.md.
 services:
   juuku:
     image: ghcr.io/nomorenamesstudio/juuku:latest
@@ -17,23 +21,23 @@ services:
       JUUKU_DATA_DIR: /data
       # Navidrome's mpv sockets, so Settings can quit a player Navidrome lost track
       # of. Needs Navidrome started with TMPDIR pointing at the same directory, and
-      # this container running as the uid mpv runs as (`user: "0:0"` below): mpv
-      # creates them 0600, so uid 1000 can see them but not open them. Unset this
-      # unless you are willing to add that, or Settings reports
-      # "0 running, N not reachable" and the button cannot quit anything.
-      # JUUKU_MPV_SOCKETS: /mpv-sockets
+      # with the same uid this container runs as (1000), which every image does by
+      # default. Without the mount Settings shows "Players: not shared".
+      JUUKU_MPV_SOCKETS: /mpv-sockets
     ports:
       # LAN only on purpose: the API can drive the jukebox and has no login.
-      # Reach it through your reverse proxy (see docs/SECURITY.md) if it ever
-      # needs to be reachable from outside.
+      # Reach it through your reverse proxy (see SECURITY.md) if it ever needs to be
+      # reachable from outside.
       - "3101:3101"
+    # the uid mpv runs as, so its 0600 sockets are ours to open. Also the reason the
+    # two directories below need this owner: `mkdir -p data mpv-sockets &&
+    # chown 1000:1000 data mpv-sockets`. Running a host user whose uid is not 1000?
+    # mirror it here and on Navidrome instead of matching this number.
+    user: "1000:1000"
     read_only: true
     volumes:
-      # the container runs as node (uid 1000), so this directory has to be writable
-      # by that uid: `mkdir -p data && chown 1000:1000 data`, or mirror the host uid
-      # here with `user: "<uid>:<gid>"`
       - ./data:/data
-      # - ./mpv-sockets:/mpv-sockets   # only alongside JUUKU_MPV_SOCKETS above
+      - ./mpv-sockets:/mpv-sockets
     tmpfs:
       - /tmp
     cap_drop:
