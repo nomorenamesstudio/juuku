@@ -1,67 +1,129 @@
-# Juuku <sub>ジューク</sub>
+# Juuku — A Free, Open-Source Remote for Navidrome's Jukebox Mode
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-b45309?style=for-the-badge)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-b45309?style=for-the-badge)](#contributing)
+[![React 19](https://img.shields.io/badge/React-19-1f6feb?style=for-the-badge)](src/)
+[![Node 22](https://img.shields.io/badge/Node-22-3fb950?style=for-the-badge)](server/)
+[![Build](https://github.com/nomorenamesstudio/juuku/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nomorenamesstudio/juuku/actions/workflows/test.yml)
 
 ![Juuku: the wordmark, the line “The remote for the jukebox in the room.”, and the album, library and lyrics screens on phones](docs/social/og-1200x630.jpg)
 
-*Juuku* is a jukebox with the middle knocked out — `ジューク` is how Japanese shortens `ジュークボックス`.
+A free, open-source remote for [Navidrome](https://www.navidrome.org/)'s jukebox
+mode that turns any browser on your network into the remote for the machine with the
+speakers — and gives you a real library, queue and player instead of a raw Subsonic
+endpoint.
 
-Remote control for [Navidrome](https://www.navidrome.org/)'s **jukebox mode**: browse the library, queue music, skip, pause, favorite and set the volume on the box that actually has the speakers, from any browser on the network.
+*Juuku* (ジューク) is how Japanese shortens ジュークボックス, the jukebox.
 
-Navidrome's own web UI cannot drive the jukebox — the feature is only reachable through the Subsonic `jukeboxControl` endpoint. Juuku is that remote.
+## Why this exists
+
+Navidrome can drive `mpv` on its own host, but its web UI has no way to reach that
+feature: jukebox control only exists behind the Subsonic `jukeboxControl` endpoint. So
+the music plays in the room and the only way to change it is to walk over to that
+machine. Juuku is the remote that should have come in the box.
+
+## What you get
+
+| | |
+|---|---|
+| **Library** | Album grid with paging, artist list, one search across songs, albums and artists. Tapping a track queues it, ▶ plays it now. |
+| **Player** | Full-screen player that minimizes to a bar: artwork, scrubber that seeks inside the track, transport, volume, favorite. |
+| **Queue** | Its own view: skip to an entry, remove one, shuffle, clear the lot. It follows the playing track by itself. |
+| **Favorites** | The heart writes to a `Favorites` playlist in Navidrome, so your other clients see the same list. |
+| **Lyrics** | Synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none. |
+| **Home** | What played last — albums and playlists — plus last added, newest release and daily picks, from your own library. |
+| **Three themes** | Mocha (amber, serif), Modern (turquoise, sans) and Geek (green mono, pixel icons). Same layout, same data. |
+| **Phone first** | Sidebar on a wide screen, tab bar on a phone, installs to the home screen as a PWA. |
+| **One command** | A single Docker container, uid 1000, read-only root filesystem, no capabilities. |
 
 ![The album page on a wide screen, with the same screen on a phone beside it](docs/screenshot.jpg)
 
-Three themes, one layout — Mocha, Modern and Geek differ in colour, type and icons,
-not in what they show:
+Three themes, one layout — Mocha, Modern and Geek differ in color, type and icons, not
+in what they show:
 
 ![Mocha, Modern and Geek](docs/themes.jpg)
 
-The same three themes, the same screenshots and a short FAQ live on the landing page:
+The same themes, the same screenshots and a short FAQ live on the landing page:
 <https://juuku.nomorenames.studio> ([source](site/)).
 
-## Run it
+## Quick start
+
+1. Point one of these at your Navidrome:
 
 ```sh
 docker run -d --name juuku -p 3101:3101 --read-only --cap-drop ALL \
-  -e NAVIDROME_URL=http://navidrome:4533 -e NAVIDROME_USER=juuku -e NAVIDROME_PASSWORD=… \
-  ghcr.io/nomorenamesstudio/juuku:latest
+  -e NAVIDROME_URL=http://navidrome:4533 -e NAVIDROME_USER=juuku \
+  -e NAVIDROME_PASSWORD=… ghcr.io/nomorenamesstudio/juuku:latest
 ```
 
-Then open `http://<host>:3101` on the phone. `deploy/compose.yml` is the fuller
-version (read-only rootfs, no capabilities, healthcheck), and
-[docs/SETUP.md](docs/SETUP.md) covers the rest, including
+2. Open `http://<host>:3101` on your phone and queue something.
+
+`deploy/compose.yml` is the fuller version (data volume, healthcheck,
+`no-new-privileges`), and [docs/SETUP.md](docs/SETUP.md) covers the rest, including
 [running it behind a path prefix](docs/SETUP.md#behind-a-path-prefix-tailscale-a-reverse-proxy-subpath).
 
-### Settings
-
-Two different passwords, and they are not interchangeable:
+### Two passwords, not interchangeable
 
 | variable | what it is |
 |---|---|
 | `NAVIDROME_URL` | the Navidrome that plays the music, e.g. `http://navidrome:4533` |
-| `NAVIDROME_USER` | the Navidrome account Juuku signs in as — a normal, non-admin one is enough |
-| `NAVIDROME_PASSWORD` | **that** account's password. Used by the server only; never sent to the browser |
-| `JUUKU_PASSWORD` | optional lock on **Juuku itself**. Unset means no login at all (LAN default). Set it and the browser asks once, for 30 days |
-| `HOST` / `PORT` | where the app listens inside the container, `0.0.0.0:3101` |
+| `NAVIDROME_USER` | the Navidrome account Juuku signs in as |
+| `NAVIDROME_PASSWORD` | **that** account's password. Server-side only, never sent to the browser |
+| `JUUKU_PASSWORD` | optional lock on Juuku itself. Unset means no login at all (the LAN default) |
+| `JUUKU_TRUST_PROXY` | only behind a reverse proxy: a hop count (`1`) or `loopback` |
 
-So `NAVIDROME_PASSWORD` is how the box talks to the music server; `JUUKU_PASSWORD`
-is what stops someone else on the network from queueing their own taste.
+Navidrome defaults `Jukebox.AdminOnly` to true, so the Juuku account has to be an admin
+unless you set `ND_JUKEBOX_ADMINONLY=false` on the Navidrome side. That trade, and the
+rest of the threat model, is [SECURITY.md](SECURITY.md) — this is a remote for the
+room, not a website.
 
-[SECURITY.md](SECURITY.md) says the rest — it is a remote for the room, not a
-website.
+## How it works
 
-## What it does
+```
+phone / laptop        juuku (Node)              navidrome              the room
+   browser  ──HTTP──▶  server + built UI  ──Subsonic──▶  jukeboxControl ──▶  mpv ──▶ speakers
+```
 
-- **Library** — album grid with paging, artist list, and one search across songs, albums and artists. Tapping a track queues it; ▶ plays it now.
-- **Player** — a full-screen player that minimizes to a bottom bar: artwork, scrubber (seeks inside the current track), transport, volume, favorite.
-- **Queue** — its own view, opened when you want it: skip to an entry, remove one, shuffle, or clear the lot.
-- **Favorites** — the heart writes to a `Favorites` playlist in Navidrome, so other clients see it too.
-- **Lyrics** — synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none.
-- **Themes** — Mocha (amber, serif, Lucide), Modern (turquoise, sans, Phosphor) and Geek (green mono, pixel icons); the UI and its data are identical in all three.
+- **Credentials stay on the server.** The browser only ever sees Juuku's own JSON; the
+  Subsonic call signs in with a salted token (`t=md5(password + salt)`).
+- **One poll target.** `/api/state` returns queue and status together, once a second,
+  cached for a moment on the server so three devices do not mean three upstream calls.
+- **One queue, one room.** Navidrome's jukebox has a single global queue and a single
+  set of speakers. That is the point.
+- **It heals players.** Navidrome cannot always reap a dead `mpv`; Settings → *Restart
+  playback* quits the leftovers over their own IPC sockets, then rebuilds the queue.
+  Needs `JUUKU_MPV_SOCKETS` and matching uids, never root.
 
-Works on a phone first and gets a sidebar on wide screens, and installs to a home
-screen as a PWA — [that needs HTTPS, which is easy on a private network](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the decisions and
+[docs/API.md](docs/API.md) for the exposed surface.
 
-## Quick start
+## FAQ
+
+**Do I need a Navidrome admin account?** By default yes, because Navidrome only lets
+admins drive the jukebox. Set `ND_JUKEBOX_ADMINONLY=false` and a plain account works.
+
+**Does the phone play the music?** No. `mpv` runs on the Navidrome host, next to the
+speakers. The phone is only the remote, which is why it works from the sofa.
+
+**Is it really free?** MIT, no accounts, no telemetry, no license server, no paid tier.
+
+**Why no AI?** There is no model in the runtime: no API key, no tokens, no per-request
+cost. (AI did help build it — see [Built with AI](#built-with-ai).)
+
+**Where do my settings go?** Three small JSON files in the data directory on your own
+box: preferences, the recent log and the last volume. Nothing leaves the network.
+
+**Does it need HTTPS?** Only for the home-screen install; over plain HTTP it works. A
+tailnet and `tailscale serve` is the easy way — see
+[docs/SETUP.md](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).
+
+**Can I run it without Docker?** Yes: `npm install && npm run build && npm start`. The
+dev setup is below.
+
+**Is there an API?** The UI talks to one small JSON API, documented in
+[docs/API.md](docs/API.md).
+
+## Development
 
 ```sh
 npm install
@@ -70,75 +132,56 @@ npm install
 npm run dev                 # api :3101 + web :3100
 ```
 
-Open <http://127.0.0.1:3100>. The sandbox needs albums first: drop a few into
-`sandbox/music`, then run `./scripts/sandbox-up.sh` again. Everything else — Docker,
-a phone on the LAN, credentials — is in [docs/SETUP.md](docs/SETUP.md).
+Open <http://127.0.0.1:3100>. Drop a few albums into `sandbox/music` and re-run
+`./scripts/sandbox-up.sh` if the sandbox is empty.
 
-`npm run dev` runs two processes: the API server (`server/`, holds the Subsonic credentials) and Vite. `npm run build && npm start` serves the built app and the API from `:3101` alone.
-
-## How it talks to Navidrome
-
-Browser → Juuku API → Subsonic `/rest/jukeboxControl` → Navidrome → `mpv` on that host.
-
-- Credentials stay server-side; the browser only sees Juuku's own JSON.
-- Auth is Subsonic salted token (`t=md5(password + salt)`), so the password never travels.
-- There is no push channel in the Subsonic API, so the UI polls `/api/state` once a second.
-- One queue, one device: Navidrome's jukebox has a single global playback queue. `Jukebox.AdminOnly` decides who may drive it.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the decisions and [docs/API.md](docs/API.md) for the exposed surface.
+```
+server/              API + Subsonic client (plain ESM Node, no build step)
+src/                 React UI (Vite + TS): views/, rows, player, mini player
+src/views/           Library, Album, Artist, Playlist, Queue, Favorites, Player, Settings
+public/fonts/        Bricolage Grotesque, Instrument Serif, Geist Mono (SIL OFL)
+sandbox/             throwaway music and data for the dev instance
+scripts/             sandbox-up.sh, audio-dev.sh
+docker-compose.yml   the throwaway Navidrome with jukebox enabled
+docs/                INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
+site/                the landing page (GitHub Pages), static, no build step
+```
 
 ## Docs
 
 | | |
 |---|---|
 | [Setup](docs/SETUP.md) | sandbox, Docker, phone testing, credentials, traps |
-| [Setup → path prefix](docs/SETUP.md#behind-a-path-prefix-tailscale-a-reverse-proxy-subpath) | serving it at `/juuku` behind `tailscale serve` or any proxy subpath |
-| [Setup → PWA](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it) | home-screen install, and why HTTPS unlocks the rest |
-| [Architecture](docs/ARCHITECTURE.md) | how jukebox polling, repeat and the queue model work |
+| [Architecture](docs/ARCHITECTURE.md) | polling, repeat, the queue model, player healing |
 | [API](docs/API.md) | the HTTP surface the UI talks to |
 | [Security](SECURITY.md) | threat model, the no-login default, reverse-proxy recipe |
-| [Changelog](docs/CHANGELOG.md) | dated entries |
+| [Changelog](docs/CHANGELOG.md) | dated entries, tagged Feature / Fix / Break |
 
-## Configuration
+## Contributing
 
-Copy `.env.example` to `.env` and point it at the Navidrome you want to control:
+1. Open an issue first for anything bigger than a typo, so we agree on the shape.
+2. Fork, branch, and keep the change to the thing you named — this is a remote, not a
+   media server.
+3. Run `npm test` and `npm run build` before the PR. Plain-spoken review, no ceremony.
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `NAVIDROME_URL` | `http://127.0.0.1:4533` | Navidrome base URL |
-| `NAVIDROME_USER` | `admin` | User with jukebox permission |
-| `NAVIDROME_PASSWORD` | `juuku` | That user's password (the sandbox default) |
-| `PORT` | `3101` | Juuku API port |
+## License
 
-## Layout
+MIT — see [LICENSE](LICENSE). Bundled assets keep their own licenses: Bricolage
+Grotesque, Instrument Serif and Geist Mono are SIL OFL (licenses in `public/fonts/`),
+the geek icons are [Pixelarticons](https://github.com/halfmage/pixelarticons) by Gerrit
+Halfmann (MIT) and the modern icons are [Phosphor](https://phosphoricons.com) (MIT).
 
-```
-server/          API + Subsonic client (plain ESM Node, no build step)
-src/             React UI (Vite + TS): views/, rows, player, mini player
-src/views/       Library, AlbumView, ArtistView, QueueView, FavoritesView, PlayerView
-public/fonts/    Bricolage Grotesque, Instrument Serif, Geist Mono (SIL OFL, licenses alongside)
-sandbox/         throwaway music/data mount points for the dev instance
-scripts/         sandbox-up.sh — compose + seed music + create admin + scan
-                 audio-dev.sh — route the container's mpv to your speakers
-docker-compose.yml   the throwaway Navidrome with jukebox enabled
-docs/            INDEX, API, ARCHITECTURE, SETUP, CHANGELOG
-site/            the landing page (GitHub Pages), static, no build step
-```
+## Built with AI
+
+Hand-written and AI-enhanced. The specification, the decisions and the review are mine;
+the implementation was drafted with DeepSeek V4.1 Flash in DeepSeek Harness. The commit
+history and [docs/CHANGELOG.md](docs/CHANGELOG.md) show what landed when.
 
 ## Support
 
 Free, MIT, no telemetry, no accounts. If Juuku earns a place in your setup:
 [buymeacoffee.com/nomorenames](https://buymeacoffee.com/nomorenames).
 
-## License
+[![GitHub stars](https://img.shields.io/github/stars/nomorenamesstudio/juuku?style=for-the-badge&color=b45309)](https://github.com/nomorenamesstudio/juuku/stargazers)
 
-MIT — see [LICENSE](LICENSE).
-
-Bundled assets keep their own licenses: Bricolage Grotesque, Instrument Serif and
-Geist Mono are SIL OFL (license files in `public/fonts/`), and the icon sets are
-[Pixelarticons](https://github.com/halfmage/pixelarticons) by Gerrit Halfmann (geek,
-MIT) and [Phosphor Icons](https://phosphoricons.com) (modern, fill weight, MIT).
-
-## Built with AI
-
-Hand-written and AI-enhanced. The specification, decisions and review are mine; the implementation was drafted with DeepSeek V4.1 Flash in DeepSeek Harness. The commit history and [docs/CHANGELOG.md](docs/CHANGELOG.md) show what landed when.
+Built by [K](https://github.com/nomorenamesstudio) | [nomorenames.studio](https://nomorenames.studio)
