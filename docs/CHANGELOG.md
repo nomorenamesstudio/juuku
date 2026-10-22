@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.9 — 2026-10-22
+
+- **Fix** — covers that "disappeared" were a cached JSON error. When Navidrome cannot produce a cover (no artwork for the id, or its own artwork store unreadable) it answers **HTTP 200** with a subsonic error in the body, and the proxy passed that on as `Content-Type: application/json` with a day of cache — so the browser kept a JSON error where the picture belongs, long after the server could serve it again. A non-image body is refused now (404 for code 70, 502 otherwise), failures carry `no-store`, and cover URLs carry `v=2` so anything a browser cached in that window is fetched fresh. Measured before the fix: 13 artists whose covers all served valid JPEGs from the server while the app showed none.
+- **Library** — one test for the trust boundary in `server/subsonic.mjs`: a 200 that carries an error is not artwork. Red on the old code, green now.
+
 ## v0.8.8 — 2026-10-21
 
 - **Library** — the note that closes a list is centred under the grid. Left-aligned it read as a stray line rather than the end of the list; only that note centres, the queue's tail note and the rest of the fine print are untouched.

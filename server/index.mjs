@@ -816,10 +816,18 @@ app.get('/api/artists/:id/songs', wrap(async (req, res) => {
 
 app.get('/api/cover/:id', wrap(async (req, res) => {
   const size = clampCount(req.query.size, 300, 16, 1200);
-  const { body, contentType } = await binary('getCoverArt', { id: req.params.id, size });
-  res.setHeader('Content-Type', contentType);
+  let art;
+  try {
+    art = await binary('getCoverArt', { id: req.params.id, size });
+  } catch (err) {
+    // a cover that is missing now may be resolved later, so do not let a failure be
+    // remembered: a cached miss outlives the fix and looks like lost artwork
+    res.setHeader('Cache-Control', 'no-store');
+    throw err;
+  }
+  res.setHeader('Content-Type', art.contentType);
   res.setHeader('Cache-Control', 'public, max-age=86400');
-  res.end(body);
+  res.end(art.body);
 }));
 
 // --------------------------------------------------------------------- lyrics

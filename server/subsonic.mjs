@@ -71,11 +71,17 @@ export async function call(endpoint, params = {}, options = {}) {
 export async function binary(endpoint, params) {
   const url = `${config.url}/rest/${endpoint}?${query(params)}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  const body = Buffer.from(await res.arrayBuffer());
   if (!res.ok) throw new ApiError(502, `${endpoint}: ${res.status}`);
-  return {
-    body: Buffer.from(await res.arrayBuffer()),
-    contentType: res.headers.get('content-type') ?? 'application/octet-stream',
-  };
+  const contentType = res.headers.get('content-type') ?? 'application/octet-stream';
+  // Navidrome answers 200 with a subsonic error body when it cannot produce the file:
+  // no artwork for that id, or its own artwork store unreadable. Handing that on as
+  // artwork made the browser cache a JSON error in place of a cover for a day.
+  if (!contentType.startsWith('image/')) {
+    const code = /"code"\s*:\s*(\d+)/.exec(body.toString('utf8').slice(0, 400))?.[1];
+    throw new ApiError(code === '70' ? 404 : 502, `${endpoint}: no image (${contentType}${code ? `, code ${code}` : ''})`);
+  }
+  return { body, contentType };
 }
 
 /**

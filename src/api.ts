@@ -210,5 +210,12 @@ export const removeFromPlaylist = (id: string, songId: string) =>
     method: 'DELETE',
   });
 
+/**
+ * Bumped when the proxy used to hand out non-images (0.8.8 and earlier): every cover
+ * URL a browser cached in that window is a JSON error, and a new URL is the only way
+ * to make it fetch again without asking anyone to clear their cache.
+ */
+const COVER_VERSION = 'v=2';
+
 export const coverUrl = (id: string | undefined, size = 400) =>
-  id ? `api/cover/${encodeURIComponent(id)}?size=${size}` : undefined;
+  id ? `api/cover/${encodeURIComponent(id)}?size=${size}&${COVER_VERSION}` : undefined;
