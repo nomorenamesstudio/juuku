@@ -208,6 +208,20 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   }, [handleQueueEnd, handleRepeatOne]);
 
   useEffect(() => {
+    // a phone that was in a pocket for an hour must not show the queue from back then:
+    // the next interval tick can be a second away, so ask as soon as it is visible
+    const onVisible = () => {
+      if (!document.hidden) void refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('pageshow', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('pageshow', onVisible);
+    };
+  }, [refresh]);
+
+  useEffect(() => {
     // while the login screen is up there is nothing to poll for, and every call is a 401
     if (paused) return;
     getHealth().then(setHealth, (err: Error) => setError(err.message));

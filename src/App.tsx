@@ -330,13 +330,18 @@ export default function App() {
   // first fetches race the session check and 401
   if (!session || !prefsReady) {
     return (
-      <main className="boot">
-        <span className="wordmark-stack">
-          <span className="wordmark-latin">juuku</span>
-          <span className="wordmark-kana" lang="ja">
-            ジューク
+      <main className="boot" aria-busy="true">
+        <div className="boot-stack">
+          <span className="wordmark-stack">
+            <span className="wordmark-latin">juuku</span>
+            <span className="wordmark-kana" lang="ja">
+              ジューク
+            </span>
           </span>
-        </span>
+          {/* a static wordmark on a slow boot reads as a broken app */}
+          <span className="boot-pulse" aria-hidden="true" />
+        </div>
+        <span className="sr-only">Loading</span>
       </main>
     );
   }

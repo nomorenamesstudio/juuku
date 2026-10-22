@@ -7,6 +7,7 @@ import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMar
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
+import { isVolumeReset, lastVolume, loadVolume, rememberVolume } from './volume.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
 import { alphabeticalBy } from './sort.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
@@ -239,6 +240,7 @@ function saveRecent() {
 }
 
 loadRecent();
+void loadVolume();
 
 function noteAlbum(previous, next) {
   const index = previous?.status?.currentIndex ?? -1;
@@ -264,6 +266,8 @@ async function recentlyPlayed(size, offset) {
 const STATE_TTL_MS = 900;
 /** bumped by every write, so a read that started before it cannot cache its answer */
 let stateEpoch = 0;
+/** a reset is corrected at most this often, so a failing setGain cannot spam */
+let lastVolumeFixAt = 0;
 
 function invalidateState() {
   stateEpoch += 1;
@@ -297,6 +301,12 @@ function readState() {
         stateCache.payload = payload;
         stateCache.at = Date.now();
       }
+      // a player that came back on its own (Navidrome restarted, mpv respawned) reports
+      // full volume; correct it once, outside this read, and only for that signature
+      if (payload.status.playing && isVolumeReset(payload.status.gain) && Date.now() - lastVolumeFixAt > 10_000) {
+        lastVolumeFixAt = Date.now();
+        void serialWrite(() => restoreVolume(payload)).catch((err) => console.warn(`volume restore failed: ${err.message}`));
+      }
       return payload;
     })
     .finally(() => {
@@ -319,6 +329,28 @@ app.get('/api/player/status', wrap(async (_req, res) => {
   const report = await socketReport();
   res.json({ shared: socketsShared(), players: report.reachable, blocked: report.blocked });
 }));
+
+/**
+ * Navidrome starts every new player at full volume, so a restart or a rebuilt queue
+ * arrives at 100% whatever the slider said. Put the remembered level back — but only
+ * when the observed level is that fresh-player signature, never over a real choice.
+ */
+async function restoreVolume(status) {
+  const current = status?.gain ?? (await readState()).status.gain;
+  if (!isVolumeReset(current)) return false;
+  const gain = lastVolume();
+  console.log(`[volume] restoring ${Math.round(gain * 100)}% over the player's ${Math.round(current * 100)}%`);
+  await call('jukeboxControl', { action: 'setGain', gain });
+  invalidateState();
+  return true;
+}
+
+/** the status a write returns should already show the level the room is at */
+async function withVolume(status) {
+  if (!isVolumeReset(status.gain)) return status;
+  await restoreVolume(status);
+  return { ...status, gain: lastVolume() };
+}
 
 let lastHealAt = 0;
 
@@ -344,6 +376,7 @@ async function restartPlayback() {
     const target = Math.min(index, ids.length - 1);
     await call('jukeboxControl', { action: 'skip', index: target });
     if (wasPlaying) await call('jukeboxControl', { action: 'start' });
+    await restoreVolume();
     invalidateState();
   }
 
@@ -447,7 +480,8 @@ app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
   );
     // the next poll must not serve the state from before this action
     invalidateState();
-    res.json(statusOf(response));
+    if (action === 'setGain') rememberVolume(Number(gain));
+    res.json(action === 'setGain' ? statusOf(response) : await withVolume(statusOf(response)));
   })));
 
 /**
@@ -488,7 +522,7 @@ app.post('/api/queue/next', wrap(async (req, res) => serialWrite(async () => {
   const response = await call('jukeboxControl', { action: 'status' });
   // same as /api/play: the queue changed, so the cached state is from before it
   invalidateState();
-  res.json(statusOf(response));
+  res.json(await withVolume(statusOf(response)));
 })));
 
 /**
@@ -532,7 +566,7 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   const response = await call('jukeboxControl', { action: 'start' });
   // without this the next poll served the queue from before the play for up to a second
   invalidateState();
-  res.json(statusOf(response));
+  res.json(await withVolume(statusOf(response)));
 })));
 
 // -------------------------------------------------------------------- library

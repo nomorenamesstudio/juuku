@@ -11,7 +11,7 @@ room, not like a website.
 |---|---|
 | Navidrome credentials | in the environment (`NAVIDROME_*`), never in the image, never in the repo, never sent to the browser |
 | Browser session | none — the browser talks only to Juuku's own API on the same origin |
-| On-disk state | two JSON files in the data volume: `prefs.json` (per-account preferences) and `recent.json` (the albums that played). Nothing else, and the image itself writes nothing |
+| On-disk state | three JSON files in the data volume: `prefs.json` (per-account preferences), `recent.json` (the albums that played) and `volume.json` (the last level set from the app). Nothing else, and the image itself writes nothing |
 
 ## The default posture
 

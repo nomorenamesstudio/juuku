@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { type Album, type AlbumSort, type Artist, type HomeRows, coverUrl, getHome } from '../api';
 import { Cover } from '../Cover';
 import { ChevronLeftIcon } from '../icons';
@@ -170,25 +170,37 @@ export function HomeView() {
   const [rows, setRows] = useState<HomeRows | null>(cache?.rows ?? null);
   const [failed, setFailed] = useState(false);
 
+  const load = useCallback(() => {
+    getHome().then(
+      (payload) => {
+        cache = { at: Date.now(), rows: payload };
+        setRows(payload);
+        setFailed(false);
+      },
+      () => setFailed(true),
+    );
+  }, []);
+
   useEffect(() => {
     if (cache && Date.now() - cache.at < CACHE_MS) {
       setRows(cache.rows);
       return;
     }
-    let alive = true;
-    getHome().then(
-      (payload) => {
-        cache = { at: Date.now(), rows: payload };
-        if (alive) setRows(payload);
-      },
-      () => {
-        if (alive) setFailed(true);
-      },
-    );
-    return () => {
-      alive = false;
+    load();
+  }, [load]);
+
+  // a phone that comes back to the app should not be reading yesterday's shelves
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden && (!cache || Date.now() - cache.at > 5000)) load();
     };
-  }, []);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('pageshow', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('pageshow', onVisible);
+    };
+  }, [load]);
 
   const rowsOf = (key: AlbumShelfKey) => rows?.[key] ?? [];
   const artistsOf = () => rows?.dailyArtists ?? [];

@@ -7,6 +7,12 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.11 — 2026-10-22
+
+- **Fix** — the room's volume is remembered. Navidrome starts every new mpv at full volume, so a restart or a rebuilt queue came back at 100%: the last level set from the app is kept in `volume.json` in the data dir and put back whenever a player reports that fresh-100% signature — never over a level anyone chose — and the write responses already carry the restored level so the slider never flashes. Measured: 30% set, Navidrome restarted, play returned `gain: 0.3`.
+- **Boot** — a slow start looks like work now: the wordmark carries a thin pulsing bar, `aria-busy` and a screen-reader "Loading". The library says "Reading the library…" while the first page is in flight instead of the false "Nothing played through Navidrome yet…".
+- **Resume** — coming back to the app refreshes immediately rather than on the next poll tick (measured 142/778/785 ms → 11/2/1 ms), and the home shelves refetch once their cache is older than five seconds.
+
 ## v0.8.10 — 2026-10-22
 
 - **Fix** — "Add to queue" on an album page wrapped onto two lines on a phone. `.album-meta` and `.album-actions` are centred items, so both shrank to their widest text: the action row got 285px of a 353px column, and since 0.8.7 made it a flex row the pills shrink instead of overflowing, so the label broke. Both take the full width now — Play album 171px, Add to queue 173px, one line each — and the playlist row with its kebab is unchanged at 145/147/42.
