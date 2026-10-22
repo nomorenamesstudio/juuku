@@ -184,6 +184,20 @@ Navidrome's log is explicit about the first half of that: `Error retrieving cove
 … permission denied` for the cache, `Artwork: Failed to persist resolved image` for
 the store.
 
+**Check where juuku's data actually lives before you chown a path.** If the compose
+file names a volume instead of a bind mount (`- juuku-data:/data`, which is what a
+`docker compose` project usually ends up with), the host directory you would chown is
+not the one the container reads — Docker made a named volume, owned by root, and a
+uid 1000 container cannot write a byte of it. The app keeps working and loses only its
+writes: preferences stop saving, `recent.json` stops updating, and the log says
+`volume not saved: EACCES: permission denied` or `recent.json not saved`. Own the
+volume itself:
+
+```sh
+docker volume ls | grep juuku                     # find the real name, e.g. juuku_juuku-data
+docker run --rm -v juuku_juuku-data:/data alpine chown -R 1000:1000 /data
+```
+
 Without the directory Settings shows `Players: not shared` and hides the button.
 
 Share the directory but give the containers different uids and you get the worst of
