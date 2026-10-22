@@ -1,0 +1,3 @@
+# everything here is public and meant to be read, including by AI crawlers
+User-agent: *
+Allow: /

@@ -3,19 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Juuku — the remote for the jukebox in the room</title>
-    <meta
-      name="description"
-      content="A web remote for Navidrome's jukebox mode: browse the library, queue, skip, favorite and set the volume from any phone on your network. One container, three themes, MIT."
-    />
+    <title>Juuku — a free remote for Navidrome's jukebox mode</title>
+    <meta name="description" content="Juuku is a free, open-source web remote for Navidrome's jukebox mode: browse your library, queue, skip and set the volume from any phone on the network." />
     <link rel="canonical" href="https://juuku.nomorenames.studio/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Juuku" />
-    <meta property="og:title" content="Juuku — the remote for the jukebox in the room" />
-    <meta
-      property="og:description"
-      content="Navidrome's jukebox mode has no remote of its own. Juuku is one: queue, skip, favorite, volume, from any phone on the network."
-    />
+    <meta property="og:title" content="Juuku — a free remote for Navidrome's jukebox mode" />
+    <meta property="og:description" content="Juuku is a free, open-source web remote for Navidrome's jukebox mode: browse your library, queue, skip and set the volume from any phone on the network." />
     <meta property="og:url" content="https://juuku.nomorenames.studio/" />
     <meta property="og:image" content="https://juuku.nomorenames.studio/social-og.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -41,7 +35,94 @@
     </script>
     <link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="style.css?v=58" />
+    <script type="application/ld+json">
+{
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Juuku",
+      "description": "A free, open-source web remote for Navidrome's jukebox mode: browse, queue, skip and set the volume from any phone on the network.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web",
+      "url": "https://juuku.nomorenames.studio/",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "license": "https://github.com/nomorenamesstudio/juuku/blob/main/LICENSE",
+      "codeRepository": "https://github.com/nomorenamesstudio/juuku",
+      "author": {
+        "@type": "Person",
+        "name": "K",
+        "url": "https://nomorenames.studio"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+{
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I have to run another server?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A small container next to your Navidrome, on the same machine or the same network. No database, no cloud, no account."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why not just use Navidrome's own UI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Jukebox control lives behind the Subsonic jukeboxControl endpoint, and Navidrome's player never calls it. Juuku does — and keeps the Navidrome password on the server, where the browser cannot see it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who can queue songs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Whoever can reach the port. Leave JUUKU_PASSWORD unset and that is your LAN; set it and everyone needs the password once, for 30 days. Either way the port stays private — no router forwarding."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it need its own Navidrome account?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No — any account works, yours included. One catch: Navidrome refuses jukebox control from non-admins unless you set ND_JUKEBOX_ADMINONLY=false on the server. So either hand it an admin account, or flip that setting and use a normal one. A second account is tidier if you would rather not put your own password in a container, but it is optional."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why not a native app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Building and shipping phone apps is more work: slower to iterate, two more codebases to keep alive, and the stores charge for it — Apple wants $99 a year before you ship anything. So no, not planned. If enough people chip in that developer fee though, it probably happens — and until then the web app does the job, especially installed as a PWA."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on a phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It was built for the phone — that is the intended use — but it works flawlessly on anything with a browser; wide screens get a sidebar instead of the tab bar. It installs to a home screen as a PWA as well, which needs HTTPS: that part of the setup docs covers it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why is it free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Because we built it for ourselves. The remotes that existed were stale — the iOS ones especially — and the gap was annoying enough to fix. It came out fun, fun enough that someone else might get some use out of it. No account, no upsell, nothing to buy."
+          }
+        }
+      ]
+    }
+    </script>
+    <link rel="stylesheet" href="style.css?v=67" />
     <script src="script.js?v=43" defer></script>
   </head>
   <body>
@@ -89,12 +170,11 @@
         <section class="hero" id="top">
           <div class="wrap hero-grid">
             <div class="hero-copy">
-              <h1>The remote for the jukebox in the room.</h1>
+              <h1>Juuku — a free remote for Navidrome's jukebox mode.</h1>
               <p class="pitch">
-                Want your Navidrome to play the music on the box with the speakers? Jukebox mode does
-                that, but it needs a remote control — so we built Juuku, a full-fledged companion app
-                for jukebox mode. Browse the library, queue a track, skip, favorite, and set the
-                volume from any phone on your network.
+                The remote for the jukebox in the room. Navidrome plays the music where the speakers
+                are; Juuku is the phone in your hand — browse the library, queue a track, skip,
+                favorite and set the volume from anywhere on the network.
               </p>
               <div class="cta">
                 <a class="btn" href="https://github.com/nomorenamesstudio/juuku">
@@ -105,8 +185,8 @@
                   </span>
                   Get Juuku on GitHub<span class="arrow" aria-hidden="true">→</span>
                 </a>
-                <a class="btn btn-secondary" href="#features">
-                  Learn more<span class="arrow" aria-hidden="true">↓</span>
+                <a class="btn btn-secondary" href="#run">
+                  Self-host it<span class="arrow" aria-hidden="true">↓</span>
                 </a>
               </div>
             </div>
@@ -144,6 +224,89 @@
             </figure>
           </div>
         </section>
+        <section class="section" id="why">
+          <div class="wrap why-grid">
+            <div class="why-copy">
+              <h2>Why this exists</h2>
+              <p class="note">
+                Navidrome can play your music through the speakers on its own host, and its web UI
+                has no way to reach that feature. Jukebox mode lives behind the Subsonic
+                <code>jukeboxControl</code> endpoint, so the queue and the volume sit on the machine
+                in the room and no button anywhere else touches them.
+              </p>
+              <p class="note">
+                We built the remote we wanted: the phone in your hand, the library in front of you,
+                the music where the speakers are.
+              </p>
+            </div>
+            <figure class="flow">
+              <svg
+                class="flow-art"
+                viewBox="0 0 300 392"
+                role="img"
+                aria-label="The Juuku web app in your browser talks http or https to the Juuku server, which talks Subsonic to Navidrome, which plays out of the speakers in the room."
+              >
+                <!-- the phone, with Juuku installed on it: island, screen, home bar -->
+                <rect class="flow-tile" x="128" y="0" width="44" height="44" rx="11" />
+                <!-- lucide smartphone: the app is a web app, so it lives in a browser -->
+                <g class="flow-lucide" transform="translate(134.4 6.4) scale(1.3)">
+                  <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                  <path d="M12 18h.01" />
+                </g>
+                <text class="flow-label" x="150" y="58">juuku webapp</text>
+
+                <g class="flow-arrow">
+                  <path d="M150 68v26" />
+                  <path d="m144 88 6 6 6-6" />
+                </g>
+                <text class="flow-proto" x="158" y="84">http/https</text>
+
+                <!-- the server you run next to Navidrome: the app's own icon -->
+                <rect class="flow-tile" x="128" y="104" width="44" height="44" rx="11" />
+                <circle class="flow-ring" cx="150" cy="126" r="12.5" />
+                <circle class="flow-dot" cx="150" cy="126" r="2.6" />
+                <path class="flow-arc" d="M150 113.5a12.5 12.5 0 0 1 12.5 12.5" />
+                <circle class="flow-led" cx="163" cy="113" r="3.2" />
+                <text class="flow-label" x="150" y="162">juuku server</text>
+
+                <g class="flow-arrow">
+                  <path d="M150 172v26" />
+                  <path d="m144 192 6 6 6-6" />
+                </g>
+                <text class="flow-proto" x="160" y="188">subsonic</text>
+
+                <!-- navidrome's own mark, unmodified -->
+                <image href="images/navidrome-logo.png" x="126" y="206" width="48" height="48" />
+                <text class="flow-label" x="150" y="270">navidrome</text>
+
+                <!-- one lead out of Navidrome that forks to both cabinets -->
+                <g class="flow-arrow">
+                  <path d="M150 278v10" />
+                  <path d="M88 288h124" />
+                  <path d="M88 288v22" />
+                  <path d="M212 288v22" />
+                  <path d="m82 304 6 6 6-6" />
+                  <path d="m206 304 6 6 6-6" />
+                </g>
+                <text class="flow-proto flow-proto-mid" x="150" y="306">audio out</text>
+
+                <!-- two cabinets, a cone and a dust cap each -->
+                <g class="flow-glyph">
+                  <rect class="flow-tile" x="68" y="324" width="40" height="50" rx="9" />
+                  <circle cx="88" cy="336" r="3.2" />
+                  <circle cx="88" cy="354" r="10.5" />
+                  <circle cx="88" cy="354" r="3.6" />
+                  <rect class="flow-tile" x="192" y="324" width="40" height="50" rx="9" />
+                  <circle cx="212" cy="336" r="3.2" />
+                  <circle cx="212" cy="354" r="10.5" />
+                  <circle cx="212" cy="354" r="3.6" />
+                </g>
+                <text class="flow-label" x="150" y="388">the room</text>
+              </svg>
+            </figure>
+          </div>
+        </section>
+
         <section class="section" id="features">
           <div class="wrap">
             <h2>What it does</h2>
@@ -363,6 +526,83 @@
                 aria-label="Lyrics"
               ><span class="gbar-fill"></span></button>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="compare">
+          <div class="wrap">
+            <h2>Juuku vs the alternatives</h2>
+            <p class="note">
+              Two things already exist: Navidrome's own web UI, and the Subsonic API underneath it.
+              Here is what each one can do about the music in the room.
+            </p>
+            <div
+              class="cmp-scroll"
+              role="region"
+              aria-label="Juuku compared with Navidrome's web UI and a Subsonic client you write yourself"
+              tabindex="0"
+            >
+              <table class="cmp">
+                <thead>
+                  <tr>
+                    <th scope="col"></th>
+                    <th scope="col" class="is-us">Juuku</th>
+                    <th scope="col">Navidrome's web UI</th>
+                    <th scope="col">A client you write</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Price</th>
+                    <td class="is-us">Free, MIT</td>
+                    <td>Free, MIT</td>
+                    <td>Free, plus your evenings</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Plays on the room's speakers</th>
+                    <td class="is-us">Yes — it drives jukebox mode</td>
+                    <td>No, browser playback only</td>
+                    <td>Yes, once it is written</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Control from a phone</th>
+                    <td class="is-us">Yes</td>
+                    <td>No</td>
+                    <td>You build it</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Volume for the room</th>
+                    <td class="is-us">Yes</td>
+                    <td>Browser playback only</td>
+                    <td>You build it</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Favorites</th>
+                    <td class="is-us">Yes, into a shared playlist</td>
+                    <td>Yes</td>
+                    <td>You build it</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">What you maintain</th>
+                    <td class="is-us">One Docker container</td>
+                    <td>Nothing extra</td>
+                    <td>Your own client</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Your library stays yours</th>
+                    <td class="is-us">Yes — same Navidrome, same files</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">AI in the runtime</th>
+                    <td class="is-us">None</td>
+                    <td>None</td>
+                    <td>Depends on what you write</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -606,7 +846,8 @@ Ask before exposing a port or changing Navidrome settings.</code></pre>
         </div>
         <p class="colophon">
           MIT licensed. Screenshots are of the running app; the fonts are Bricolage Grotesque,
-          Instrument Serif and Geist Mono (SIL OFL), the icons Lucide, Phosphor and Pixelarticons.
+          Instrument Serif and Geist Mono (SIL OFL), the icons Lucide, Phosphor and Pixelarticons,
+          and the Navidrome mark in the diagram is Navidrome's own.
         </p>
         <p class="credit">
           Made with <span class="heart" aria-hidden="true">♥</span> by

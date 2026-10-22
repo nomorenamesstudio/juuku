@@ -94,3 +94,31 @@ Then `magick <png> -resize 1600x1000 -strip -interlace Plane -quality 82 <jpg>`.
 Two things to keep out of the capture: a sandbox library of two albums makes a thin
 hero (use a real one), and starting playback on the Navidrome someone is listening to
 is not a screenshot problem you want.
+
+## Publishing layer
+
+The page is built to be quoted, not only read, and four things carry that:
+
+- **`<head>`** — an H1 with the category keyword, a 152-character description, Open
+  Graph pointing at `social-og.jpg`, and a canonical URL. No `noindex` anywhere;
+  GitHub Pages adds none.
+- **JSON-LD** — `SoftwareApplication` (price 0, MIT, repo) and `FAQPage`, where every
+  question and answer is copied **word for word** from the visible FAQ. Change one and
+  the other has to change with it.
+- **`#compare`** — *Juuku vs the alternatives*, the block search engines pull for
+  "vs" queries: price, jukebox control, phone control, volume, favorites, what you
+  maintain, and no AI in the runtime. Scrolls sideways under 40rem, the page itself
+  never does.
+- **The signal path** in *Why this exists* — one inline SVG, vertical: Lucide's
+  `smartphone` for the browser end, the server (the app's own icon), Navidrome, then one lead out
+  of Navidrome that forks to both cabinets, with `http`, `subsonic` and `audio out`
+  beside the arrows. Every glyph is `currentColor` or a token, so it follows the theme; the
+  only exception is `images/navidrome-logo.png`, Navidrome's own mark, dragged in
+  from their repo unmodified (13KB, 192px) because recolouring somebody's logo to fit
+  a theme is not our call.
+- **`llms.txt` and `robots.txt`** — the first tells AI crawlers what the page is and
+  where the repo and license are; the second allows every crawler, none blocked.
+
+Copy follows `landing-page-publishing`: the first sentence of each section answers the
+question on its own, no banned words, no exclamation marks, and no marketing preamble
+before the answer.

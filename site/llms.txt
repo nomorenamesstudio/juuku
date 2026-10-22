@@ -1,0 +1,11 @@
+# Juuku
+
+> A free, open-source web remote for Navidrome's jukebox mode that drives the music playing on the machine with the speakers. Self-hosted: there is no hosted instance, you run it next to your own Navidrome. No AI in the runtime, MIT licensed.
+
+## Core pages
+
+- [Landing page](https://juuku.nomorenames.studio/): What Juuku is, the three themes, and the FAQ
+- [GitHub Repo](https://github.com/nomorenamesstudio/juuku): Source code, issues, container image
+- [Self-hosting](https://github.com/nomorenamesstudio/juuku/blob/main/docs/SETUP.md): How to run it next to your Navidrome
+- [FAQ / Why It Exists](https://juuku.nomorenames.studio/#why): Origin story, who can queue, free vs paid
+- [License](https://github.com/nomorenamesstudio/juuku/blob/main/LICENSE): MIT

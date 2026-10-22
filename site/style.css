@@ -1336,3 +1336,164 @@ code {
   }
 
 }
+
+/* ------------------------------------------------------------- comparison */
+.cmp-scroll {
+  margin: clamp(1.4rem, 3vw, 2.2rem) 0 0;
+  overflow-x: auto;
+  /* a four-column table cannot be honest at 390px without scrolling */
+  scrollbar-width: thin;
+}
+
+.cmp {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.cmp th,
+.cmp td {
+  padding: 0.8rem 1rem 0.8rem 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  transition: border-color 0.35s var(--ease);
+}
+
+.cmp thead th {
+  border-top: 0;
+  padding-bottom: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text) 52%, var(--bg));
+}
+
+.cmp tbody th {
+  font-weight: 500;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--text) 74%, var(--bg));
+}
+
+.cmp td {
+  color: color-mix(in srgb, var(--text) 60%, var(--bg));
+}
+
+.cmp .is-us {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------- why / signal path */
+.why-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 3rem);
+  align-items: center;
+}
+
+@media (min-width: 60rem) {
+  .why-grid {
+    /* the copy keeps a readable measure and the diagram fills the space it left */
+    grid-template-columns: minmax(0, 34rem) minmax(16rem, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+}
+
+.why-copy .note:last-child {
+  margin-bottom: 0;
+}
+
+.flow {
+  margin: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* one drawing, three themes: everything is currentColor or a token */
+.flow-art {
+  width: 100%;
+  max-width: 20rem;
+  height: auto;
+  color: var(--text);
+}
+
+.flow-tile {
+  fill: color-mix(in srgb, var(--panel) 55%, transparent);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.flow-ring,
+.flow-glyph,
+.flow-arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.flow-ring,
+.flow-dot,
+.flow-led {
+  stroke: none;
+  fill: var(--accent);
+}
+
+.flow-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.flow-arc {
+  stroke: var(--text);
+}
+
+.flow-arrow path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.flow-label,
+.flow-proto {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  fill: color-mix(in srgb, var(--text) 50%, var(--bg));
+}
+
+/* the labels beside the arrows, not under a node */
+.flow-proto {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-anchor: start;
+  fill: color-mix(in srgb, var(--text) 40%, var(--bg));
+}
+
+/* a label in the fork's mouth, centred between the drops */
+.flow-proto-mid {
+  text-anchor: middle;
+}
+
+/* lucide glyphs are drawn for a 24px box at stroke 2; the group scale keeps the
+   optical weight level with the hand-drawn glyphs around it */
+.flow-lucide {
+  fill: none;
+  stroke: currentColor;
+  /* scaled per glyph, so this is the number that keeps the weight level with the
+     hand-drawn shapes: 1.7 x 1.3 = 2.2, the same as .flow-glyph */
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
