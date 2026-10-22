@@ -6,7 +6,7 @@
 [![Node 22](https://img.shields.io/badge/Node-22-3fb950?style=for-the-badge)](server/)
 [![Build](https://github.com/nomorenamesstudio/juuku/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nomorenamesstudio/juuku/actions/workflows/test.yml)
 
-![Juuku: the wordmark, the line “The remote for the jukebox in the room.”, and the album, library and lyrics screens on phones](docs/social/og-1200x630.jpg)
+![Juuku: the wordmark, the line “A free remote for Navidrome's jukebox mode”, and the player screen on a phone](docs/social/og-1200x630.jpg)
 
 A free, open-source remote for [Navidrome](https://www.navidrome.org/)'s jukebox
 mode that turns any browser on your network into the remote for the machine with the
