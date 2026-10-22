@@ -42,8 +42,9 @@ export interface Jukebox {
   toast: string | null;
   notify: (message: string) => void;
   addToQueue: (songs: Song[], label?: string) => Promise<void>;
-  playNow: (songs: Song[]) => Promise<void>;
-  playFrom: (songs: Song[], index: number) => Promise<void>;
+  /** playlistId lets the home screen remember which playlist this queue came from */
+  playNow: (songs: Song[], playlistId?: string) => Promise<void>;
+  playFrom: (songs: Song[], index: number, playlistId?: string) => Promise<void>;
   playNext: (songs: Song[]) => Promise<void>;
   repeat: RepeatMode;
   cycleRepeat: () => void;
@@ -292,10 +293,10 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   );
 
   const playNow = useCallback(
-    async (songs: Song[]) => {
+    async (songs: Song[], playlistId?: string) => {
       if (songs.length === 0) return;
       await run(async () => {
-        await playNowRequest(songs.map((song) => song.id));
+        await playNowRequest(songs.map((song) => song.id), 0, playlistId);
         await afterQueueChange();
       }, songs.length === 1 ? `Playing ${songs[0].title}` : `Playing ${songs.length} tracks`);
     },
@@ -303,10 +304,10 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   );
 
   const playFrom = useCallback(
-    async (songs: Song[], index: number) => {
+    async (songs: Song[], index: number, playlistId?: string) => {
       if (songs.length === 0) return;
       await run(async () => {
-        await playNowRequest(songs.map((song) => song.id), index);
+        await playNowRequest(songs.map((song) => song.id), index, playlistId);
         await afterQueueChange();
       }, songs.length === 1 ? `Playing ${songs[0].title}` : `Playing ${songs.length} tracks`);
     },

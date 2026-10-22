@@ -91,7 +91,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
       </header>
 
       <div className="actions album-actions">
-        <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs)}>
+        <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs, id)}>
           <PlayIcon size={18} /> Play all
         </button>
         <button
@@ -130,7 +130,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
               song={song}
               active={jbox.current?.id === song.id}
               playing={jbox.status?.playing}
-              onPlay={() => jbox.playFrom(songs, index)}
+              onPlay={() => jbox.playFrom(songs, index, id)}
               onMenu={() => openActions([song], { playlistId: id, onDone: () => setReloadKey((n) => n + 1) })}
             />
           ))}

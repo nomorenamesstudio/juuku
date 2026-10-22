@@ -145,11 +145,13 @@ export interface HomeRows {
   newestRelease: Album[];
   dailyPicks: Album[];
   dailyArtists: Artist[];
+  /** playlists started from the app, newest first */
+  lastPlayedPlaylists: Playlist[];
 }
 
 export async function getHome(): Promise<HomeRows> {
   const payload = await request<Partial<HomeRows>>(`api/home?day=${new Date().toLocaleDateString('sv')}`);
-  const keys: (keyof HomeRows)[] = ['lastPlayed', 'lastAdded', 'newestRelease', 'dailyPicks', 'dailyArtists'];
+  const keys: (keyof HomeRows)[] = ['lastPlayed', 'lastAdded', 'newestRelease', 'dailyPicks', 'dailyArtists', 'lastPlayedPlaylists'];
   if (!keys.every((key) => Array.isArray(payload?.[key]))) throw new Error('the server has no home rows');
   return payload as HomeRows;
 }
@@ -186,8 +188,8 @@ export const control = (body: ControlBody) =>
   request<PlaybackStatus>('api/control', { method: 'POST', body: JSON.stringify(body) });
 
 /** Replace the queue with these songs and start playing at `index`. */
-export const playNow = (ids: string[], index = 0) =>
-  request<PlaybackStatus>('api/play', { method: 'POST', body: JSON.stringify({ ids, index }) });
+export const playNow = (ids: string[], index = 0, playlistId?: string) =>
+  request<PlaybackStatus>('api/play', { method: 'POST', body: JSON.stringify({ ids, index, playlistId }) });
 
 /** Insert right after the current track instead of at the end of the queue. */
 export const playNext = (ids: string[]) =>

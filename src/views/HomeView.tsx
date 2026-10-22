@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { type Album, type AlbumSort, type Artist, type HomeRows, coverUrl, getHome } from '../api';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { type Album, type AlbumSort, type Artist, type HomeRows, type Playlist, coverUrl, getHome } from '../api';
 import { Cover } from '../Cover';
+import { formatTotal } from '../format';
 import { ChevronLeftIcon } from '../icons';
 import { writePref } from '../prefs';
 import { navigate } from '../router';
@@ -10,7 +11,7 @@ export const SORT_KEY = 'juuku.library.sort';
 type AlbumShelfKey = 'lastPlayed' | 'lastAdded' | 'newestRelease' | 'dailyPicks';
 
 const SHELVES: { key: AlbumShelfKey; title: string; sort: AlbumSort }[] = [
-  { key: 'lastPlayed', title: 'Last played', sort: 'recent' },
+  { key: 'lastPlayed', title: 'Last played albums', sort: 'recent' },
   { key: 'lastAdded', title: 'Last added', sort: 'newest' },
   { key: 'newestRelease', title: 'Newest release', sort: 'byYear' },
   { key: 'dailyPicks', title: 'Daily picks', sort: 'daily' },
@@ -102,6 +103,58 @@ function Shelf({ title, albums, sort }: { title: string; albums: Album[]; sort: 
             <span className="album-artist">
               <span className="album-artist-name">{album.artist}</span>
               {album.year ? <span className="album-year">· {album.year}</span> : null}
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** The other history row: the playlists started from here, not from Navidrome. */
+function PlaylistShelf({ playlists }: { playlists: Playlist[] }) {
+  const { track, step, edges } = useShelf();
+  if (playlists.length === 0) return null;
+  return (
+    <section className="shelf">
+      <div className="shelf-head">
+        <h2 className="section-label">Last played playlists</h2>
+        <div className="shelf-tools">
+          <button
+            className="icon-button shelf-step"
+            onClick={() => step(-1)}
+            disabled={edges.start}
+            aria-label="Scroll the last played playlists back"
+            title="Back"
+          >
+            <ChevronLeftIcon size={16} />
+          </button>
+          <button
+            className="icon-button shelf-step"
+            onClick={() => step(1)}
+            disabled={edges.end}
+            aria-label="Scroll the last played playlists on"
+            title="More"
+          >
+            <ChevronLeftIcon size={16} className="flip" />
+          </button>
+          <button className="back shelf-all" onClick={() => navigate('/library/playlists')}>
+            See all <ChevronLeftIcon size={16} className="flip" />
+          </button>
+        </div>
+      </div>
+      <div className="shelf-track" ref={track}>
+        {playlists.map((playlist) => (
+          <button key={playlist.id} className="shelf-card" onClick={() => navigate(`/playlist/${playlist.id}`)}>
+            <span className="album-art">
+              {playlist.coverArt ? <Cover src={coverUrl(playlist.coverArt, 300)} /> : null}
+            </span>
+            <span className="album-name">{playlist.name}</span>
+            <span className="album-artist">
+              <span className="album-artist-name">
+                {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'}
+              </span>
+              {playlist.duration ? <span className="album-year">· {formatTotal(playlist.duration)}</span> : null}
             </span>
           </button>
         ))}
@@ -218,7 +271,11 @@ export function HomeView() {
 
       {rows &&
         SHELVES.map((shelf) => (
-          <Shelf key={shelf.key} title={shelf.title} albums={rowsOf(shelf.key)} sort={shelf.sort} />
+          <Fragment key={shelf.key}>
+            <Shelf title={shelf.title} albums={rowsOf(shelf.key)} sort={shelf.sort} />
+            {/* the playlists played here sit right under the albums that played */}
+            {shelf.key === 'lastPlayed' && <PlaylistShelf playlists={rows.lastPlayedPlaylists ?? []} />}
+          </Fragment>
         ))}
 
       {rows && <ArtistShelf artists={artistsOf()} onSeeAll={() => navigate('/library/artists')} />}

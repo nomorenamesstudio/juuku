@@ -17,14 +17,14 @@ With `JUUKU_PASSWORD` set, every route below except `/api/session`, `/api/login`
 | GET | `/api/health` | Connection + capability probe (does the instance have jukebox on?) |
 | GET | `/api/state` | Whole remote state: queue plus playback status |
 | POST | `/api/control` | Every write action |
-| POST | `/api/play` | Replace the queue with these songs and start playing |
+| POST | `/api/play` | Replace the queue with these songs and start playing (`playlistId` is optional and only feeds the home screen's history) |
 | POST | `/api/queue/next` | Insert songs right after the track that is playing |
 | GET/POST | `/api/playlists` | List playlists / create one (`{ name, ids? }`) |
 | GET | `/api/playlists/:id` | Playlist plus its songs |
 | POST | `/api/playlists/:id/songs` | Append songs to a playlist |
 | DELETE | `/api/playlists/:id/songs/:songId` | Remove one song from a playlist |
 | GET | `/api/search?q=` | Songs + albums + artists in one call |
-| GET | `/api/home?day=YYYY-MM-DD` | The four album shelves plus the daily artists for the given local day |
+| GET | `/api/home?day=YYYY-MM-DD` | The four album shelves, the played playlists and the daily artists for the given local day |
 | GET | `/api/counts` | Totals for the tab pills: `{ albums, playlists }` |
 | GET | `/api/albums?type=newest&size=30&offset=0&day=` | Album list, paged (`newest`, `recent`, `byYear`, `alphabeticalByName`, `alphabeticalByArtist`, `daily`) |
 | GET | `/api/albums/:id` | Album plus its songs |
@@ -46,6 +46,7 @@ With `JUUKU_PASSWORD` set, every route below except `/api/session`, `/api/login`
 ```json
 {
   "lastPlayed": [ … albums … ],
+  "lastPlayedPlaylists": [ … playlists … ],
   "lastAdded": [ … ],
   "newestRelease": [ … ],
   "dailyPicks": [ … ],
@@ -53,7 +54,7 @@ With `JUUKU_PASSWORD` set, every route below except `/api/session`, `/api/login`
 }
 ```
 
-Ten each, at most. `lastPlayed` comes from juuku's own log (`recent.json` in the data dir) because Navidrome does not record jukebox playback; `dailyPicks` and `dailyArtists` are the whole library shuffled with a seed derived from `day`, so the order is stable for that day and changes at midnight. `dailyArtists` leaves out the `Various Artists` catch-all.
+Ten each, at most. `lastPlayed` and `lastPlayedPlaylists` come from juuku's own log (`recent.json` in the data dir, holding album and playlist ids) because Navidrome does not record jukebox playback — a playlist is logged when the app starts one, which is why `/api/play` takes that optional `playlistId`; `dailyPicks` and `dailyArtists` are the whole library shuffled with a seed derived from `day`, so the order is stable for that day and changes at midnight. `dailyArtists` leaves out the `Various Artists` catch-all.
 
 ### `GET /api/health`
 

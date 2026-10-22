@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.12 — 2026-10-22
+
+- **Home** — the playlists you started from the app get their own row under the album history: "Last played playlists", same shelf, its own **See all** to the playlists tab. The album row is now "Last played albums" so the two read as a pair. Started playlists are logged in `recent.json` next to the albums (`{ albums, playlists }`, and the old bare-array file still loads); `/api/play` takes an optional `playlistId` for it, and deleted playlists are dropped when the row is built.
+- **Fix** — the remembered volume is adopted on the first poll when nothing is stored yet, so the level the room is already at survives a restart without waiting for someone to touch the slider.
+
 ## v0.8.11 — 2026-10-22
 
 - **Fix** — the room's volume is remembered. Navidrome starts every new mpv at full volume, so a restart or a rebuilt queue came back at 100%: the last level set from the app is kept in `volume.json` in the data dir and put back whenever a player reports that fresh-100% signature — never over a level anyone chose — and the write responses already carry the restored level so the slider never flashes. Measured: 30% set, Navidrome restarted, play returned `gain: 0.3`.

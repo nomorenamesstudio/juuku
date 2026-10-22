@@ -7,7 +7,8 @@ import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMar
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
-import { isVolumeReset, lastVolume, loadVolume, rememberVolume } from './volume.mjs';
+import { bump } from './recent.mjs';
+import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
 import { alphabeticalBy } from './sort.mjs';
 import { ApiError, binary, call, nativeTotal, serverInfo } from './subsonic.mjs';
@@ -198,6 +199,9 @@ let lastObserved = null;
 
 /** Albums that played, newest first — the source of the "last played" sort. */
 const RECENT_ALBUMS_MAX = 40;
+/** playlists played from the app, newest first — the home screen's other history row */
+const RECENT_PLAYLISTS_MAX = 12;
+const recentPlaylists = [];
 /**
  * The recent log lives in the data dir: it is the only record of jukebox playback
  * (Navidrome never stores it), so a deploy restart must not wipe the home row.
@@ -209,7 +213,11 @@ const recentAlbums = [];
 function loadRecent() {
   try {
     const parsed = JSON.parse(readFileSync(RECENT_FILE, 'utf8'));
-    if (Array.isArray(parsed)) recentAlbums.push(...parsed.filter((id) => typeof id === 'string').slice(0, RECENT_ALBUMS_MAX));
+    const strings = (value, max) => (Array.isArray(value) ? value.filter((id) => typeof id === 'string').slice(0, max) : []);
+    // 0.8.x wrote a bare array of album ids; the object form adds playlists
+    const albums = Array.isArray(parsed) ? parsed : parsed?.albums;
+    recentAlbums.push(...strings(albums, RECENT_ALBUMS_MAX));
+    recentPlaylists.push(...strings(parsed?.playlists, RECENT_PLAYLISTS_MAX));
   } catch {
     // first run or unreadable file: an empty log is fine
   }
@@ -225,7 +233,7 @@ let recentSaveTimer = null;
 async function saveRecentNow() {
   try {
     await mkdir(DATA_DIR, { recursive: true });
-    await writeFile(RECENT_FILE, JSON.stringify(recentAlbums));
+    await writeFile(RECENT_FILE, JSON.stringify({ albums: recentAlbums, playlists: recentPlaylists }));
   } catch (err) {
     console.warn(`recent.json not saved: ${err.message}`);
   }
@@ -248,10 +256,14 @@ function noteAlbum(previous, next) {
   if (!entry?.albumId || !previous.status.playing) return;
   const changed = !next || next.status.currentIndex !== index || !next.status.playing;
   if (!changed) return;
-  const at = recentAlbums.indexOf(entry.albumId);
-  if (at !== -1) recentAlbums.splice(at, 1);
-  recentAlbums.unshift(entry.albumId);
-  recentAlbums.length = Math.min(recentAlbums.length, RECENT_ALBUMS_MAX);
+  bump(recentAlbums, entry.albumId, RECENT_ALBUMS_MAX);
+  saveRecent();
+}
+
+/** A playlist "played" when the app started it — nothing else in the stack records it. */
+function notePlaylist(id) {
+  if (typeof id !== 'string' || !id) return;
+  bump(recentPlaylists, id, RECENT_PLAYLISTS_MAX);
   saveRecent();
 }
 
@@ -301,6 +313,9 @@ function readState() {
         stateCache.payload = payload;
         stateCache.at = Date.now();
       }
+      // first run with this build: whatever the room is at becomes the remembered level,
+      // so the next restart is covered without waiting for a slider touch
+      if (payload.status.playing && shouldAdopt(payload.status.gain)) rememberVolume(payload.status.gain);
       // a player that came back on its own (Navidrome restarted, mpv respawned) reports
       // full volume; correct it once, outside this read, and only for that signature
       if (payload.status.playing && isVolumeReset(payload.status.gain) && Date.now() - lastVolumeFixAt > 10_000) {
@@ -557,7 +572,7 @@ function serialWrite(task) {
 
 /** Play immediately: replace the queue, jump to a track and start. */
 app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
-  const { ids, index = 0 } = req.body ?? {};
+  const { ids, index = 0, playlistId } = req.body ?? {};
   if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
   if (!Number.isInteger(index) || index < 0 || index >= ids.length) throw badRequest('index must be inside ids');
   await call('jukeboxControl', { action: 'set', id: ids }, { repeat: ['id'] });
@@ -566,6 +581,7 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   const response = await call('jukeboxControl', { action: 'start' });
   // without this the next poll served the queue from before the play for up to a second
   invalidateState();
+  notePlaylist(playlistId);
   res.json(await withVolume(statusOf(response)));
 })));
 
@@ -750,6 +766,17 @@ app.get('/api/albums', wrap(async (req, res) => {
   res.json({ albums, offset, hasMore: albums.length === size });
 }));
 
+/** The played playlists, in the order they were played, without the deleted ones. */
+async function recentPlaylistsPayload() {
+  if (recentPlaylists.length === 0) return [];
+  const response = await call('getPlaylists').catch(() => null);
+  const byId = new Map((response?.playlists?.playlist ?? []).map((entry) => [entry.id, entry]));
+  return recentPlaylists
+    .map((id) => byId.get(id))
+    .filter(Boolean)
+    .map((entry) => playlistMeta(entry));
+}
+
 /**
  * The home screen's shelves. "Last played" is juuku's own log (Navidrome never
  * records jukebox playback), the rest come straight from the library.
@@ -758,7 +785,7 @@ app.get('/api/home', wrap(async (req, res) => {
   const day = dayOf(req.query.day);
   const list = (response) => (response.albumList2?.album ?? []).map(album);
 
-  const [played, added, released, daily, dailyNames] = await Promise.all([
+  const [played, added, released, daily, dailyNames, playedPlaylists] = await Promise.all([
     recentlyPlayed(10, 0),
     call('getAlbumList2', { type: 'newest', size: 10 }).then(list),
     call('getAlbumList2', {
@@ -769,6 +796,7 @@ app.get('/api/home', wrap(async (req, res) => {
     }).then(list),
     dailyAlbums(day).then((albums) => albums.slice(0, 10)),
     dailyArtists(day).then((artists) => artists.slice(0, 10)),
+    recentPlaylistsPayload(),
   ]);
 
   res.json({
@@ -777,6 +805,7 @@ app.get('/api/home', wrap(async (req, res) => {
     newestRelease: released,
     dailyPicks: daily,
     dailyArtists: dailyNames,
+    lastPlayedPlaylists: playedPlaylists,
   });
 }));
 

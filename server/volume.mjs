@@ -31,6 +31,12 @@ export async function loadVolume() {
   return stored;
 }
 
+/** nothing remembered yet: adopt the level the room is actually at, so the first
+ *  restart after installing is covered without anyone touching the slider */
+export function shouldAdopt(observed) {
+  return stored === null && Number.isFinite(observed) && Math.round(observed * 100) <= 99;
+}
+
 export function rememberVolume(gain) {
   if (!Number.isFinite(gain) || gain < 0 || gain > 1) return;
   stored = gain;

@@ -9,10 +9,14 @@ test('a fresh player at full volume is restored, a chosen level is not touched',
   // the data dir is read when the module loads, so point it somewhere disposable first
   const dir = await fs.mkdtemp('/tmp/juuku-volume-');
   process.env.JUUKU_DATA_DIR = dir;
-  const { isVolumeReset, lastVolume, loadVolume, rememberVolume } = await import('./volume.mjs');
+  const { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } = await import('./volume.mjs');
 
   assert.equal(lastVolume(), null, 'nothing remembered yet');
   assert.equal(isVolumeReset(1), false, 'no correction without a remembered level');
+  // first run: the level the room is at gets adopted, but full volume is not "a level"
+  assert.equal(shouldAdopt(1), false, 'full volume is the default, nothing to remember');
+  assert.equal(shouldAdopt(0.73), true, 'adopt what the room is actually at');
+  assert.equal(shouldAdopt(0), true, 'even silence is a choice worth keeping');
 
   await rememberVolume(0.35);   // resolves once the file is written
   assert.equal(lastVolume(), 0.35);
