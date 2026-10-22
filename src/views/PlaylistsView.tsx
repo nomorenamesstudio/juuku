@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { coverUrl } from '../api';
-import { formatTime } from '../format';
+import { formatTotal } from '../format';
 import { PlusIcon } from '../icons';
 import { navigate } from '../router';
 import { usePlaylists } from '../usePlaylists';
@@ -74,7 +74,7 @@ export function PlaylistsView({ embedded = false }: { embedded?: boolean } = {})
                   {isFavorites(playlist.name) && <span className="row-pin" aria-hidden>♥</span>}
                 </span>
                 <span className="row-sub">
-                  {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'} · {formatTime(playlist.duration)}
+                  {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'} · {formatTotal(playlist.duration ?? 0)}
                 </span>
               </span>
             </button>

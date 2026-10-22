@@ -1041,6 +1041,9 @@ h1.display {
   align-items: center;
   gap: 0.15rem;
   min-width: 0;
+  /* a centred grid item shrinks to its widest text, which left the action row about
+     285px on a phone and squeezed "Add to queue" onto two lines */
+  width: 100%;
 }
 
 .album-title {
@@ -1080,6 +1083,9 @@ h1.display {
      width on the same line rather than wrapping into a grid cell of its own */
   display: flex;
   gap: 0.6rem;
+  /* a centred flex item too: without this the row shrinks to its content and the
+     pills wrap their labels instead of using the width that is there */
+  width: 100%;
 }
 
 .album-actions .primary,

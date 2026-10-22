@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.10 — 2026-10-22
+
+- **Fix** — "Add to queue" on an album page wrapped onto two lines on a phone. `.album-meta` and `.album-actions` are centred items, so both shrank to their widest text: the action row got 285px of a 353px column, and since 0.8.7 made it a flex row the pills shrink instead of overflowing, so the label broke. Both take the full width now — Play album 171px, Add to queue 173px, one line each — and the playlist row with its kebab is unchanged at 145/147/42.
+- **Playlists** — the list shows total time as hours and minutes ("1 hr 21 min") like the playlist view does, instead of the per-track clock format ("81:01").
+
 ## v0.8.9 — 2026-10-22
 
 - **Fix** — covers that "disappeared" were a cached JSON error. When Navidrome cannot produce a cover (no artwork for the id, or its own artwork store unreadable) it answers **HTTP 200** with a subsonic error in the body, and the proxy passed that on as `Content-Type: application/json` with a day of cache — so the browser kept a JSON error where the picture belongs, long after the server could serve it again. A non-image body is refused now (404 for code 70, 502 otherwise), failures carry `no-store`, and cover URLs carry `v=2` so anything a browser cached in that window is fetched fresh. Measured before the fix: 13 artists whose covers all served valid JPEGs from the server while the app showed none.
