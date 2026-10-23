@@ -226,6 +226,32 @@ keeps the old behaviour: no login, LAN only.
 Read [SECURITY.md](../SECURITY.md) before exposing the port to anything beyond your
 own network — the app has no login by design.
 
+## Updating
+
+Pull the new tag and rebuild. The data volume is untouched: preferences, the recent
+log and the remembered volume survive, and playback is Navidrome's, so a restart does
+not lose the queue.
+
+```sh
+cd juuku
+git fetch --tags
+git checkout v0.8.12        # the release you want
+docker compose up -d --build
+```
+
+Running the published image instead:
+
+```sh
+docker compose pull && docker compose up -d
+```
+
+The app tells you when there is a newer tag: a dot appears on the settings cog and
+Settings → About names the version with a link back to this page. That check is one
+call to GitHub's public API, cached on the server for six hours — set
+`JUUKU_UPDATE_CHECK=off` to keep the box off the network entirely, or
+`JUUKU_VERSION=x.y.z` to override the version it compares (useful when you build your
+own image).
+
 ## Behind a path prefix (Tailscale, a reverse proxy subpath)
 
 Juuku works mounted at `/juuku` instead of the root. `tailscale serve` can mount a

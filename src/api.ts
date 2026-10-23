@@ -195,6 +195,17 @@ export const playNow = (ids: string[], index = 0, playlistId?: string) =>
 export const playNext = (ids: string[]) =>
   request<PlaybackStatus>('api/queue/next', { method: 'POST', body: JSON.stringify({ ids }) });
 
+/** what the server knows about releases: it asks GitHub, at most every six hours */
+export interface VersionInfo {
+  current: string;
+  latest: string | null;
+  updateAvailable: boolean;
+  url: string;
+  checkedAt: string | null;
+}
+
+export const getVersion = () => request<VersionInfo>('api/version');
+
 export const getPlaylists = () => request<{ playlists: Playlist[] }>('api/playlists');
 export const getPlaylist = (id: string) => request<{ playlist: Playlist; songs: Song[] }>(`api/playlists/${id}`);
 export const createPlaylist = (name: string, ids: string[] = []) =>

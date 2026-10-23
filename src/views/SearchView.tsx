@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { type Album, type Artist, type Song, coverUrl, search } from '../api';
+import { type Album, type Artist, type Playlist, type Song, coverUrl, getPlaylists, search } from '../api';
+import { formatTotal } from '../format';
 import { Cover } from '../Cover';
 import { CloseIcon, SearchIcon } from '../icons';
 import { readPref, writePref } from '../prefs';
@@ -43,7 +44,16 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Results | null>(null);
   const [recent, setRecent] = useState<Recent[]>(readRecent);
+  // Subsonic's search has no playlists; they are one cheap call, filtered here
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const input = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    getPlaylists().then(
+      (payload) => setPlaylists(payload.playlists),
+      () => setPlaylists([]),
+    );
+  }, []);
 
   useEffect(() => {
     input.current?.focus();
@@ -127,7 +137,15 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
     setRecent([]);
   };
 
-  const nothing = results && results.songs.length === 0 && results.albums.length === 0 && results.artists.length === 0;
+  const text = query.trim().toLowerCase();
+  const matchingPlaylists = text ? playlists.filter((playlist) => playlist.name.toLowerCase().includes(text)) : [];
+
+  const nothing =
+    results &&
+    results.songs.length === 0 &&
+    results.albums.length === 0 &&
+    results.artists.length === 0 &&
+    matchingPlaylists.length === 0;
 
   return (
     <div className="view">
@@ -140,7 +158,7 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Songs, albums, artists"
+            placeholder="Songs, albums, artists, playlists"
             aria-label="Search the library"
           />
           {query && (
@@ -206,6 +224,32 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
             </section>
           )}
 
+          {matchingPlaylists.length > 0 && (
+            <section>
+              <h2 className="section-label">Playlists</h2>
+              <ul className="plain-list">
+                {matchingPlaylists.map((playlist) => (
+                  <li key={playlist.id}>
+                    <button className="link-row with-art" onClick={() => navigate(`/playlist/${playlist.id}`)}>
+                      {playlist.coverArt ? (
+                        <Cover src={coverUrl(playlist.coverArt, 96)} />
+                      ) : (
+                        <span className="playlist-art-fallback" aria-hidden />
+                      )}
+                      <span className="link-text">
+                        <span className="row-title">{playlist.name}</span>
+                        <span className="row-sub">
+                          {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'} ·{' '}
+                          {formatTotal(playlist.duration ?? 0)}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {results.songs.length > 0 && (
             <section>
               <h2 className="section-label">Songs</h2>
@@ -262,7 +306,7 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
           </ul>
         </section>
       ) : (
-        <p className="empty">Search songs, albums and artists. What you open lands here.</p>
+        <p className="empty">Search songs, albums, artists and playlists. What you open lands here.</p>
       )}
     </div>
   );

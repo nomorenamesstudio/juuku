@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AlbumsIcon, ArtistIcon, ChevronDownIcon, PlaylistIcon, RefreshIcon } from '../icons';
+import { AlbumsIcon, ArtistIcon, ChevronDownIcon, PlaylistIcon, PlusIcon, RefreshIcon } from '../icons';
+import { NewPlaylistSheet } from '../NewPlaylistSheet';
 import { type Album, type AlbumSort, coverUrl, getAlbums } from '../api';
 import { Cover } from '../Cover';
 import { useCounts } from '../useCounts';
@@ -37,6 +38,7 @@ export function Library({ tab }: { tab: LibraryTab }) {
   // the first page is on its way: an empty grid under "no albums here yet" was a lie
   // for however long the request took, which on a phone over a tunnel is seconds
   const [fetching, setFetching] = useState(albumCache === null);
+  const [naming, setNaming] = useState(false);
 
   useEffect(() => {
     // the shell remounts this view on every route change (the content element is
@@ -146,6 +148,12 @@ export function Library({ tab }: { tab: LibraryTab }) {
                 {playlistTotal !== null && <span className="count-pill">{playlistTotal}</span>}
               </button>
             </div>
+            {tab === 'playlists' && (
+              <button className="secondary new-playlist" onClick={() => setNaming(true)} aria-label="New playlist">
+                <PlusIcon size={16} />
+                New playlist
+              </button>
+            )}
             {tab === 'albums' && (
               <label className="sort-select">
                 <span className="visually-hidden">Sort albums</span>
@@ -162,6 +170,8 @@ export function Library({ tab }: { tab: LibraryTab }) {
           </div>
         </header>
       </div>
+
+      {naming && <NewPlaylistSheet onClose={() => setNaming(false)} />}
 
     {tab === 'playlists' ? (
         <PlaylistsView embedded />

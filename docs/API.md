@@ -26,6 +26,7 @@ With `JUUKU_PASSWORD` set, every route below except `/api/session`, `/api/login`
 | GET | `/api/search?q=` | Songs + albums + artists in one call |
 | GET | `/api/home?day=YYYY-MM-DD` | The four album shelves, the played playlists and the daily artists for the given local day |
 | GET | `/api/counts` | Totals for the tab pills: `{ albums, playlists }` |
+| GET | `/api/version` | `{ current, latest, updateAvailable, url, checkedAt }` — the server asks GitHub for the highest tag, at most every six hours |
 | GET | `/api/albums?type=newest&size=30&offset=0&day=` | Album list, paged (`newest`, `recent`, `byYear`, `alphabeticalByName`, `alphabeticalByArtist`, `daily`) |
 | GET | `/api/albums/:id` | Album plus its songs |
 | GET | `/api/artists` | All artists |

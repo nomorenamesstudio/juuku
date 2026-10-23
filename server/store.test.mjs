@@ -20,3 +20,11 @@ test('clean clamps the lyric lead and keeps only real search entries', () => {
   assert.deepEqual(out['juuku.search.recent'].map((entry) => entry.id), ['a']);
   assert.equal(out['juuku.library.sort'], 'newest');
 });
+
+test('the dismissed update is a version string or nothing at all', () => {
+  assert.equal(clean({ 'juuku.update.dismissed': '0.8.13' })['juuku.update.dismissed'], '0.8.13');
+  assert.equal(clean({ 'juuku.update.dismissed': 'v0.8.13' })['juuku.update.dismissed'], '0.8.13');
+  // junk would hide every future release, so it is dropped rather than stored
+  assert.equal(clean({ 'juuku.update.dismissed': 'yes' })['juuku.update.dismissed'], undefined);
+  assert.equal(clean({ 'juuku.update.dismissed': 42 })['juuku.update.dismissed'], undefined);
+});

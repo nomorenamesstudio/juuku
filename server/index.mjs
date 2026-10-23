@@ -8,6 +8,7 @@ import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.
 import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
 import { bump } from './recent.mjs';
+import { updateInfo } from './version.mjs';
 import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
 import { alphabeticalBy } from './sort.mjs';
@@ -584,6 +585,11 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   notePlaylist(playlistId);
   res.json(await withVolume(statusOf(response)));
 })));
+
+// -------------------------------------------------------------------- meta
+app.get('/api/version', wrap(async (_req, res) => {
+  res.json(await updateInfo());
+}));
 
 // -------------------------------------------------------------------- library
 

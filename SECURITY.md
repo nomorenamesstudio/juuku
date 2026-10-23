@@ -11,6 +11,7 @@ room, not like a website.
 |---|---|
 | Navidrome credentials | in the environment (`NAVIDROME_*`), never in the image, never in the repo, never sent to the browser |
 | Browser session | none — the browser talks only to Juuku's own API on the same origin |
+| Outbound calls | Two, and only two: your Navidrome, and — at most once every six hours — GitHub's public API for the newest release tag. `JUUKU_UPDATE_CHECK=off` stops the second one. Nothing else leaves the box, and no request carries your credentials |
 | On-disk state | three JSON files in the data volume: `prefs.json` (per-account preferences), `recent.json` (the albums that played) and `volume.json` (the last level set from the app). Nothing else, and the image itself writes nothing |
 
 ## The default posture

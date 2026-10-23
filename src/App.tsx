@@ -19,6 +19,7 @@ import { LoginView } from './views/LoginView';
 import { type Session, getSession, signOut, type Song } from './api';
 import { type LibraryTab, goBack, navigate, useRoute } from './router';
 import { type Settings, applySettings, loadSettings } from './settings';
+import { useUpdate } from './useUpdate';
 import { hydratePrefs } from './prefs';
 import { type Theme, applyTheme, loadTheme } from './theme';
 import { useCounts } from './useCounts';
@@ -187,6 +188,7 @@ function useEdgeSwipeBack(fence: React.RefObject<HTMLDivElement | null>, onBack:
 
 export default function App() {
   const { route } = useRoute();
+  const update = useUpdate();
   const [session, setSession] = useState<Session | null>(null);
   const edgeCue = useRef<HTMLDivElement | null>(null);
   const pull = usePullToRefresh(() => void jbox.refresh(), route.name !== 'player');
@@ -403,6 +405,7 @@ export default function App() {
           >
             <SettingsIcon size={18} />
             Settings
+            {update.show && <span className="update-dot inline" aria-hidden />}
           </button>
 
           {session?.required && (
@@ -432,9 +435,16 @@ export default function App() {
             <button
               className="icon-button settings-open"
               onClick={() => (route.name === 'settings' ? goBack() : navigate('/settings'))}
-              aria-label={route.name === 'settings' ? 'Close settings' : 'Settings'}
+              aria-label={
+                route.name === 'settings'
+                  ? 'Close settings'
+                  : update.show
+                    ? 'Settings — a newer version is out'
+                    : 'Settings'
+              }
             >
               {route.name === 'settings' ? <CloseIcon size={18} /> : <SettingsIcon size={18} />}
+              {route.name !== 'settings' && update.show && <span className="update-dot" aria-hidden />}
             </button>
             {session?.required && (
               <button

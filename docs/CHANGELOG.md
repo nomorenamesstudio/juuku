@@ -7,6 +7,15 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.13 — 2026-10-23
+
+- **Feature** — search covers playlists now. Subsonic's own search has none, so they come from the playlist list and are filtered against the same debounced query, and they count toward "nothing matches".
+- **Feature** — making a playlist left the list: a *New playlist* button sits beside the Albums/Artists/Playlists switch and opens a sheet whose name field already has focus. Escape or the backdrop closes it; creating lands on the new playlist.
+- **Feature** — the app asks whether a newer release exists. The server reads the highest tag on GitHub (cached for six hours, `JUUKU_UPDATE_CHECK=off` to stop it, `JUUKU_VERSION=x.y.z` to override the compared version) and the client shows a dismissible strip at the top of Settings plus a dot on the cog. Dismissing stores that version, so the next release asks again.
+- **Fix** — the playlist page's action row sat 21px lower than the album page's and left 3px before the tracklist. It lives inside the album header now, like the album page: 38px above, 27px below, on both.
+- **Fix** — a sheet holding a text field hid behind the iOS keyboard. The layer is pinned to the visual viewport (no-op where the keyboard resizes the layout viewport) and `.sheet` measures the layer instead of `82dvh`.
+- **UI** — sheets float 10px from every edge with a 16px radius, matching the now bar, instead of running edge to edge.
+
 ## v0.8.12 — 2026-10-22
 
 - **Home** — the playlists you started from the app get their own row under the album history: "Last played playlists", same shelf, its own **See all** to the playlists tab. The album row is now "Last played albums" so the two read as a pair. Started playlists are logged in `recent.json` next to the albums (`{ albums, playlists }`, and the old bare-array file still loads); `/api/play` takes an optional `playlistId` for it, and deleted playlists are dropped when the row is built.

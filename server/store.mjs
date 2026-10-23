@@ -70,6 +70,10 @@ export function clean(patch) {
       out[key] = value
         .filter((entry) => entry && typeof entry.id === 'string' && (entry.kind === 'album' || entry.kind === 'artist'))
         .slice(0, 10);
+    } else if (key === 'juuku.update.dismissed' && typeof value === 'string') {
+      // "not this version": only a real version string, so a stale key cannot hide
+      // the next release
+      if (/^v?\d+\.\d+\.\d+$/.test(value)) out[key] = value.replace(/^v/, '');
     } else if (key === 'juuku.library.sort' && typeof value === 'string') {
       out[key] = ['alphabeticalByName', 'alphabeticalByArtist', 'newest', 'recent', 'byYear'].includes(value)
         ? value

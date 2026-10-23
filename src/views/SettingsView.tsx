@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { type Health, type PlayerStatus, getHealth, getPlayerStatus, restartPlayers } from '../api';
-import { GithubIcon } from '../icons';
+import { CloseIcon, GithubIcon } from '../icons';
 import { type Settings, saveSettings } from '../settings';
 import { THEMES, type Theme, saveTheme } from '../theme';
+import { useUpdate } from '../useUpdate';
 
 export function SettingsView({
   settings,
@@ -15,6 +16,7 @@ export function SettingsView({
   theme: Theme;
   onTheme: (next: Theme) => void;
 }) {
+  const release = useUpdate();
   const [health, setHealth] = useState<Health | null>(null);
   const [players, setPlayers] = useState<PlayerStatus | null>(null);
   const [restarting, setRestarting] = useState(false);
@@ -53,6 +55,25 @@ export function SettingsView({
 
   return (
     <div className="view settings-view">
+      {release.show && release.info && (
+        <div className="update-banner" role="status">
+          <p>
+            <strong>Version {release.latest} is out</strong> — this one is {release.info.current}.{' '}
+            <a href={release.info.url} target="_blank" rel="noreferrer noopener">
+              How to update
+            </a>
+          </p>
+          <button
+            className="icon-button update-banner-close"
+            onClick={release.dismiss}
+            aria-label="Hide this until the next version"
+            title="Hide until the next version"
+          >
+            <CloseIcon size={16} />
+          </button>
+        </div>
+      )}
+
       <header className="view-head">
         <h1 className="display">Settings</h1>
         <p className="fineprint">

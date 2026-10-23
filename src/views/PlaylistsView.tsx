@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { coverUrl } from '../api';
 import { formatTotal } from '../format';
-import { PlusIcon } from '../icons';
 import { navigate } from '../router';
 import { usePlaylists } from '../usePlaylists';
 
@@ -9,53 +7,16 @@ import { usePlaylists } from '../usePlaylists';
 const isFavorites = (name: string) => name.trim().toLowerCase() === 'favorites';
 
 export function PlaylistsView({ embedded = false }: { embedded?: boolean } = {}) {
-  const { playlists, loading, error: readError, create } = usePlaylists();
+  const { playlists, loading, error: readError } = usePlaylists();
   const ordered = [...playlists].sort((a, b) => Number(isFavorites(b.name)) - Number(isFavorites(a.name)));
-  const [name, setName] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-
-  const submit = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setBusy(true);
-    setCreateError(null);
-    try {
-      const playlist = await create(trimmed);
-      setName('');
-      navigate(`/playlist/${playlist.id}`);
-    } catch (err) {
-      setCreateError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const content = (
     <>
-      <form
-        className="playlist-new"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit();
-        }}
-      >
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="New playlist name"
-          aria-label="New playlist name"
-        />
-        <button className="primary" type="submit" disabled={busy || !name.trim()}>
-          <PlusIcon size={18} /> Create
-        </button>
-      </form>
-
       {loading && <p className="empty">Reading playlists…</p>}
-      {!loading && (createError ?? readError) && <p className="empty">{createError ?? readError}</p>}
+      {!loading && readError && <p className="empty">{readError}</p>}
       {!loading && !readError && playlists.length === 0 && (
         <p className="empty">
-          No playlists yet. Name one above, or use the ⋯ menu on any track and pick “New playlist”.
+          No playlists yet. Use New playlist above, or the ⋯ menu on any track to name one and add it there.
         </p>
       )}
 

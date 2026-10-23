@@ -87,32 +87,32 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
               </>
             ) : null}
           </p>
+          <div className="actions album-actions">
+          <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs, id)}>
+            <PlayIcon size={18} /> Play all
+          </button>
+          <button
+            className="secondary"
+            disabled={jbox.busy || songs.length === 0}
+            onClick={() => jbox.addToQueue(songs, `Queued ${playlist?.name}`)}
+          >
+            <PlusIcon size={18} /> Add to queue
+          </button>
+          {!playlist?.protected && (
+            <button
+              className="secondary kebab"
+              disabled={!playlist}
+              onClick={() => setSheet('menu')}
+              aria-label="More playlist actions"
+              title="More"
+            >
+              <KebabIcon size={18} />
+            </button>
+          )}
+          </div>
         </div>
       </header>
 
-      <div className="actions album-actions">
-        <button className="primary" disabled={jbox.busy || songs.length === 0} onClick={() => jbox.playNow(songs, id)}>
-          <PlayIcon size={18} /> Play all
-        </button>
-        <button
-          className="secondary"
-          disabled={jbox.busy || songs.length === 0}
-          onClick={() => jbox.addToQueue(songs, `Queued ${playlist?.name}`)}
-        >
-          <PlusIcon size={18} /> Add to queue
-        </button>
-        {!playlist?.protected && (
-          <button
-            className="secondary kebab"
-            disabled={!playlist}
-            onClick={() => setSheet('menu')}
-            aria-label="More playlist actions"
-            title="More"
-          >
-            <KebabIcon size={18} />
-          </button>
-        )}
-      </div>
 
       {playlist?.protected && songs.length > 0 && (
         <p className="fineprint">Filled by the heart on any track or in the player, so this one can’t be deleted.</p>

@@ -3,6 +3,7 @@ import { type Song, coverUrl } from './api';
 import { CloseIcon, PlusIcon } from './icons';
 import type { Jukebox } from './useJukebox';
 import { usePlaylists } from './usePlaylists';
+import { useVisualViewport } from './useVisualViewport';
 
 interface TrackActionsTarget {
   songs: Song[];
@@ -36,6 +37,8 @@ export function TrackActions({
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+  useVisualViewport(layerRef);
   const single = target.songs.length === 1 ? target.songs[0] : null;
   // every song already favorited means the action removes them
   const favorite = target.songs.every((song) => jbox.favoriteIds.has(song.id));
@@ -73,7 +76,7 @@ export function TrackActions({
   };
 
   return (
-    <div className="sheet-layer" onClick={onClose} role="presentation">
+    <div className="sheet-layer" ref={layerRef} onClick={onClose} role="presentation">
       <div
         ref={sheetRef}
         tabIndex={-1}
