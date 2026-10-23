@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.15 — 2026-10-23
+
+- **Fix** — on a wide screen the album and playlist action row stretched the whole meta column (728px, two 360px pills). The row is capped at 24rem, and from 60rem up it and its pills hug their labels: Play album 135px, Add to queue 150px, side by side under the title. The phone layout is unchanged.
+
 ## v0.8.14 — 2026-10-23
 
 - **Fix** — the last-played-playlists row lost every playlist the importer had recreated, because Navidrome gives a recreated playlist a new id and the log held ids only. The log now keeps `{ id, name }` per play and the row resolves by id, then by name; a playlist that is gone for good keeps its name and reads "no longer in the library" instead of vanishing.

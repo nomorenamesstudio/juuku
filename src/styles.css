@@ -1084,8 +1084,9 @@ h1.display {
   display: flex;
   gap: 0.6rem;
   /* a centred flex item too: without this the row shrinks to its content and the
-     pills wrap their labels instead of using the width that is there */
-  width: 100%;
+     pills wrap their labels instead of using the width that is there. Capped, or on a
+     wide screen the two pills stretch the whole meta column */
+  width: min(100%, 24rem);
 }
 
 .album-actions .primary,
@@ -2787,6 +2788,16 @@ h1.display {
     display: flex;
     gap: 0.5rem;
     margin: 0.9rem 0 0;
+    /* the row hugs its pills too, instead of the capped width the phone uses */
+    width: auto;
+  }
+
+  /* on a wide screen the pills hug their labels instead of filling a row: Play album
+     is shorter than Add to queue, and that is worth seeing */
+  .album-actions .primary,
+  .album-actions .secondary:not(.kebab) {
+    flex: 0 0 auto;
+    padding-inline: 1.15rem;
   }
 
   .album-actions .primary,
