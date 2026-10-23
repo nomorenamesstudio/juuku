@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.14 — 2026-10-23
+
+- **Fix** — the last-played-playlists row lost every playlist the importer had recreated, because Navidrome gives a recreated playlist a new id and the log held ids only. The log now keeps `{ id, name }` per play and the row resolves by id, then by name; a playlist that is gone for good keeps its name and reads "no longer in the library" instead of vanishing.
+- **Behaviour** — a queue started from a playlist no longer fills "Last played albums" with every album its tracks came from. Albums are recorded when you put an album on; the playlist row records the playlist. (A container restart mid-playlist forgets which queue it was and records albums again — one comment in `recent.mjs` says where that lives.)
+
 ## v0.8.13 — 2026-10-23
 
 - **Feature** — search covers playlists now. Subsonic's own search has none, so they come from the playlist list and are filtered against the same debounced query, and they count toward "nothing matches".

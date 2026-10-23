@@ -55,7 +55,7 @@ With `JUUKU_PASSWORD` set, every route below except `/api/session`, `/api/login`
 }
 ```
 
-Ten each, at most. `lastPlayed` and `lastPlayedPlaylists` come from juuku's own log (`recent.json` in the data dir, holding album and playlist ids) because Navidrome does not record jukebox playback — a playlist is logged when the app starts one, which is why `/api/play` takes that optional `playlistId`; `dailyPicks` and `dailyArtists` are the whole library shuffled with a seed derived from `day`, so the order is stable for that day and changes at midnight. `dailyArtists` leaves out the `Various Artists` catch-all.
+Ten each, at most. `lastPlayed` and `lastPlayedPlaylists` come from juuku's own log (`recent.json` in the data dir, holding album and playlist ids) because Navidrome does not record jukebox playback — a playlist is logged when the app starts one, which is why `/api/play` takes that optional `playlistId`. The log keeps the playlist's id **and** its name, because Navidrome gives a recreated playlist a new id: an id that is gone is looked up by name, and one that is gone for good comes back with `"missing": true` so the row can still say what it was; `dailyPicks` and `dailyArtists` are the whole library shuffled with a seed derived from `day`, so the order is stable for that day and changes at midnight. `dailyArtists` leaves out the `Various Artists` catch-all.
 
 ### `GET /api/health`
 

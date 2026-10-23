@@ -7,7 +7,7 @@ import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMar
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
-import { bump } from './recent.mjs';
+import { albumThatPlayed, bump, resolvePlaylist } from './recent.mjs';
 import { updateInfo } from './version.mjs';
 import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
@@ -218,7 +218,12 @@ function loadRecent() {
     // 0.8.x wrote a bare array of album ids; the object form adds playlists
     const albums = Array.isArray(parsed) ? parsed : parsed?.albums;
     recentAlbums.push(...strings(albums, RECENT_ALBUMS_MAX));
-    recentPlaylists.push(...strings(parsed?.playlists, RECENT_PLAYLISTS_MAX));
+    const played = Array.isArray(parsed?.playlists) ? parsed.playlists : [];
+    for (const entry of played.slice(0, RECENT_PLAYLISTS_MAX)) {
+      // 0.8.12 wrote bare ids; keep them, they just have no name to fall back on
+      if (typeof entry === 'string') recentPlaylists.push({ id: entry, name: null });
+      else if (entry && typeof entry.id === 'string') recentPlaylists.push({ id: entry.id, name: typeof entry.name === 'string' ? entry.name : null });
+    }
   } catch {
     // first run or unreadable file: an empty log is fine
   }
@@ -251,20 +256,46 @@ function saveRecent() {
 loadRecent();
 void loadVolume();
 
+/**
+ * True while the queue is the one a playlist started: those tracks are the playlist's
+ * rows, not the albums', or "Last played albums" filled with every album a playlist
+ * happened to touch. Lost on restart, which only matters for a queue that outlives one.
+ *
+ * shortcut: a container restart mid-playlist logs that playlist's albums again
+ */
+let queueFromPlaylist = false;
+
 function noteAlbum(previous, next) {
-  const index = previous?.status?.currentIndex ?? -1;
-  const entry = previous?.entries?.[index];
-  if (!entry?.albumId || !previous.status.playing) return;
-  const changed = !next || next.status.currentIndex !== index || !next.status.playing;
-  if (!changed) return;
-  bump(recentAlbums, entry.albumId, RECENT_ALBUMS_MAX);
+  const albumId = albumThatPlayed(previous, next, queueFromPlaylist);
+  if (!albumId) return;
+  bump(recentAlbums, albumId, RECENT_ALBUMS_MAX);
   saveRecent();
 }
 
 /** A playlist "played" when the app started it — nothing else in the stack records it. */
-function notePlaylist(id) {
+/**
+ * A played playlist, remembered by id *and* name: Navidrome hands out a new id when a
+ * playlist is recreated (the importer does that), and an id-only log silently dropped
+ * every affected row off the home screen.
+ */
+async function notePlaylist(id) {
   if (typeof id !== 'string' || !id) return;
-  bump(recentPlaylists, id, RECENT_PLAYLISTS_MAX);
+  const known = recentPlaylists.find((entry) => entry.id === id);
+  let name = known?.name ?? null;
+  if (!name) {
+    const response = await call('getPlaylists').catch(() => null);
+    name = (response?.playlists?.playlist ?? []).find((entry) => entry.id === id)?.name ?? null;
+  }
+  if (!name) return;
+  recentPlaylists.splice(
+    0,
+    recentPlaylists.length,
+    ...bump(
+      recentPlaylists.filter((entry) => entry.id !== id),
+      { id, name },
+      RECENT_PLAYLISTS_MAX,
+    ),
+  );
   saveRecent();
 }
 
@@ -582,7 +613,8 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   const response = await call('jukeboxControl', { action: 'start' });
   // without this the next poll served the queue from before the play for up to a second
   invalidateState();
-  notePlaylist(playlistId);
+  queueFromPlaylist = Boolean(playlistId);
+  void notePlaylist(playlistId).catch((err) => console.warn(`playlist history not saved: ${err.message}`));
   res.json(await withVolume(statusOf(response)));
 })));
 
@@ -776,11 +808,20 @@ app.get('/api/albums', wrap(async (req, res) => {
 async function recentPlaylistsPayload() {
   if (recentPlaylists.length === 0) return [];
   const response = await call('getPlaylists').catch(() => null);
-  const byId = new Map((response?.playlists?.playlist ?? []).map((entry) => [entry.id, entry]));
+  const live = response?.playlists?.playlist ?? [];
+  const byId = new Map(live.map((entry) => [entry.id, entry]));
+  const byName = new Map(live.map((entry) => [entry.name, entry]));
+
   return recentPlaylists
-    .map((id) => byId.get(id))
-    .filter(Boolean)
-    .map((entry) => playlistMeta(entry));
+    .map((logged) => {
+      const resolved = resolvePlaylist(logged, byId, byName);
+      if (!resolved) return null;
+      // gone for good, but we know what it was called: say so rather than drop it
+      return resolved.entry
+        ? playlistMeta(resolved.entry)
+        : { ...resolved.missing, songCount: 0, duration: 0, missing: true };
+    })
+    .filter(Boolean);
 }
 
 /**

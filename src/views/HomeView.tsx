@@ -151,10 +151,16 @@ function PlaylistShelf({ playlists }: { playlists: Playlist[] }) {
             </span>
             <span className="album-name">{playlist.name}</span>
             <span className="album-artist">
-              <span className="album-artist-name">
-                {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'}
-              </span>
-              {playlist.duration ? <span className="album-year">· {formatTotal(playlist.duration)}</span> : null}
+              {playlist.missing ? (
+                <span className="album-artist-name">no longer in the library</span>
+              ) : (
+                <>
+                  <span className="album-artist-name">
+                    {playlist.songCount} {playlist.songCount === 1 ? 'track' : 'tracks'}
+                  </span>
+                  {playlist.duration ? <span className="album-year">· {formatTotal(playlist.duration)}</span> : null}
+                </>
+              )}
             </span>
           </button>
         ))}

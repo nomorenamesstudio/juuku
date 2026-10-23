@@ -70,6 +70,8 @@ export interface Playlist {
   changed?: string;
   /** the Favorites playlist owned by the heart button */
   protected?: boolean;
+  /** played once, and no longer in the library (see the home screen's history row) */
+  missing?: boolean;
 }
 
 export interface Favorites {

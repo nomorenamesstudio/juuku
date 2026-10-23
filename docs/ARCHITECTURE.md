@@ -40,7 +40,9 @@ go to `/library/artists`), which is why `daily` exists as a sort type.
 
 "Last played" is juuku's own log: Navidrome never stores jukebox playback, so the
 server notes the album that was playing when the queue moves on and keeps the last
-forty ids in `recent.json` in the data dir — a restart would otherwise wipe the row.
+forty album ids and twelve played playlists (id *and* name, so a playlist the importer
+recreated under a new id does not fall off the row) in `recent.json` in the data dir — a
+restart would otherwise wipe the row.
 The two daily rows are the whole library shuffled with a mulberry32 seeded from the
 local date the client sends, so they hold still all day and differ between devices
 only if the devices disagree about the date.
