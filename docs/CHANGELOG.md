@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.8.16 — 2026-10-23
+
+- **Fix** — no image had been published since 0.8.13: the release workflow built `amd64` and `arm64` in one job, so the arm64 half ran under qemu, took ~6 hours and was cancelled by the job limit (v0.8.14 and v0.8.15 both). It now builds each architecture on its own runner — `ubuntu-latest` and `ubuntu-24.04-arm`, both native — pushes by digest, and a merge job points the release tags at the two digests. Minutes instead of hours.
+- **Fix** — the workflow now checks that the pushed image answers an *anonymous* pull and warns loudly if it does not. GHCR creates packages private, so 0.8.13 built green and failed every `docker pull` until the package visibility was flipped by hand.
+
 ## v0.8.15 — 2026-10-23
 
 - **Fix** — on a wide screen the album and playlist action row stretched the whole meta column (728px, two 360px pills). The row is capped at 24rem, and from 60rem up it and its pills hug their labels: Play album 135px, Add to queue 150px, side by side under the title. The phone layout is unchanged.
