@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.9.1 — 2026-10-25
+
+- **Fix** — "Last played albums" stops filling up while a playlist plays. The flag that kept a playlist's tracks out of that row lived in memory, so every container restart forgot it — including the deploy that shipped it. It is persisted with the recent log now, carrying the queue's first track as a marker, so a queue replaced by another client clears it instead of suppressing the row forever.
+- **Fix** — a version's GitHub release is now part of building it: the image workflow publishes it from that version's changelog section, editing an existing release rather than adding a second one. The Releases page had still read 0.8.2 while the image was on 0.8.16.
+
 ## v0.9.0 — 2026-10-25
 
 - **Feature** — scrobbling. Navidrome never sees jukebox playback (mpv takes the queue straight from `jukeboxControl`), so nothing ever reached Last.fm. Juuku now reports each play to Navidrome's own Subsonic `scrobble` endpoint, which runs the same play tracker its player uses: now-playing on track start, a scrobble after half the track or four minutes, nothing under 30 seconds, nothing after a skip, and a seek past the threshold does not count because the seconds come from position deltas. **No keys in juuku** — whatever Last.fm or ListenBrainz account is connected in Navidrome covers the room, and Navidrome's own play counts finally move too.
