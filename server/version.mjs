@@ -14,6 +14,13 @@ const LATEST_RELEASE = `${REPO}/releases/latest`;
 const CHECK_MS = 6 * 60 * 60 * 1000;
 export const UPDATE_DOCS = 'https://github.com/nomorenamesstudio/juuku/blob/main/docs/SETUP.md#updating';
 
+/**
+ * The release page for a version: its changelog, which says what changed and why — more
+ * use to someone deciding whether to update than the setup guide's instructions.
+ */
+export const releaseUrl = (version) =>
+  `https://github.com/nomorenamesstudio/juuku/releases/tag/v${parseVersion(version)?.join('.') ?? version}`;
+
 /** "v0.8.12" or "0.8.12" -> [0, 8, 12]; anything else -> null */
 export function parseVersion(text) {
   const match = /^v?(\d+)\.(\d+)\.(\d+)/.exec(String(text ?? '').trim());
@@ -98,7 +105,7 @@ export async function updateInfo() {
     current,
     latest: cache.latest,
     updateAvailable: Boolean(cache.latest && isNewer(cache.latest, current)),
-    url: UPDATE_DOCS,
+    url: cache.latest && isNewer(cache.latest, current) ? releaseUrl(cache.latest) : UPDATE_DOCS,
     checkedAt: cache.at ? new Date(cache.at).toISOString() : null,
   };
 }

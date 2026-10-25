@@ -60,7 +60,7 @@ export function SettingsView({
           <p>
             <strong>Version {release.latest} is out</strong> — this one is {release.info.current}.{' '}
             <a href={release.info.url} target="_blank" rel="noreferrer noopener">
-              How to update
+              See what changed
             </a>
           </p>
           <button

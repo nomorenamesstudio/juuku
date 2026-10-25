@@ -152,6 +152,16 @@ jobs:
           found = re.search(rf'^## v{re.escape(version)}\b(.*?)(?=^## v|\Z)', text, re.S | re.M)
           print(found.group(1).strip() if found else f'Release {version}.')
           PY
+          # the release page is what the in-app banner links to, so it carries the
+          # changelog and, below it, how to actually take the update
+          cat >> /tmp/notes.md <<'MD'
+
+          ---
+
+          **Updating:** `docker compose pull && docker compose up -d`. Pinned to a tag
+          instead? Bump the tag and rebuild. The [setup guide](https://github.com/nomorenamesstudio/juuku/blob/main/docs/SETUP.md#updating)
+          has the details.
+          MD
           if gh release view "v$version" >/dev/null 2>&1; then
             gh release edit "v$version" --notes-file /tmp/notes.md
           else

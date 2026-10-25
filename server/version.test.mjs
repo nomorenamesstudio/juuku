@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { forgetVersionCheck, highestVersion, isNewer, parseVersion, updateInfo } from './version.mjs';
+import { forgetVersionCheck, highestVersion, isNewer, parseVersion, releaseUrl, updateInfo } from './version.mjs';
 
 // The dot on the cog is the only thing standing between him and a stale container, so
 // the comparison has to be right: a tag that sorts above the running version means an
@@ -36,7 +36,8 @@ test('an update check that cannot reach GitHub is unknown, not broken', async ()
     assert.equal(fresh.current, '0.8.2');
     assert.equal(fresh.latest, '0.8.12');
     assert.equal(fresh.updateAvailable, true);
-    assert.match(fresh.url, /SETUP\.md#updating$/);
+    // the banner sends you to what changed, not to the setup guide
+    assert.equal(fresh.url, 'https://github.com/nomorenamesstudio/juuku/releases/tag/v0.8.12');
 
     // now GitHub is unreachable: the answer is "no update known", never a throw
     globalThis.fetch = async () => {
@@ -46,6 +47,7 @@ test('an update check that cannot reach GitHub is unknown, not broken', async ()
     const offline = await updateInfo();
     assert.equal(offline.updateAvailable, false);
     assert.equal(offline.latest, null);
+    assert.match(offline.url, /SETUP\.md#updating$/, 'nothing to link to, so the instructions');
 
     // and the switch turns the whole thing off
     process.env.JUUKU_UPDATE_CHECK = 'off';
@@ -60,4 +62,11 @@ test('an update check that cannot reach GitHub is unknown, not broken', async ()
     globalThis.fetch = realFetch;
     forgetVersionCheck();
   }
+});
+
+// the banner links here, so the shape matters: a tag page, normalised, never a bare version
+test('the update link is that version\'s release page', () => {
+  assert.equal(releaseUrl('0.9.2'), 'https://github.com/nomorenamesstudio/juuku/releases/tag/v0.9.2');
+  assert.equal(releaseUrl('v0.9.2'), 'https://github.com/nomorenamesstudio/juuku/releases/tag/v0.9.2', 'a v prefix is not doubled');
+  assert.equal(releaseUrl('nightly'), 'https://github.com/nomorenamesstudio/juuku/releases/tag/vnightly', 'junk still makes a link');
 });

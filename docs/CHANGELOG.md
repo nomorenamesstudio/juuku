@@ -7,6 +7,10 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.9.3 — 2026-10-25
+
+- **Fix** — the "new version" banner now opens that release's page instead of the setup guide: the changelog is what you want when deciding whether to update, and every release now ends with the two commands that take it.
+
 ## v0.9.2 — 2026-10-25
 
 - **Fix** — a playlist added to the queue counts as played, not just one that started it. Real case: two tracks left, so you append a playlist and go do something else — that playlist now shows in "Last played playlists" straight away instead of after the queue got there. An album appended behind a playlist is still the album's row, recorded when its tracks actually play.
