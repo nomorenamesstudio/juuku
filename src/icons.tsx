@@ -7,6 +7,7 @@ import {
   PixelChevronDownIcon,
   PixelChevronLeftIcon,
   PixelCloseIcon,
+  PixelDiceIcon,
   PixelGithubIcon,
   PixelHeartIcon,
   PixelKebabIcon,
@@ -64,6 +65,7 @@ import {
 import { getTheme, subscribeTheme } from './theme';
 import {
   ChevronDown,
+  Dices,
   ChevronLeft,
   Heart,
   House,
@@ -165,6 +167,8 @@ export const LibraryIcon = icon(Library, PixelLibraryIcon, SolidLibraryIcon);
 export const ArtistIcon = icon(UserRound, PixelArtistIcon, SolidArtistIcon);
 export const SearchIcon = icon(Search, PixelSearchIcon, SolidSearchIcon);
 export const RefreshIcon = icon(RotateCw, PixelRefreshIcon, SolidRefreshIcon);
+/** "give me another set": a pair of dice for the stroke themes, one die for the geek set */
+export const DiceIcon = icon(Dices, PixelDiceIcon);
 export const ChevronDownIcon = icon(ChevronDown, PixelChevronDownIcon);
 export const ChevronLeftIcon = icon(ChevronLeft, PixelChevronLeftIcon);
 export const VolumeIcon = icon(Volume2, PixelVolumeIcon, SolidVolumeIcon);

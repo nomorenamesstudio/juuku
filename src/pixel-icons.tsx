@@ -181,6 +181,15 @@ export function PixelKebabIcon({ size = 18, ...rest }: PixelIconProps) {
   );
 }
 
+/** a die showing five, for the daily rows' Re-roll */
+export function PixelDiceIcon({ size = 18, ...rest }: PixelIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden {...rest}>
+      <path d="M5 3h14v2H5zM5 19h14v2H5zM3 5h2v14H3zM19 5h2v14h-2zM7 7h2v2H7zM15 7h2v2h-2zM11 11h2v2h-2zM7 15h2v2H7zM15 15h2v2h-2z" />
+    </svg>
+  );
+}
+
 export function PixelCloseIcon({ size = 18, ...rest }: PixelIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden {...rest}>

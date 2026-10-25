@@ -690,7 +690,7 @@ function seededShuffle(list, seed) {
   return out;
 }
 
-/** a list in an order that only changes when the local day does */
+/** the pool each day's picks are drawn from — shuffled per request, so a re-roll is cheap */
 const DAILY_CACHE = new Map();
 /**
  * `day` is a request parameter and therefore a cache key, so the map needs a ceiling:
@@ -709,24 +709,34 @@ function dayOf(value) {
 
 function cachedDay(key) {
   const cached = DAILY_CACHE.get(key);
-  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.albums;
+  if (cached && Date.now() - cached.at < ALPHABETICAL_TTL_MS) return cached.pool;
   return null;
 }
 
-function rememberDay(key, albums) {
-  DAILY_CACHE.set(key, { at: Date.now(), albums });
+function rememberDay(key, pool) {
+  DAILY_CACHE.set(key, { at: Date.now(), pool });
   while (DAILY_CACHE.size > DAILY_CACHE_MAX) {
     DAILY_CACHE.delete(DAILY_CACHE.keys().next().value);
   }
 }
 
+/**
+ * "Re-roll": the picks are shuffled from a day-derived seed, and the client can hand in
+ * its own instead. Ten digits, so a junk value falls back to the day rather than
+ * throwing, and a roll of 0 is a real roll.
+ */
+function seedOf(value) {
+  const text = String(value ?? '').trim();
+  return /^\d{1,10}$/.test(text) ? Number(text) >>> 0 : null;
+}
+
 /** Navidrome's catch-all for compilations; nothing personal to recommend there */
 const isVariousArtists = (name) => /^various( artists)?$/i.test(String(name ?? '').trim());
 
-async function dailyArtists(day) {
+async function dailyArtists(day, reRoll) {
   const key = `artists:${dayOf(day)}`;
   const cached = cachedDay(key);
-  if (cached) return cached;
+  if (cached) return seededShuffle(cached, reRoll ?? dayHash(key, 11));
   const response = await call('getArtists');
   const artists = (response.artists?.index ?? [])
     .flatMap((index) =>
@@ -738,21 +748,20 @@ async function dailyArtists(day) {
       })),
     )
     .filter((artist) => !isVariousArtists(artist.name));
-  // the newest artists are the ones worth a nudge; shuffle the whole list instead
-  const seed = [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, 11);
-  const shuffled = seededShuffle(artists, seed);
-  rememberDay(key, shuffled);
-  return shuffled;
+  rememberDay(key, artists);
+  return seededShuffle(artists, reRoll ?? dayHash(key, 11));
 }
 
-async function dailyAlbums(day) {
+/** a stable number per day, so the picks turn over at the client's midnight */
+function dayHash(key, salt) {
+  return [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, salt);
+}
+
+async function dailyAlbums(day, reRoll) {
   const key = dayOf(day);
-  const cached = cachedDay(key);
-  if (cached) return cached;
-  const seed = [...key].reduce((hash, char) => (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0, 7);
-  const albums = seededShuffle(await allAlbums(), seed);
-  rememberDay(key, albums);
-  return albums;
+  const pool = cachedDay(key) ?? (await allAlbums());
+  if (!cachedDay(key)) rememberDay(key, pool);
+  return seededShuffle(pool, reRoll ?? dayHash(key, 7));
 }
 
 async function allAlbumsAlphabetical(type) {
@@ -830,6 +839,9 @@ async function recentPlaylistsPayload() {
  */
 app.get('/api/home', wrap(async (req, res) => {
   const day = dayOf(req.query.day);
+  // each row re-rolls on its own: one counter for the albums, one for the artists
+  const dailySeed = seedOf(req.query.dailySeed);
+  const artistSeed = seedOf(req.query.artistsSeed);
   const list = (response) => (response.albumList2?.album ?? []).map(album);
 
   const [played, added, released, daily, dailyNames, playedPlaylists] = await Promise.all([
@@ -841,8 +853,8 @@ app.get('/api/home', wrap(async (req, res) => {
       fromYear: new Date().getFullYear(),
       toYear: 1900,
     }).then(list),
-    dailyAlbums(day).then((albums) => albums.slice(0, 10)),
-    dailyArtists(day).then((artists) => artists.slice(0, 10)),
+    dailyAlbums(day, dailySeed).then((albums) => albums.slice(0, 10)),
+    dailyArtists(day, artistSeed).then((artists) => artists.slice(0, 10)),
     recentPlaylistsPayload(),
   ]);
 

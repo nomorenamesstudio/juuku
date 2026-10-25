@@ -151,8 +151,17 @@ export interface HomeRows {
   lastPlayedPlaylists: Playlist[];
 }
 
-export async function getHome(): Promise<HomeRows> {
-  const payload = await request<Partial<HomeRows>>(`api/home?day=${new Date().toLocaleDateString('sv')}`);
+export interface HomeSeeds {
+  /** a counter per row: the daily picks re-shuffle on request instead of at midnight */
+  daily?: number;
+  artists?: number;
+}
+
+export async function getHome(seeds: HomeSeeds = {}): Promise<HomeRows> {
+  const query = new URLSearchParams({ day: new Date().toLocaleDateString('sv') });
+  if (seeds.daily !== undefined) query.set('dailySeed', String(seeds.daily));
+  if (seeds.artists !== undefined) query.set('artistsSeed', String(seeds.artists));
+  const payload = await request<Partial<HomeRows>>(`api/home?${query}`);
   const keys: (keyof HomeRows)[] = ['lastPlayed', 'lastAdded', 'newestRelease', 'dailyPicks', 'dailyArtists', 'lastPlayedPlaylists'];
   if (!keys.every((key) => Array.isArray(payload?.[key]))) throw new Error('the server has no home rows');
   return payload as HomeRows;

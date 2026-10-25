@@ -1,8 +1,8 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { type Album, type AlbumSort, type Artist, type HomeRows, type Playlist, coverUrl, getHome } from '../api';
+import { type Album, type AlbumSort, type Artist, type HomeRows, type HomeSeeds, type Playlist, coverUrl, getHome } from '../api';
 import { Cover } from '../Cover';
 import { formatTotal } from '../format';
-import { ChevronLeftIcon } from '../icons';
+import { ChevronLeftIcon, DiceIcon } from '../icons';
 import { writePref } from '../prefs';
 import { navigate } from '../router';
 
@@ -56,7 +56,17 @@ function useShelf() {
   return { track, step, edges };
 }
 
-function Shelf({ title, albums, sort }: { title: string; albums: Album[]; sort: AlbumSort }) {
+function Shelf({
+  title,
+  albums,
+  sort,
+  onReRoll,
+}: {
+  title: string;
+  albums: Album[];
+  sort: AlbumSort;
+  onReRoll?: () => void;
+}) {
   const { track, step, edges } = useShelf();
   if (albums.length === 0) return null;
   return (
@@ -82,15 +92,21 @@ function Shelf({ title, albums, sort }: { title: string; albums: Album[]; sort: 
           >
             <ChevronLeftIcon size={16} className="flip" />
           </button>
-          <button
-            className="back shelf-all"
-            onClick={() => {
-              writePref(SORT_KEY, sort);
-              navigate('/library/albums');
-            }}
-          >
-            See all <ChevronLeftIcon size={16} className="flip" />
-          </button>
+          {onReRoll ? (
+            <button className="back shelf-all" onClick={onReRoll} title="Another set">
+              <DiceIcon size={15} /> Re-roll
+            </button>
+          ) : (
+            <button
+              className="back shelf-all"
+              onClick={() => {
+                writePref(SORT_KEY, sort);
+                navigate('/library/albums');
+              }}
+            >
+              See all <ChevronLeftIcon size={16} className="flip" />
+            </button>
+          )}
         </div>
       </div>
       <div className="shelf-track" ref={track}>
@@ -169,7 +185,7 @@ function PlaylistShelf({ playlists }: { playlists: Playlist[] }) {
   );
 }
 
-function ArtistShelf({ artists, onSeeAll }: { artists: Artist[]; onSeeAll: () => void }) {
+function ArtistShelf({ artists, onReRoll }: { artists: Artist[]; onReRoll: () => void }) {
   const { track, step, edges } = useShelf();
   if (artists.length === 0) return null;
   return (
@@ -195,8 +211,8 @@ function ArtistShelf({ artists, onSeeAll }: { artists: Artist[]; onSeeAll: () =>
           >
             <ChevronLeftIcon size={16} className="flip" />
           </button>
-          <button className="back shelf-all" onClick={onSeeAll}>
-            See all <ChevronLeftIcon size={16} className="flip" />
+          <button className="back shelf-all" onClick={onReRoll} title="Another set">
+            <DiceIcon size={15} /> Re-roll
           </button>
         </div>
       </div>
@@ -229,16 +245,21 @@ export function HomeView() {
   const [rows, setRows] = useState<HomeRows | null>(cache?.rows ?? null);
   const [failed, setFailed] = useState(false);
 
-  const load = useCallback(() => {
-    getHome().then(
-      (payload) => {
-        cache = { at: Date.now(), rows: payload };
-        setRows(payload);
-        setFailed(false);
-      },
-      () => setFailed(true),
-    );
-  }, []);
+  const [seeds, setSeeds] = useState<HomeSeeds>({});
+
+  const load = useCallback(
+    (next: HomeSeeds = seeds) => {
+      getHome(next).then(
+        (payload) => {
+          cache = { at: Date.now(), rows: payload };
+          setRows(payload);
+          setFailed(false);
+        },
+        () => setFailed(true),
+      );
+    },
+    [seeds],
+  );
 
   useEffect(() => {
     if (cache && Date.now() - cache.at < CACHE_MS) {
@@ -261,6 +282,13 @@ export function HomeView() {
     };
   }, [load]);
 
+  /** one row gets a new shuffle; the other keeps its own counter, so it stays put */
+  const reRoll = (row: 'daily' | 'artists') => {
+    const next = { ...seeds, [row]: (seeds[row] ?? 0) + 1 };
+    setSeeds(next);
+    load(next);
+  };
+
   const rowsOf = (key: AlbumShelfKey) => rows?.[key] ?? [];
   const artistsOf = () => rows?.dailyArtists ?? [];
   const empty = rows && SHELVES.every((shelf) => rowsOf(shelf.key).length === 0) && artistsOf().length === 0;
@@ -278,13 +306,18 @@ export function HomeView() {
       {rows &&
         SHELVES.map((shelf) => (
           <Fragment key={shelf.key}>
-            <Shelf title={shelf.title} albums={rowsOf(shelf.key)} sort={shelf.sort} />
+            <Shelf
+              title={shelf.title}
+              albums={rowsOf(shelf.key)}
+              sort={shelf.sort}
+              onReRoll={shelf.key === 'dailyPicks' ? () => reRoll('daily') : undefined}
+            />
             {/* the playlists played here sit right under the albums that played */}
             {shelf.key === 'lastPlayed' && <PlaylistShelf playlists={rows.lastPlayedPlaylists ?? []} />}
           </Fragment>
         ))}
 
-      {rows && <ArtistShelf artists={artistsOf()} onSeeAll={() => navigate('/library/artists')} />}
+      {rows && <ArtistShelf artists={artistsOf()} onReRoll={() => reRoll('artists')} />}
     </div>
   );
 }
