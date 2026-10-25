@@ -7,7 +7,7 @@ import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMar
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
-import { albumThatPlayed, bump, resolvePlaylist } from './recent.mjs';
+import { albumThatPlayed, bump, queueStillFromPlaylist, resolvePlaylist } from './recent.mjs';
 import { updateInfo } from './version.mjs';
 import { createScrobbler } from './scrobble.mjs';
 import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
@@ -211,6 +211,10 @@ const recentPlaylists = [];
 const DATA_DIR = process.env.JUUKU_DATA_DIR ?? '.data';
 const RECENT_FILE = join(DATA_DIR, 'recent.json');
 const recentAlbums = [];
+/** true while the queue is the one a playlist started; persisted, see loadRecent */
+let queueFromPlaylist = false;
+/** the first track of that queue, so a queue replaced elsewhere clears the flag */
+let queueFirstId = null;
 
 function loadRecent() {
   try {
@@ -224,6 +228,11 @@ function loadRecent() {
       // 0.8.12 wrote bare ids; keep them, they just have no name to fall back on
       if (typeof entry === 'string') recentPlaylists.push({ id: entry, name: null });
       else if (entry && typeof entry.id === 'string') recentPlaylists.push({ id: entry.id, name: typeof entry.name === 'string' ? entry.name : null });
+    }
+    // the queue outlives the container, so the fact it came from a playlist has to too
+    if (parsed?.queue?.fromPlaylist === true) {
+      queueFromPlaylist = true;
+      queueFirstId = typeof parsed.queue.firstId === 'string' ? parsed.queue.firstId : null;
     }
   } catch {
     // first run or unreadable file: an empty log is fine
@@ -240,7 +249,14 @@ let recentSaveTimer = null;
 async function saveRecentNow() {
   try {
     await mkdir(DATA_DIR, { recursive: true });
-    await writeFile(RECENT_FILE, JSON.stringify({ albums: recentAlbums, playlists: recentPlaylists }));
+    await writeFile(
+      RECENT_FILE,
+      JSON.stringify({
+        albums: recentAlbums,
+        playlists: recentPlaylists,
+        queue: { fromPlaylist: queueFromPlaylist, firstId: queueFirstId },
+      }),
+    );
   } catch (err) {
     console.warn(`recent.json not saved: ${err.message}`);
   }
@@ -258,14 +274,10 @@ loadRecent();
 void loadVolume();
 
 /**
- * True while the queue is the one a playlist started: those tracks are the playlist's
- * rows, not the albums', or "Last played albums" filled with every album a playlist
- * happened to touch. Lost on restart, which only matters for a queue that outlives one.
- *
- * shortcut: a container restart mid-playlist logs that playlist's albums again
+ * Those tracks are the playlist's rows, not the albums', or "Last played albums" filled
+ * with every album a playlist happened to touch. The flag is persisted with the log,
+ * because the queue outlives the container that recorded it.
  */
-let queueFromPlaylist = false;
-
 function noteAlbum(previous, next) {
   const albumId = albumThatPlayed(previous, next, queueFromPlaylist);
   if (!albumId) return;
@@ -336,6 +348,13 @@ function readState() {
     })
     .then((response) => {
       const payload = response ? playlistOf(response.jukeboxPlaylist) : emptyState();
+      // a queue replaced by another client (or one that outlived a restart) is not the
+      // playlist's any more: stop suppressing the album row
+      if (queueFromPlaylist && !queueStillFromPlaylist(payload, queueFirstId)) {
+        queueFromPlaylist = false;
+        queueFirstId = null;
+        saveRecent();
+      }
       // Navidrome keeps no play history for jukebox playback, so the albums that
       // actually played are remembered here instead of scrobbling every track.
       noteAlbum(lastObserved, payload);
@@ -615,6 +634,8 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   // without this the next poll served the queue from before the play for up to a second
   invalidateState();
   queueFromPlaylist = Boolean(playlistId);
+  queueFirstId = queueFromPlaylist ? (ids[0] ?? null) : null;
+  saveRecent();
   void notePlaylist(playlistId).catch((err) => console.warn(`playlist history not saved: ${err.message}`));
   res.json(await withVolume(statusOf(response)));
 })));

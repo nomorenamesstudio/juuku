@@ -36,3 +36,13 @@ export function albumThatPlayed(previous, next, fromPlaylist) {
   const changed = !next || next.status.currentIndex !== index || !next.status.playing;
   return changed ? entry.albumId : null;
 }
+
+/**
+ * Whether the queue is still the one a playlist started. A queue replaced by something
+ * else — another client, a restart that lost the flag — must not keep suppressing the
+ * album row, so the first entry is the marker.
+ */
+export function queueStillFromPlaylist(state, firstId) {
+  if (!firstId) return false;
+  return state?.entries?.[0]?.id === firstId;
+}

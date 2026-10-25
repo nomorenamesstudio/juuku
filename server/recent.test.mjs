@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { albumThatPlayed, bump, resolvePlaylist } from './recent.mjs';
+import { albumThatPlayed, bump, queueStillFromPlaylist, resolvePlaylist } from './recent.mjs';
 
 // The home screen's history rows: the thing that just played goes to the front, appears
 // once, and the list stays bounded. Both album and playlist logs go through this, so a
@@ -64,4 +64,15 @@ test('the album row ignores a queue a playlist started', () => {
 
   assert.equal(albumThatPlayed(playing(0), playing(1), true), null, 'a playlist queue records no albums');
   assert.equal(albumThatPlayed(playing(0), playing(0, false), true), null, 'not even when it stops');
+});
+
+// The flag that keeps a playlist's tracks out of "Last played albums" has to survive the
+// container that recorded it, and has to give way when another client replaces the queue.
+test('the playlist marker follows the queue, not the container', () => {
+  const queue = (...ids) => ({ entries: ids.map((id) => ({ id })) });
+  assert.equal(queueStillFromPlaylist(queue('a', 'b'), 'a'), true);
+  assert.equal(queueStillFromPlaylist(queue('a', 'b'), 'c'), false, 'a different queue is not the playlist');
+  assert.equal(queueStillFromPlaylist(queue(), 'a'), false, 'an empty queue is not the playlist');
+  assert.equal(queueStillFromPlaylist(queue('a'), null), false, 'no marker, nothing to hold on to');
+  assert.equal(queueStillFromPlaylist(null, 'a'), false);
 });
