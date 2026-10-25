@@ -193,6 +193,8 @@ export interface ControlBody {
   offset?: number;
   ids?: string[];
   gain?: number;
+  /** on `add` only: a playlist being appended counts as played, just later */
+  playlistId?: string;
 }
 
 export const control = (body: ControlBody) =>

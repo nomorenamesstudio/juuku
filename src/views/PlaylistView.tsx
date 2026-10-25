@@ -94,7 +94,7 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
           <button
             className="secondary"
             disabled={jbox.busy || songs.length === 0}
-            onClick={() => jbox.addToQueue(songs, `Queued ${playlist?.name}`)}
+            onClick={() => jbox.addToQueue(songs, `Queued ${playlist?.name}`, id)}
           >
             <PlusIcon size={18} /> Add to queue
           </button>

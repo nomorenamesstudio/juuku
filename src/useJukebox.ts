@@ -41,7 +41,8 @@ export interface Jukebox {
   busy: boolean;
   toast: string | null;
   notify: (message: string) => void;
-  addToQueue: (songs: Song[], label?: string) => Promise<void>;
+  /** playlistId, like playNow: appending a playlist counts as playing it */
+  addToQueue: (songs: Song[], label?: string, playlistId?: string) => Promise<void>;
   /** playlistId lets the home screen remember which playlist this queue came from */
   playNow: (songs: Song[], playlistId?: string) => Promise<void>;
   playFrom: (songs: Song[], index: number, playlistId?: string) => Promise<void>;
@@ -282,10 +283,10 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   }, [refresh]);
 
   const addToQueue = useCallback(
-    async (songs: Song[], label?: string) => {
+    async (songs: Song[], label?: string, playlistId?: string) => {
       if (songs.length === 0) return;
       await run(async () => {
-        await control({ action: 'add', ids: songs.map((song) => song.id) });
+        await control({ action: 'add', ids: songs.map((song) => song.id), playlistId });
         await afterQueueChange();
       }, label ?? (songs.length === 1 ? `Added ${songs[0].title}` : `Added ${songs.length} tracks`));
     },

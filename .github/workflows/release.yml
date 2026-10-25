@@ -98,7 +98,16 @@ jobs:
 
   image:
     needs: bump
-    uses: ./.github/workflows/image.yml
-    with:
-      tag: v${{ inputs.version }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      # If one workflow's push could start another, the recursion guard makes a pushed
+      # tag invisible to `on: push` here. Calling the image workflow with the API does
+      # start it, and is one construct fewer than a reusable-workflow job.
+      - name: Build and publish the image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ inputs.version }}
+        run: gh workflow run image.yml --ref main -f "tag=$TAG" --repo "${{ github.repository }}"

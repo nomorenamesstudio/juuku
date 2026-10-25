@@ -7,7 +7,7 @@ import { cleanArtist, cleanTitle, parseLrc, pickCandidate, sameTitle, versionMar
 import { COOKIE, MAX_AGE, createAuth, createThrottle, readCookie } from './auth.mjs';
 import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
-import { albumThatPlayed, bump, queueStillFromPlaylist, resolvePlaylist } from './recent.mjs';
+import { albumThatPlayed, bump, queueStillOurs, resolvePlaylist } from './recent.mjs';
 import { updateInfo } from './version.mjs';
 import { createScrobbler } from './scrobble.mjs';
 import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
@@ -211,9 +211,14 @@ const recentPlaylists = [];
 const DATA_DIR = process.env.JUUKU_DATA_DIR ?? '.data';
 const RECENT_FILE = join(DATA_DIR, 'recent.json');
 const recentAlbums = [];
-/** true while the queue is the one a playlist started; persisted, see loadRecent */
-let queueFromPlaylist = false;
-/** the first track of that queue, so a queue replaced elsewhere clears the flag */
+/**
+ * The tracks that came from a playlist, so their rows go to the playlist history and an
+ * album queued behind one still reaches "Last played albums". Keyed by track id rather
+ * than by queue position: another client shuffling or removing entries cannot desync it.
+ * Persisted, because the queue outlives the container.
+ */
+let playlistTracks = new Set();
+/** the first track of the queue juuku built, so a queue replaced elsewhere clears the set */
 let queueFirstId = null;
 
 function loadRecent() {
@@ -229,9 +234,10 @@ function loadRecent() {
       if (typeof entry === 'string') recentPlaylists.push({ id: entry, name: null });
       else if (entry && typeof entry.id === 'string') recentPlaylists.push({ id: entry.id, name: typeof entry.name === 'string' ? entry.name : null });
     }
-    // the queue outlives the container, so the fact it came from a playlist has to too
-    if (parsed?.queue?.fromPlaylist === true) {
-      queueFromPlaylist = true;
+    // the queue outlives the container, so what came from a playlist has to too
+    const tracks = Array.isArray(parsed?.queue?.playlistTracks) ? parsed.queue.playlistTracks : [];
+    playlistTracks = new Set(tracks.filter((id) => typeof id === 'string').slice(0, 2000));
+    if (playlistTracks.size > 0) {
       queueFirstId = typeof parsed.queue.firstId === 'string' ? parsed.queue.firstId : null;
     }
   } catch {
@@ -254,7 +260,7 @@ async function saveRecentNow() {
       JSON.stringify({
         albums: recentAlbums,
         playlists: recentPlaylists,
-        queue: { fromPlaylist: queueFromPlaylist, firstId: queueFirstId },
+        queue: { playlistTracks: [...playlistTracks], firstId: queueFirstId },
       }),
     );
   } catch (err) {
@@ -274,12 +280,12 @@ loadRecent();
 void loadVolume();
 
 /**
- * Those tracks are the playlist's rows, not the albums', or "Last played albums" filled
- * with every album a playlist happened to touch. The flag is persisted with the log,
- * because the queue outlives the container that recorded it.
+ * A playlist's tracks are the playlist's rows, or "Last played albums" filled with every
+ * album a playlist happened to touch — while an album appended behind a playlist still
+ * counts. Hence the per-track set rather than a flag on the queue.
  */
 function noteAlbum(previous, next) {
-  const albumId = albumThatPlayed(previous, next, queueFromPlaylist);
+  const albumId = albumThatPlayed(previous, next, (id) => playlistTracks.has(id));
   if (!albumId) return;
   bump(recentAlbums, albumId, RECENT_ALBUMS_MAX);
   saveRecent();
@@ -348,10 +354,10 @@ function readState() {
     })
     .then((response) => {
       const payload = response ? playlistOf(response.jukeboxPlaylist) : emptyState();
-      // a queue replaced by another client (or one that outlived a restart) is not the
-      // playlist's any more: stop suppressing the album row
-      if (queueFromPlaylist && !queueStillFromPlaylist(payload, queueFirstId)) {
-        queueFromPlaylist = false;
+      // a queue replaced by another client is not the one juuku built: the playlist
+      // bookkeeping is stale, and stale bookkeeping would silence the album row
+      if (playlistTracks.size > 0 && !queueStillOurs(payload, queueFirstId)) {
+        playlistTracks = new Set();
         queueFirstId = null;
         saveRecent();
       }
@@ -548,6 +554,23 @@ app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
     // the next poll must not serve the state from before this action
     invalidateState();
     if (action === 'setGain') rememberVolume(Number(gain));
+    /**
+     * Appending a playlist is starting it, only later: the last tracks of the queue run
+     * out and the playlist takes over. So it belongs in the same history row, and its
+     * albums stay out of "Last played albums" for the same reason a played playlist's
+     * do. The queue's first entry is unchanged by an append, so the marker holds.
+     */
+    if (action === 'add') {
+      const playlistId = typeof req.body?.playlistId === 'string' ? req.body.playlistId : '';
+      if (playlistId) {
+        const current = await call('jukeboxControl', { action: 'get' });
+        const entries = current.jukeboxPlaylist?.entry ?? [];
+        for (const id of ids) playlistTracks.add(id);
+        queueFirstId = entries[0]?.id ?? ids[0] ?? null;
+        saveRecent();
+        void notePlaylist(playlistId).catch((err) => console.warn(`playlist history not saved: ${err.message}`));
+      }
+    }
     res.json(action === 'setGain' ? statusOf(response) : await withVolume(statusOf(response)));
   })));
 
@@ -633,8 +656,8 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   const response = await call('jukeboxControl', { action: 'start' });
   // without this the next poll served the queue from before the play for up to a second
   invalidateState();
-  queueFromPlaylist = Boolean(playlistId);
-  queueFirstId = queueFromPlaylist ? (ids[0] ?? null) : null;
+  playlistTracks = playlistId ? new Set(ids) : new Set();
+  queueFirstId = ids[0] ?? null;
   saveRecent();
   void notePlaylist(playlistId).catch((err) => console.warn(`playlist history not saved: ${err.message}`));
   res.json(await withVolume(statusOf(response)));

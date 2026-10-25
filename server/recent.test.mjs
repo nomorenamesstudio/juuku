@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { albumThatPlayed, bump, queueStillFromPlaylist, resolvePlaylist } from './recent.mjs';
+import { albumThatPlayed, bump, queueStillOurs, resolvePlaylist } from './recent.mjs';
 
 // The home screen's history rows: the thing that just played goes to the front, appears
 // once, and the list stays bounded. Both album and playlist logs go through this, so a
@@ -51,28 +51,38 @@ test('a played playlist is found by id, then by name after a recreation', () => 
 
 // "Last played albums" means albums put on, so a playlist's tracks belong to the
 // playlist row instead of scattering every album it touched into the album history.
-test('the album row ignores a queue a playlist started', () => {
+test('the album row records the track that finished', () => {
   const playing = (index, playing_ = true) => ({
     status: { currentIndex: index, playing: playing_ },
     entries: [{ albumId: 'first' }, { albumId: 'second' }],
   });
+  const album = () => false;
 
-  assert.equal(albumThatPlayed(playing(0), playing(1), false), 'first', 'a track change records the album that played');
-  assert.equal(albumThatPlayed(playing(0), playing(0), false), null, 'the same track twice is not a play');
-  assert.equal(albumThatPlayed(playing(0), playing(0, false), false), 'first', 'stopping records it too');
-  assert.equal(albumThatPlayed(playing(1), playing(1), false), null, 'no album on the entry, nothing to record');
-
-  assert.equal(albumThatPlayed(playing(0), playing(1), true), null, 'a playlist queue records no albums');
-  assert.equal(albumThatPlayed(playing(0), playing(0, false), true), null, 'not even when it stops');
+  assert.equal(albumThatPlayed(playing(0), playing(1), album), 'first', 'a track change records the album that played');
+  assert.equal(albumThatPlayed(playing(0), playing(0), album), null, 'the same track twice is not a play');
+  assert.equal(albumThatPlayed(playing(0), playing(0, false), album), 'first', 'stopping records it too');
+  assert.equal(albumThatPlayed(playing(1), playing(1), album), null, 'no album on the entry, nothing to record');
 });
 
-// The flag that keeps a playlist's tracks out of "Last played albums" has to survive the
-// container that recorded it, and has to give way when another client replaces the queue.
-test('the playlist marker follows the queue, not the container', () => {
+// A playlist's tracks must not reach "Last played albums" — but an album queued behind a
+// playlist must, so the decision belongs to the track that finished, not to the queue.
+test('the album row follows the track, not the queue', () => {
+  const state = (id, albumId = 'album-1') => ({
+    status: { currentIndex: 0, playing: true },
+    entries: [{ id, albumId }],
+  });
+  const nothing = () => false;
+
+  assert.equal(albumThatPlayed(state('from-playlist'), null, () => true), null, 'a playlist track is the playlist row');
+  assert.equal(albumThatPlayed(state('from-album'), null, () => false), 'album-1', 'an album queued behind a playlist still counts');
+  assert.equal(albumThatPlayed(state('x'), null, nothing), 'album-1', 'and the default records as before');
+});
+
+test('the queue marker notices another client taking over', () => {
   const queue = (...ids) => ({ entries: ids.map((id) => ({ id })) });
-  assert.equal(queueStillFromPlaylist(queue('a', 'b'), 'a'), true);
-  assert.equal(queueStillFromPlaylist(queue('a', 'b'), 'c'), false, 'a different queue is not the playlist');
-  assert.equal(queueStillFromPlaylist(queue(), 'a'), false, 'an empty queue is not the playlist');
-  assert.equal(queueStillFromPlaylist(queue('a'), null), false, 'no marker, nothing to hold on to');
-  assert.equal(queueStillFromPlaylist(null, 'a'), false);
+  assert.equal(queueStillOurs(queue('a', 'b'), 'a'), true);
+  assert.equal(queueStillOurs(queue('a', 'b'), 'c'), false, 'a different queue is not ours');
+  assert.equal(queueStillOurs(queue(), 'a'), false, 'an empty queue is not ours');
+  assert.equal(queueStillOurs(queue('a'), null), false, 'no marker, nothing to hold on to');
+  assert.equal(queueStillOurs(null, 'a'), false);
 });

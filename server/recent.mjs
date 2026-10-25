@@ -28,21 +28,23 @@ export function resolvePlaylist(logged, byId, byName) {
  * only once it stopped being the current track. A queue a playlist started reports
  * nothing — its tracks are the playlist's history, not the albums'.
  */
-export function albumThatPlayed(previous, next, fromPlaylist) {
-  if (fromPlaylist) return null;
+export function albumThatPlayed(previous, next, cameFromPlaylist) {
   const index = previous?.status?.currentIndex ?? -1;
   const entry = previous?.entries?.[index];
   if (!entry?.albumId || !previous?.status?.playing) return null;
+  // a playlist's own tracks are the playlist's rows; an album queued behind one still
+  // counts, so the decision belongs to the track that just finished, not the queue
+  if (cameFromPlaylist(entry.id)) return null;
   const changed = !next || next.status.currentIndex !== index || !next.status.playing;
   return changed ? entry.albumId : null;
 }
 
 /**
- * Whether the queue is still the one a playlist started. A queue replaced by something
- * else — another client, a restart that lost the flag — must not keep suppressing the
- * album row, so the first entry is the marker.
+ * Whether the queue is still the one juuku built. Another client replacing the queue
+ * leaves the playlist bookkeeping stale, and stale bookkeeping means a row that stops
+ * updating, so the first entry is the marker.
  */
-export function queueStillFromPlaylist(state, firstId) {
+export function queueStillOurs(state, firstId) {
   if (!firstId) return false;
   return state?.entries?.[0]?.id === firstId;
 }

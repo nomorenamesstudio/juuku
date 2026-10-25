@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.9.2 — 2026-10-25
+
+- **Fix** — a playlist added to the queue counts as played, not just one that started it. Real case: two tracks left, so you append a playlist and go do something else — that playlist now shows in "Last played playlists" straight away instead of after the queue got there. An album appended behind a playlist is still the album's row, recorded when its tracks actually play.
+- **Note** — the bookkeeping behind those two rows now tracks which *tracks* came from a playlist instead of flagging the whole queue. An existing `recent.json` keeps its album and playlist history, but a queue that is already playing when you update is no longer known to be a playlist's, so its albums are recorded for the rest of that queue. Playing any playlist once restores the old behaviour.
+
 ## v0.9.1 — 2026-10-25
 
 - **Fix** — "Last played albums" stops filling up while a playlist plays. The flag that kept a playlist's tracks out of that row lived in memory, so every container restart forgot it — including the deploy that shipped it. It is persisted with the recent log now, carrying the queue's first track as a marker, so a queue replaced by another client clears it instead of suppressing the row forever.
