@@ -9,6 +9,7 @@ import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
 import { albumThatPlayed, bump, resolvePlaylist } from './recent.mjs';
 import { updateInfo } from './version.mjs';
+import { createScrobbler } from './scrobble.mjs';
 import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
 import { alphabeticalBy } from './sort.mjs';
@@ -617,6 +618,44 @@ app.post('/api/play', wrap(async (req, res) => serialWrite(async () => {
   void notePlaylist(playlistId).catch((err) => console.warn(`playlist history not saved: ${err.message}`));
   res.json(await withVolume(statusOf(response)));
 })));
+
+// ---------------------------------------------------------------- scrobbling
+/**
+ * Reported to Navidrome, not to Last.fm: its own scrobbler never sees jukebox playback,
+ * but its Subsonic `scrobble` endpoint runs the same play tracker, so Last.fm and
+ * ListenBrainz work wherever the user turned them on for Navidrome. Nothing to connect
+ * here and no keys to keep.
+ */
+async function reportPlayback(event) {
+  try {
+    if (event.type === 'now-playing') await call('scrobble', { id: event.id, submission: false, position: 0 });
+    // Navidrome wants milliseconds since the epoch
+    else await call('scrobble', { id: event.id, submission: true, time: event.timestamp });
+  } catch (err) {
+    // a rejected scrobble is not worth a broken queue
+    console.warn(`scrobble not reported: ${err.message}`);
+  }
+}
+
+const scrobbler = createScrobbler(reportPlayback);
+let lastScrobbleRead = 0;
+
+/**
+ * Nothing else observes the queue when no client is open, and a play has to be reported
+ * while the phone is in a pocket. Five seconds while something plays, half a minute when
+ * nothing does.
+ */
+setInterval(() => {
+  const playing = stateCache.payload?.status?.playing;
+  const wait = playing ? 5_000 : 30_000;
+  if (Date.now() - lastScrobbleRead < wait) return;
+  lastScrobbleRead = Date.now();
+  readState()
+    .then((state) => scrobbler.observe(state))
+    .catch(() => {
+      // a dead player is not a scrobbling problem
+    });
+}, 5_000).unref();
 
 // -------------------------------------------------------------------- meta
 app.get('/api/version', wrap(async (_req, res) => {

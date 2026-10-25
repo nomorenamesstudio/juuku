@@ -252,6 +252,35 @@ call to GitHub's public API, cached on the server for six hours — set
 `JUUKU_VERSION=x.y.z` to override the version it compares (useful when you build your
 own image).
 
+## Scrobbling
+
+Navidrome's own scrobbler never sees jukebox playback: mpv takes the queue straight from
+`jukeboxControl`, bypassing the play tracker. Juuku reports every play back to Navidrome
+through its Subsonic `scrobble` endpoint instead, which runs that same tracker — so
+**whatever Last.fm or ListenBrainz account is set up in Navidrome covers the room too**,
+using Navidrome's own app credentials.
+
+There is nothing to configure here and no keys to keep. Turn Last.fm on in Navidrome's
+settings (Settings → Last.fm there) and juuku's playback starts appearing; leave it off
+and Navidrome still records the plays, which is useful by itself.
+
+One thing bites on the way in, and it is silent: **the scrobbler links belong to a
+Navidrome user.** Connect Last.fm and ListenBrainz as the account in `NAVIDROME_USER` —
+the one juuku signs in as — not the account you browse Navidrome with. A play reported by
+an account with no session key is recorded and then dropped without an error; that is the
+first thing to check when plays appear in Navidrome but not on Last.fm.
+
+If it still does not arrive, check Navidrome → Players → **`Juuku [node]`** → *"Send
+Scrobbles to external services"*. It is on by default, so it is rarely the cause, but with
+it off nothing leaves the server either — and that one at least logs, at debug:
+*"External scrobbling disabled for this player"*.
+
+What juuku reports: now-playing when a track starts, and a scrobble after half the track
+or four minutes, whichever comes first, timestamped at the track's start. Never for
+tracks under 30 seconds, never for a skip before the threshold, and a seek past the
+threshold is not counted as listening — the seconds are summed from the position deltas,
+not read off the position.
+
 ## Behind a path prefix (Tailscale, a reverse proxy subpath)
 
 Juuku works mounted at `/juuku` instead of the root. `tailscale serve` can mount a

@@ -178,6 +178,10 @@ export function SettingsView({
           <dt>Jukebox</dt>
           <dd>{health ? ('enabled' in health.jukebox && health.jukebox.enabled ? 'enabled' : 'off') : '…'}</dd>
         </dl>
+        <p className="fineprint settings-note">
+          Every jukebox play is reported to Navidrome, so its own Last.fm and ListenBrainz settings cover the room too.
+          Nothing to connect here.
+        </p>
         {players?.shared && (
           <button className="secondary" onClick={() => void restart()} disabled={restarting}>
             {restarting ? 'Restarting…' : 'Restart playback'}
