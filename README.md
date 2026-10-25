@@ -31,7 +31,8 @@ machine. Juuku is the remote that should have come in the box.
 | **Queue** | Its own view: skip to an entry, remove one, shuffle, clear the lot. It follows the playing track by itself. |
 | **Favorites** | The heart writes to a `Favorites` playlist in Navidrome, so your other clients see the same list. |
 | **Lyrics** | Synced from the track's embedded `.lrc`/`LYRICS` tag through Navidrome, falling back to [LRCLIB](https://lrclib.net/) when a track has none. |
-| **Home** | What played last — albums and playlists — plus last added, newest release and daily picks, from your own library. |
+| **Home** | What played last — albums and playlists — plus last added, newest release and daily picks you can re-roll, from your own library. |
+| **Scrobbling** | Jukebox playback reaches Last.fm and ListenBrainz through Navidrome's own scrobbler, so the room's plays count too. No keys to paste here. |
 | **Three themes** | Mocha (amber, serif), Modern (turquoise, sans) and Geek (green mono, pixel icons). Same layout, same data. |
 | **Phone first** | Sidebar on a wide screen, tab bar on a phone, installs to the home screen as a PWA. |
 | **One command** | A single Docker container, uid 1000, read-only root filesystem, no capabilities. |

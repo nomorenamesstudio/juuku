@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.9.0 — 2026-10-25
+
+- **Feature** — scrobbling. Navidrome never sees jukebox playback (mpv takes the queue straight from `jukeboxControl`), so nothing ever reached Last.fm. Juuku now reports each play to Navidrome's own Subsonic `scrobble` endpoint, which runs the same play tracker its player uses: now-playing on track start, a scrobble after half the track or four minutes, nothing under 30 seconds, nothing after a skip, and a seek past the threshold does not count because the seconds come from position deltas. **No keys in juuku** — whatever Last.fm or ListenBrainz account is connected in Navidrome covers the room, and Navidrome's own play counts finally move too.
+- **Feature** — the daily rows on Home re-roll on request instead of linking to the library. Each has its own seed, so rolling the album picks leaves the artist picks alone; the day's pool stays cached and only the shuffle repeats. The button carries Lucide's dices, with a pixel die for the geek theme.
+
 ## v0.8.16 — 2026-10-23
 
 - **Fix** — no image had been published since 0.8.13: the release workflow built `amd64` and `arm64` in one job, so the arm64 half ran under qemu, took ~6 hours and was cancelled by the job limit (v0.8.14 and v0.8.15 both). It now builds each architecture on its own runner — `ubuntu-latest` and `ubuntu-24.04-arm`, both native — pushes by digest, and a merge job points the release tags at the two digests. Minutes instead of hours.
