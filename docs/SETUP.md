@@ -252,6 +252,25 @@ call to GitHub's public API, cached on the server for six hours — set
 `JUUKU_VERSION=x.y.z` to override the version it compares (useful when you build your
 own image).
 
+## Releasing
+
+Actions → **release** → *Run workflow*, with the version (`0.9.1`, no `v`), a short
+title, and optionally one line of notes. It:
+
+1. checks the version is ahead of `package.json` and the tag is free,
+2. runs the tests and the build,
+3. bumps `package.json`, prepends `## vX.Y.Z — date` to `docs/CHANGELOG.md` (your note,
+   or a bullet per commit since the last tag), commits `X.Y.Z: <title>`, tags it,
+4. pushes both, then calls the image workflow: two architecture builds, a merged
+   manifest, and a GitHub release whose notes are that changelog section.
+
+The bump is pushed with `GITHUB_TOKEN`, which does not start other workflows, so the
+suite runs inside the release job rather than in `test.yml`.
+
+Tagging by hand still works: a pushed `v*` tag triggers the image workflow, which
+publishes the release from the matching changelog section — an existing release is
+edited rather than duplicated.
+
 ## Scrobbling
 
 Navidrome's own scrobbler never sees jukebox playback: mpv takes the queue straight from

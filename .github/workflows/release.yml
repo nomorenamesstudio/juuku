@@ -1,0 +1,104 @@
+name: release
+
+# One place to cut a version: bump package.json, write the changelog entry, commit, tag,
+# push — then hand off to the image workflow, which builds the two architectures and
+# publishes the GitHub release from that changelog section.
+#
+# Run it from Actions → release → Run workflow. Commits since the previous tag become
+# the changelog bullets unless you type your own notes.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without the v (e.g. 0.9.1)'
+        required: true
+        type: string
+      title:
+        description: 'Short title for the commit and the tag (e.g. "scrobble through Navidrome")'
+        required: true
+        type: string
+      notes:
+        description: 'Optional: one-line changelog note. Empty = a bullet per commit since the last tag'
+        required: false
+        type: string
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: v${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check the version and the tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          case "$VERSION" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error title=Bad version::$VERSION is not x.y.z"; exit 1 ;;
+          esac
+          current=$(node -p "require('./package.json').version")
+          node -e '
+            const [a, b] = [process.env.VERSION, process.argv[1]].map((v) => v.split(".").map(Number));
+            const newer = a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] > b[2];
+            if (!newer) { console.error(`::error title=Version not ahead::${process.env.VERSION} is not newer than ${process.argv[1]}`); process.exit(1); }
+          ' "$current"
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error title=Tag exists::v$VERSION already exists"; exit 1
+          fi
+
+      - run: npm ci --no-audit --no-fund
+      # the bump commit is pushed with GITHUB_TOKEN, which does not start other
+      # workflows, so the suite has to run here rather than in test.yml
+      - run: npm test
+      - run: npm run build
+
+      - name: Bump, log and tag
+        env:
+          VERSION: ${{ inputs.version }}
+          TITLE: ${{ inputs.title }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null
+          previous=$(git describe --tags --abbrev=0 2>/dev/null || echo '')
+          if [ -n "$NOTES" ]; then
+            bullets="- ${NOTES}"
+          else
+            bullets=$(git log --no-merges --pretty='- %s' "${previous}..HEAD" | head -40)
+            # an `[ -z ] && x` would return 1 on the false branch and kill the step
+            if [ -z "$bullets" ]; then bullets='- Nothing since the last tag.'; fi
+          fi
+          {
+            echo "## v${VERSION} — $(date -u +%Y-%m-%d)"
+            echo
+            echo "$bullets"
+            echo
+            cat docs/CHANGELOG.md
+          } > CHANGELOG.new
+          mv CHANGELOG.new docs/CHANGELOG.md
+
+          git config user.name 'juuku release'
+          git config user.email 'release@nomorenames.studio'
+          git add package.json package-lock.json docs/CHANGELOG.md
+          git commit -q -m "${VERSION}: ${TITLE}"
+          git tag -a "v${VERSION}" -m "${VERSION} — ${TITLE}"
+          git push origin HEAD:main
+          git push origin "v${VERSION}"
+
+  image:
+    needs: bump
+    uses: ./.github/workflows/image.yml
+    with:
+      tag: v${{ inputs.version }}
+    secrets: inherit

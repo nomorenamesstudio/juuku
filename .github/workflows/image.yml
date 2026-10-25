@@ -8,6 +8,13 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+  # the release workflow bumps, tags and then calls this, so a release is one run
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tag to build, e.g. v0.9.1 (defaults to the ref that triggered it)'
+        type: string
+        required: false
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
@@ -28,6 +35,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - uses: docker/setup-buildx-action@v3
 
@@ -109,4 +118,37 @@ jobs:
             "https://ghcr.io/v2/${{ github.repository }}/manifests/latest")
           if [ "$code" != "200" ]; then
             echo "::warning title=Image is not public::ghcr.io/${{ github.repository }}:latest answered ${code} to an anonymous pull. Package settings -> Change visibility -> Public."
+          fi
+
+  # The Releases page drifted once already: tags were pushed for months without a
+  # release object, so it still read 0.8.2 while the image was on 0.8.16. This makes a
+  # release part of building one, with the notes taken from that version's changelog.
+  release:
+    needs: merge
+    if: startsWith(inputs.tag || '', 'v') || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Publish the GitHub release from the changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_REF: ${{ inputs.tag || github.ref_name }}
+        run: |
+          version="${TAG_REF#v}"
+          python3 - "$version" > /tmp/notes.md <<'PY'
+          import re, sys
+          version = sys.argv[1]
+          text = open('docs/CHANGELOG.md').read()
+          found = re.search(rf'^## v{re.escape(version)}\b(.*?)(?=^## v|\Z)', text, re.S | re.M)
+          print(found.group(1).strip() if found else f'Release {version}.')
+          PY
+          if gh release view "v$version" >/dev/null 2>&1; then
+            gh release edit "v$version" --notes-file /tmp/notes.md
+          else
+            gh release create "v$version" --title "$version" --notes-file /tmp/notes.md --verify-tag
           fi
