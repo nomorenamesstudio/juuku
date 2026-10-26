@@ -7,6 +7,11 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.9.4 — 2026-10-25
+
+- **Fix** — pull to refresh works, and refreshes the right thing. It listened to pointer events, which iOS cancels as soon as it claims a downward drag for its own rubber-band scroll, so the gesture never completed on a phone. It also only re-read the queue — which polls itself every second — while the rows you were looking at are fetched once on mount. Now it takes the gesture with touch events and reloads, so home, albums and playlists actually come back fresh.
+- **Fix** — tracks are credited to the album artist, with a featured guest named beside it in the player. Juuku was reading Subsonic's legacy `artist` field, so a guest vocalist or composer could take the credit and lead to an artist page with no albums; it now uses OpenSubsonic's display fields. Rows name the album artist (a third segment just truncated the album), the player shows "Röyksopp · Robyn", and compilations stay on the track's own artist instead of "Various Artists".
+
 ## v0.9.3 — 2026-10-25
 
 - **Fix** — the "new version" banner now opens that release's page instead of the setup guide: the changelog is what you want when deciding whether to update, and every release now ends with the two commands that take it.

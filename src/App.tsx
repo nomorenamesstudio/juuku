@@ -52,8 +52,11 @@ const TABS = [
 ];
 
 /**
- * Pull down from the top of a list to re-fetch state. The refresh button in the
- * corner was doing this silently, so the gesture replaces it.
+ * Pull down from the top of a list to refresh. It reloads rather than re-reading the
+ * queue: the queue already polls itself every second, while the list you are looking at
+ * — home rows, albums, a playlist — is fetched once on mount and would never move. A
+ * reload brings the lot back for a few hundred milliseconds, and since the gesture only
+ * arms at the top of the page there is no scroll position to lose.
  */
 function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
   const [pull, setPull] = useState(0);
@@ -78,37 +81,45 @@ function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
       setPull(0);
     };
 
-    const onDown = (event: PointerEvent) => {
-      if (event.pointerType === 'mouse' || window.scrollY > 0) return;
+    /**
+     * Touch events, not pointer events: on iOS a downward drag at the top of the page is
+     * the browser's own rubber-band scroll, so it fires `pointercancel` and stops
+     * delivering moves — the gesture never completed on a phone, only in a desktop
+     * emulator. Listening to touch and calling preventDefault once the pull is armed
+     * keeps the gesture ours; that is why the listeners cannot be passive.
+     */
+    const onStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || window.scrollY > 0) return;
       if (document.querySelector('.sheet-layer, .player')) return;
-      startY = event.clientY;
+      startY = event.touches[0].clientY;
       armed = false;
     };
 
-    const onMove = (event: PointerEvent) => {
+    const onMove = (event: TouchEvent) => {
       if (startY === null) return;
-      const dy = event.clientY - startY;
+      const dy = event.touches[0].clientY - startY;
       if (dy <= 0 || window.scrollY > 0) return reset();
-      armed = dy > 14;
+      if (!armed && dy > 14) armed = true;
       if (!armed) return;
+      event.preventDefault();
       pullRef.current = Math.min(1, dy / 90);
       setPull(pullRef.current);
     };
 
-    const onUp = () => {
+    const onEnd = () => {
       if (armed && pullRef.current > 0.75) latest.current();
       reset();
     };
 
-    window.addEventListener('pointerdown', onDown, true);
-    window.addEventListener('pointermove', onMove, true);
-    window.addEventListener('pointerup', onUp, true);
-    window.addEventListener('pointercancel', reset, true);
+    window.addEventListener('touchstart', onStart, { capture: true, passive: true });
+    window.addEventListener('touchmove', onMove, { capture: true, passive: false });
+    window.addEventListener('touchend', onEnd, true);
+    window.addEventListener('touchcancel', reset, true);
     return () => {
-      window.removeEventListener('pointerdown', onDown, true);
-      window.removeEventListener('pointermove', onMove, true);
-      window.removeEventListener('pointerup', onUp, true);
-      window.removeEventListener('pointercancel', reset, true);
+      window.removeEventListener('touchstart', onStart, true);
+      window.removeEventListener('touchmove', onMove, true);
+      window.removeEventListener('touchend', onEnd, true);
+      window.removeEventListener('touchcancel', reset, true);
     };
   }, [enabled]);
 
@@ -191,7 +202,10 @@ export default function App() {
   const update = useUpdate();
   const [session, setSession] = useState<Session | null>(null);
   const edgeCue = useRef<HTMLDivElement | null>(null);
-  const pull = usePullToRefresh(() => void jbox.refresh(), route.name !== 'player');
+  const pull = usePullToRefresh(() => {
+    void jbox.refresh();
+    window.location.reload();
+  }, route.name !== 'player');
   useEdgeSwipeBack(edgeCue, () => goBack(route.name === 'playlist' ? '/playlists' : '/library'));
   // nothing polls until we know whether a password is needed
   const paused = !session || (session.required && !session.authenticated);

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { type Lyrics, type PlaybackStatus, coverUrl } from '../api';
 import { Cover } from '../Cover';
+import { credit } from '../credit';
 import { formatTime } from '../format';
 import {
   AddToPlaylistIcon,
@@ -236,6 +237,8 @@ export function PlayerView({
   onLyricsOpenChange: (open: boolean) => void;
 }) {
   const { current, status, entries } = jbox;
+  // the album artist leads, a featured name is named beside it rather than linked
+  const performer = credit(current ?? { artist: 'Unknown artist' });
   const showLyrics = lyricsOpen;
   // on a wide screen the lyrics panel sits beside the artwork, so the stage keeps the
   // cover: swapping in the lyrics there showed them twice and hid the cover
@@ -331,13 +334,15 @@ export function PlayerView({
                 pushing dots and years onto lines of their own */}
             <p className="byline">
               <span className="byline-artist">
-                {current.artistId ? (
-                  <button className="artist-link" onClick={() => navigate(`/artist/${current.artistId}`)}>
-                    {current.artist}
+                {performer.primaryId ? (
+                  <button className="artist-link" onClick={() => navigate(`/artist/${performer.primaryId}`)}>
+                    {performer.primary}
                   </button>
                 ) : (
-                  current.artist
+                  performer.primary
                 )}
+                {/* the collaborator named, not linked: its own page is usually empty */}
+                {performer.secondary ? <span className="byline-featured"> · {performer.secondary}</span> : null}
               </span>
               <span className="byline-album">
                 {current.albumId ? (

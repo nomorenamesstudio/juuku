@@ -1,8 +1,11 @@
 export interface Song {
   id: string;
   title: string;
+  /** the credit as tagged — may be a collaboration, not necessarily an alias of the album artist */
   artist: string;
   artistId?: string;
+  albumArtist?: string;
+  albumArtistId?: string;
   album: string;
   albumId?: string;
   duration: number;

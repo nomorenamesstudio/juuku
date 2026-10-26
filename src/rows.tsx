@@ -1,4 +1,5 @@
 import type { Song } from './api';
+import { credit } from './credit';
 import { formatTime } from './format';
 import { CloseIcon, HeartIcon, MoreIcon } from './icons';
 import { useTrackActions } from './TrackActions';
@@ -28,6 +29,16 @@ interface SongRowProps {
   onMenu?: () => void;
 }
 
+/**
+ * Rows name the album artist, not a featured guest: three segments ("album artist ·
+ * guest · album") truncate on a phone, and the album is the part that tells you where
+ * you are in a long queue. The guest keeps its place in the player's byline, which has
+ * the room.
+ */
+function byline(song: Song) {
+  return credit(song).primary;
+}
+
 /** Library row: tapping the row queues the track, the ▶ button plays it now. */
 export function SongRow({
   song,
@@ -48,7 +59,9 @@ export function SongRow({
       )}
       <button className="row-main" onClick={onPlay} aria-label={`Play ${song.title}`}>
         <span className="row-title">{song.title}</span>
-        {subtitle !== null && <span className="row-sub">{subtitle ?? `${song.artist} · ${song.album}`}</span>}
+        {subtitle !== null && (
+          <span className="row-sub">{subtitle ?? `${byline(song)} · ${song.album}`}</span>
+        )}
       </button>
       <span className="row-time">{formatTime(song.duration)}</span>
       {onFavorite && (
@@ -94,7 +107,7 @@ export function QueueRow({ song, index, active, played, playing, onSkip, onRemov
         {/* the album matters here: a whole artist queued means the artist repeats and
             only the album tells you where in the run you are */}
         <span className="row-sub">
-          <span className="row-artist">{song.artist}</span>
+          <span className="row-artist">{byline(song)}</span>
           {song.album ? <span className="row-album"> · {song.album}</span> : null}
         </span>
       </button>

@@ -1862,7 +1862,9 @@ h1.display {
 }
 
 .player-meta .byline-album,
-.player-meta .byline-album .year {
+.player-meta .byline-album .year,
+/* the featured name is a credit, not the album artist: quiet, like the album line */
+.player-meta .byline-featured {
   color: var(--dim);
 }
 

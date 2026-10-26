@@ -64,11 +64,18 @@ function fail(res, err) {
 
 const badRequest = (message) => new ApiError(400, message);
 
+/**
+ * OpenSubsonic's display fields carry the credit as tagged, while the legacy `artist`
+ * can be a single name out of a collaboration. The album artist rides along because a
+ * featured name often has no albums of its own, and its artist page is a dead end.
+ */
 const song = (entry) => ({
   id: entry.id,
   title: entry.title,
-  artist: entry.artist,
+  artist: entry.displayArtist ?? entry.artist,
   artistId: entry.artistId,
+  albumArtist: entry.displayAlbumArtist ?? entry.albumArtist ?? undefined,
+  albumArtistId: entry.albumArtists?.[0]?.id ?? undefined,
   album: entry.album,
   albumId: entry.albumId,
   duration: entry.duration,
