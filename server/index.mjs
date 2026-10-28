@@ -9,6 +9,7 @@ import { getProfile, putProfile } from './store.mjs';
 import { jsonWrites } from './json-writes.mjs';
 import { albumThatPlayed, bump, queueStillOurs, resolvePlaylist } from './recent.mjs';
 import { updateInfo } from './version.mjs';
+import { REPEAT_MODES, repeatAtEnd } from './repeat.mjs';
 import { createScrobbler } from './scrobble.mjs';
 import { isVolumeReset, lastVolume, loadVolume, rememberVolume, shouldAdopt } from './volume.mjs';
 import { dropDeadSockets, livePlayers, quitPlayers, socketReport, socketsShared } from './player.mjs';
@@ -227,6 +228,8 @@ const recentAlbums = [];
 let playlistTracks = new Set();
 /** the first track of the queue juuku built, so a queue replaced elsewhere clears the set */
 let queueFirstId = null;
+/** repeat is not a Subsonic feature, so the server keeps the mode and loops the queue */
+let repeatMode = 'off';
 
 function loadRecent() {
   try {
@@ -241,6 +244,7 @@ function loadRecent() {
       if (typeof entry === 'string') recentPlaylists.push({ id: entry, name: null });
       else if (entry && typeof entry.id === 'string') recentPlaylists.push({ id: entry.id, name: typeof entry.name === 'string' ? entry.name : null });
     }
+    if (typeof parsed?.repeat === 'string' && REPEAT_MODES.includes(parsed.repeat)) repeatMode = parsed.repeat;
     // the queue outlives the container, so what came from a playlist has to too
     const tracks = Array.isArray(parsed?.queue?.playlistTracks) ? parsed.queue.playlistTracks : [];
     playlistTracks = new Set(tracks.filter((id) => typeof id === 'string').slice(0, 2000));
@@ -267,6 +271,7 @@ async function saveRecentNow() {
       JSON.stringify({
         albums: recentAlbums,
         playlists: recentPlaylists,
+        repeat: repeatMode,
         queue: { playlistTracks: [...playlistTracks], firstId: queueFirstId },
       }),
     );
@@ -586,6 +591,18 @@ app.post('/api/control', wrap(async (req, res) => serialWrite(async () => {
  * stops it, so the current track is re-skipped (with the position it had reached)
  * and resumed afterwards - otherwise "play next" would jump to the start.
  */
+/**
+ * The client's repeat button, mirrored here: with no app open the server has to know
+ * whether the queue should loop when it runs out.
+ */
+app.post('/api/repeat', wrap(async (req, res) => {
+  const mode = req.body?.mode;
+  if (!REPEAT_MODES.includes(mode)) throw badRequest(`mode must be one of ${REPEAT_MODES.join(', ')}`);
+  repeatMode = mode;
+  saveRecent();
+  res.json({ mode: repeatMode });
+}));
+
 app.post('/api/queue/next', wrap(async (req, res) => serialWrite(async () => {
   const ids = req.body?.ids;
   if (!Array.isArray(ids) || ids.length === 0) throw badRequest('ids must be a non-empty array');
@@ -698,15 +715,38 @@ let lastScrobbleRead = 0;
  */
 setInterval(() => {
   const playing = stateCache.payload?.status?.playing;
-  const wait = playing ? 5_000 : 30_000;
+  // a queue that should loop has to be caught within a few seconds of running out,
+  // exactly like a playing one; only a queue nobody is watching can wait
+  const wait = playing || repeatMode !== 'off' ? 5_000 : 30_000;
   if (Date.now() - lastScrobbleRead < wait) return;
   lastScrobbleRead = Date.now();
   readState()
-    .then((state) => scrobbler.observe(state))
+    .then((state) => {
+      scrobbler.observe(state);
+      const index = repeatAtEnd(repeatMode, state);
+      if (index !== null && Date.now() - lastRepeatAt > REPEAT_COOLDOWN_MS) void loopQueue(index);
+    })
     .catch(() => {
       // a dead player is not a scrobbling problem
     });
 }, 5_000).unref();
+
+/** one restart per end, however many ticks look at it */
+const REPEAT_COOLDOWN_MS = 10_000;
+let lastRepeatAt = 0;
+
+/** Back to the top of the queue: the same skip-then-start the client sends. */
+async function loopQueue(index) {
+  lastRepeatAt = Date.now();
+  try {
+    await call('jukeboxControl', { action: 'skip', index, offset: 0 });
+    await call('jukeboxControl', { action: 'start' });
+    invalidateState();
+    console.log(`[repeat] ${repeatMode === 'one' ? 'replaying the last track' : 'back to the top of the queue'}`);
+  } catch (err) {
+    console.warn(`repeat restart failed: ${err.message}`);
+  }
+}
 
 // -------------------------------------------------------------------- meta
 app.get('/api/version', wrap(async (_req, res) => {

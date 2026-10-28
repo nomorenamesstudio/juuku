@@ -7,6 +7,16 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## v0.9.5 — 2026-10-25
+
+- **Feature** — repeat works with the app closed. It was a client-side trick (Subsonic has no repeat mode), so a queue that ran out while the phone was in a pocket stayed silent until the app came back. The server keeps the mode now and loops the queue itself: back to the top, or the same track for repeat-one, within a few seconds of the end.
+- **Feature** — the queue loops only when it should: the end of a queue is `playing=false` at the last index with position 0, which is how a finished queue is told apart from a pause.
+- **Feature** — a back-to-top button on Library, Search and Queue once you are two screens down, fading in, with a smooth scroll up (instant when the system asks for reduced motion).
+- **Fix** — a slow or stuck server is visible instead of silent. Requests now time out after 12 seconds, the poll can no longer be wedged for ever by one that never settles, and the app says "Oh no — the server is not answering." with a reload button once three polls in a row fail.
+- **Fix** — the "new version" banner opens that release's page, whose notes end with the two commands that take the update.
+- **Fix** — pull to refresh takes a deliberate gesture: it arms 18 px down and commits at about a quarter of a screen, and a sideways swipe over a shelf is ignored outright instead of refreshing by accident.
+- **Fix** — every track list shares one grid. Playlists, search results and favourites now show the position number, with the animated bars in its place while a row plays, so the columns match an album or the queue; the selected row's highlight also bleeds past the text column instead of hugging its own left edge.
+
 ## v0.9.4 — 2026-10-25
 
 - **Fix** — pull to refresh works, and refreshes the right thing. It listened to pointer events, which iOS cancels as soon as it claims a downward drag for its own rubber-band scroll, so the gesture never completed on a phone. It also only re-read the queue — which polls itself every second — while the rows you were looking at are fetched once on mount. Now it takes the gesture with touch events and reloads, so home, albums and playlists actually come back fresh.

@@ -1171,7 +1171,11 @@ h1.display {
   align-items: center;
   gap: 0.35rem;
   border-radius: 8px;
-  padding: 0.1rem 0.15rem;
+  /* the highlight bleeds past the text column, so a selected row reads as a card with
+     room inside it instead of a band the title is touching on the left — the negative
+     margin and the padding cancel, so nothing moves */
+  margin-inline: -0.35rem;
+  padding: 0.1rem 0.35rem;
 }
 
 .row:hover {
@@ -3890,4 +3894,74 @@ h1.display {
 .update-banner-close {
   flex: none;
   color: var(--dim);
+}
+
+/* a server that is slow or not answering at all: the shell is up, so say why it is empty */
+.slow-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  padding: 2rem;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(2px);
+  text-align: center;
+  color: var(--dim);
+}
+
+.slow-overlay p {
+  margin: 0;
+  max-width: 22rem;
+}
+
+/* back to the top of a long library or search list: fades in two screens down, and
+   sits above the tab bar (and the deck, when one is up) */
+.to-top {
+  position: fixed;
+  z-index: 26;
+  right: 0.9rem;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-edge);
+  color: var(--cream);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.6rem) scale(0.92);
+  transition:
+    opacity var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease-spring),
+    visibility var(--dur-2) var(--ease);
+}
+
+.has-deck .to-top {
+  bottom: calc(9.4rem + env(safe-area-inset-bottom));
+}
+
+.to-top.is-shown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.to-top:active {
+  transform: scale(0.92);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .to-top {
+    transition: opacity 120ms linear;
+    transform: none;
+  }
 }

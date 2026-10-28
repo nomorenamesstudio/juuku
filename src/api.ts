@@ -82,10 +82,18 @@ export interface Favorites {
   songs: Song[];
 }
 
+/**
+ * Nothing here used to time out: a request that never answered left its promise pending
+ * for ever, and the poll's in-flight latch then blocked every later tick — the app just
+ * stopped updating, with no error to show for it.
+ */
+const REQUEST_TIMEOUT_MS = 12_000;
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
+    signal: init?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   // a body that is not JSON means the path is not ours (a stale server behind an
   // older build answers index.html); swallowing it turned that into `{}` and a
@@ -202,6 +210,10 @@ export interface ControlBody {
 
 export const control = (body: ControlBody) =>
   request<PlaybackStatus>('api/control', { method: 'POST', body: JSON.stringify(body) });
+
+/** The repeat button's state, mirrored to the server so the queue loops without a client. */
+export const saveRepeat = (mode: 'off' | 'all' | 'one') =>
+  request<{ mode: string }>('api/repeat', { method: 'POST', body: JSON.stringify({ mode }) });
 
 /** Replace the queue with these songs and start playing at `index`. */
 export const playNow = (ids: string[], index = 0, playlistId?: string) =>

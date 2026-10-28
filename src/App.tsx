@@ -4,13 +4,14 @@ import {
   AlbumsIcon,
   ArtistIcon,
   ChevronLeftIcon,
+  ChevronUpIcon,
   HomeIcon,
   CloseIcon,
   LibraryIcon,
   LogOutIcon,
   PlaylistIcon,
   QueueIcon,
-  RefreshIcon,
+  ReloadIcon,
   SearchIcon,
   SettingsIcon,
 } from './icons';
@@ -52,6 +53,35 @@ const TABS = [
 ];
 
 /**
+ * True once the page is scrolled more than `screens` viewport heights down: the library
+ * and search pages grow to hundreds of covers, and getting back to the top by flinging
+ * the list is guesswork.
+ */
+function useScrolledPast(screens: number) {
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      setPast(window.scrollY > screens * window.innerHeight);
+    };
+    const onScroll = () => {
+      // one measure per frame: this fires on every scroll event of a heavy list
+      if (!frame) frame = window.requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [screens]);
+  return past;
+}
+
+/**
  * Pull down from the top of a list to refresh. It reloads rather than re-reading the
  * queue: the queue already polls itself every second, while the list you are looking at
  * — home rows, albums, a playlist — is fetched once on mount and would never move. A
@@ -71,11 +101,21 @@ function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
 
   useEffect(() => {
     if (!enabled || !window.matchMedia('(max-width: 899px)').matches) return;
-    let startY: number | null = null;
+    /** how far past the top the finger has to travel before the gesture is even armed */
+    const ARM = 18;
+    /** …and how far for a full pull: a deliberate gesture, not a scroll that drifted */
+    const TRAVEL = 130;
+    /** …of which this much commits the refresh */
+    const COMMIT = 0.8;
+
+    let start: { x: number; y: number } | null = null;
+    // a sideways swipe over a shelf is not a pull, however much the finger wobbles
+    let axis: 'unknown' | 'vertical' | 'sideways' = 'unknown';
     let armed = false;
 
     const reset = () => {
-      startY = null;
+      start = null;
+      axis = 'unknown';
       armed = false;
       pullRef.current = 0;
       setPull(0);
@@ -91,23 +131,35 @@ function usePullToRefresh(onRefresh: () => void, enabled: boolean) {
     const onStart = (event: TouchEvent) => {
       if (event.touches.length !== 1 || window.scrollY > 0) return;
       if (document.querySelector('.sheet-layer, .player')) return;
-      startY = event.touches[0].clientY;
+      start = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      axis = 'unknown';
       armed = false;
     };
 
     const onMove = (event: TouchEvent) => {
-      if (startY === null) return;
-      const dy = event.touches[0].clientY - startY;
+      if (!start || axis === 'sideways') return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (axis === 'unknown') {
+        // wait for the finger to commit to a direction before judging it
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          axis = 'sideways';
+          return;
+        }
+        axis = 'vertical';
+      }
       if (dy <= 0 || window.scrollY > 0) return reset();
-      if (!armed && dy > 14) armed = true;
+      if (!armed && dy > ARM) armed = true;
       if (!armed) return;
       event.preventDefault();
-      pullRef.current = Math.min(1, dy / 90);
+      pullRef.current = Math.min(1, dy / TRAVEL);
       setPull(pullRef.current);
     };
 
     const onEnd = () => {
-      if (armed && pullRef.current > 0.75) latest.current();
+      if (armed && pullRef.current > COMMIT) latest.current();
       reset();
     };
 
@@ -202,6 +254,13 @@ export default function App() {
   const update = useUpdate();
   const [session, setSession] = useState<Session | null>(null);
   const edgeCue = useRef<HTMLDivElement | null>(null);
+  const scrolled = useScrolledPast(2);
+  const toTop = route.name === 'library' || route.name === 'search' || route.name === 'queue';
+  const backToTop = () => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
   const pull = usePullToRefresh(() => {
     void jbox.refresh();
     window.location.reload();
@@ -210,6 +269,21 @@ export default function App() {
   // nothing polls until we know whether a password is needed
   const paused = !session || (session.required && !session.authenticated);
   const jbox = useJukebox({ paused });
+
+  /**
+   * The shell mounts before the first state arrives, so a slow server used to look like
+   * an empty queue. Give it a moment, then say so — and the same overlay turns into a
+   * message with a reload once the polls keep failing.
+   */
+  const [slowBoot, setSlowBoot] = useState(false);
+  useEffect(() => {
+    if (jbox.booted || jbox.stalled) {
+      setSlowBoot(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setSlowBoot(true), 1500);
+    return () => window.clearTimeout(timer);
+  }, [jbox.booted, jbox.stalled]);
   const [lyricsOpen, setLyricsOpen] = useState(false);
   const [settings, setSettings] = useState<Settings>(loadSettings);
   // the account's preferences arrive before the shell paints, so nothing flashes
@@ -511,11 +585,39 @@ export default function App() {
         <ChevronLeftIcon size={18} />
       </div>
 
+      {toTop && (
+        <button
+          className={`to-top ${scrolled ? 'is-shown' : ''}`}
+          onClick={backToTop}
+          aria-hidden={!scrolled}
+          tabIndex={scrolled ? 0 : -1}
+          aria-label="Back to the top"
+          title="Back to the top"
+        >
+          <ChevronUpIcon size={20} />
+        </button>
+      )}
+
       {pull > 0 && (
         <div className="pull-hint" style={{ opacity: pull }} aria-hidden="true">
-          <RefreshIcon size={16} style={{ transform: `rotate(${pull * 180}deg)` }} />
+          <ReloadIcon size={16} style={{ transform: `rotate(${pull * 180}deg)` }} />
         </div>
       )}
+
+      {jbox.stalled ? (
+        <div className="slow-overlay" role="alert">
+          <span className="boot-pulse" aria-hidden="true" />
+          <p>Oh no — the server is not answering.</p>
+          <button className="secondary" onClick={() => window.location.reload()}>
+            <ReloadIcon size={16} /> Reload
+          </button>
+        </div>
+      ) : slowBoot ? (
+        <div className="slow-overlay" role="status" aria-live="polite">
+          <span className="boot-pulse" aria-hidden="true" />
+          <p>Connecting to the server…</p>
+        </div>
+      ) : null}
 
       {jbox.toast && <output className="toast">{jbox.toast}</output>}
       {jbox.error && (

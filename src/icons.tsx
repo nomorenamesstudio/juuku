@@ -6,6 +6,7 @@ import {
   PixelArtistIcon,
   PixelChevronDownIcon,
   PixelChevronLeftIcon,
+  PixelChevronUpIcon,
   PixelCloseIcon,
   PixelDiceIcon,
   PixelGithubIcon,
@@ -67,6 +68,7 @@ import {
   ChevronDown,
   Dices,
   ChevronLeft,
+  ChevronUp,
   Heart,
   House,
   Disc3,
@@ -79,6 +81,7 @@ import {
   Pause,
   Play,
   Plus,
+  RefreshCw,
   RotateCw,
   Repeat,
   Repeat1,
@@ -167,10 +170,13 @@ export const LibraryIcon = icon(Library, PixelLibraryIcon, SolidLibraryIcon);
 export const ArtistIcon = icon(UserRound, PixelArtistIcon, SolidArtistIcon);
 export const SearchIcon = icon(Search, PixelSearchIcon, SolidSearchIcon);
 export const RefreshIcon = icon(RotateCw, PixelRefreshIcon, SolidRefreshIcon);
+/** the two arrows in a circle, for reloading the whole app rather than a list */
+export const ReloadIcon = icon(RefreshCw, PixelRefreshIcon, SolidRefreshIcon);
 /** "give me another set": a pair of dice for the stroke themes, one die for the geek set */
 export const DiceIcon = icon(Dices, PixelDiceIcon);
 export const ChevronDownIcon = icon(ChevronDown, PixelChevronDownIcon);
 export const ChevronLeftIcon = icon(ChevronLeft, PixelChevronLeftIcon);
+export const ChevronUpIcon = icon(ChevronUp, PixelChevronUpIcon);
 export const VolumeIcon = icon(Volume2, PixelVolumeIcon, SolidVolumeIcon);
 export const MicIcon = icon(MicVocal, PixelMicIcon, SolidMicIcon);
 export const MoreIcon = icon(MoreHorizontal, PixelMoreIcon, SolidMoreIcon);

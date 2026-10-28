@@ -10,12 +10,15 @@ import {
   getFavorites,
   getHealth,
   getState,
+  saveRepeat,
   playNext as playNextRequest,
   playNow as playNowRequest,
   removeFavorite,
 } from './api';
 
 const POLL_MS = 1000;
+/** a poll older than this is treated as dead, so the latch opens for the next one */
+const REQUEST_TIMEOUT_HINT = 14_000;
 const REPEAT_KEY = 'juuku.repeat';
 
 export type RepeatMode = 'off' | 'all' | 'one';
@@ -29,6 +32,10 @@ interface Snapshot {
 }
 
 export interface Jukebox {
+  /** a state has arrived at least once */
+  booted: boolean;
+  /** the last few polls all failed: the server is not answering */
+  stalled: boolean;
   state: State | null;
   status: PlaybackStatus | null;
   entries: Song[];
@@ -70,6 +77,12 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  /** no state has ever arrived: the shell is up but there is nothing in it yet */
+  const [booted, setBooted] = useState(false);
+  /** the last few polls all failed, which means the server, not the queue */
+  const [stalled, setStalled] = useState(false);
+  const failures = useRef(0);
+
   const [repeat, setRepeat] = useState<RepeatMode>(() => {
     const stored = window.localStorage.getItem(REPEAT_KEY);
     return stored === 'all' || stored === 'one' ? stored : 'off';
@@ -86,6 +99,8 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   // the number of the newest state read, so a slow one cannot overwrite a fast one
   const readSeq = useRef(0);
   const polling = useRef(false);
+  /** when the in-flight poll started, so a request that never settles cannot wedge it */
+  const pollingSince = useRef(0);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -96,6 +111,9 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   useEffect(() => {
     repeatRef.current = repeat;
     window.localStorage.setItem(REPEAT_KEY, repeat);
+    // the server loops the queue when no client is open, so it needs the mode too;
+    // a failed mirror is not worth a banner — the app's own handling still works
+    void saveRepeat(repeat).catch(() => {});
   }, [repeat]);
 
   const cycleRepeat = useCallback(() => {
@@ -167,6 +185,9 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     const mine = (readSeq.current += 1);
     try {
       const next = await getState();
+      failures.current = 0;
+      setStalled(false);
+      setBooted(true);
       // a read that started earlier can answer later: only the newest one may land,
       // or the queue and its position jump back to where they were
       if (mine !== readSeq.current) return;
@@ -205,6 +226,9 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
         void handleRepeatOne(next, previous);
       }
     } catch (err) {
+      // three polls in a row is a server that is not answering, not a blip: say so
+      failures.current += 1;
+      if (failures.current >= 3) setStalled(true);
       if (mine === readSeq.current) setError((err as Error).message);
     }
   }, [handleQueueEnd, handleRepeatOne]);
@@ -231,9 +255,13 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
     refresh();
     const timer = window.setInterval(() => {
       // a poll that is still waiting for a stuck server must not be joined by the
-      // next tick: ten of them used to stack up behind one hanging request
-      if (document.hidden || polling.current) return;
+      // next tick: ten of them used to stack up behind one hanging request. The age
+      // check matters too — a request that never settles would otherwise keep the
+      // latch shut for ever, and the app would sit there looking alive and dead.
+      if (document.hidden) return;
+      if (polling.current && Date.now() - pollingSince.current < REQUEST_TIMEOUT_HINT) return;
       polling.current = true;
+      pollingSince.current = Date.now();
       void refresh().finally(() => {
         polling.current = false;
       });
@@ -415,6 +443,8 @@ export function useJukebox({ paused = false }: { paused?: boolean } = {}): Jukeb
   const current = status && status.currentIndex >= 0 ? entries[status.currentIndex] : undefined;
 
   return {
+    booted,
+    stalled,
     state,
     repeat,
     cycleRepeat,

@@ -54,9 +54,10 @@ export function SongRow({
   const openActions = useTrackActions();
   return (
     <li className={`row ${active ? 'row-active' : ''}`}>
-      {number !== undefined && (
-        <span className="row-number">{active ? <Eq playing={!!playing} /> : number}</span>
-      )}
+      {/* the gutter is always there: a list without numbers (a playlist, search results)
+          would otherwise start its titles a number's width further left and read as a
+          different, tighter list than an album's */}
+      <span className="row-number">{number !== undefined && (active ? <Eq playing={!!playing} /> : number)}</span>
       <button className="row-main" onClick={onPlay} aria-label={`Play ${song.title}`}>
         <span className="row-title">{song.title}</span>
         {subtitle !== null && (

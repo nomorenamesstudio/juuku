@@ -128,6 +128,9 @@ export function PlaylistView({ id, jbox }: { id: string; jbox: Jukebox }) {
             <SongRow
               key={`${song.id}-${index}`}
               song={song}
+              // the same columns as an album or the queue: position, then the animated
+              // bars while this one plays, so a playlist does not read as a denser list
+              number={index + 1}
               active={jbox.current?.id === song.id}
               playing={jbox.status?.playing}
               onPlay={() => jbox.playFrom(songs, index, id)}

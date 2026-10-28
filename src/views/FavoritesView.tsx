@@ -41,6 +41,7 @@ export function FavoritesView({ jbox }: { jbox: Jukebox }) {
             <SongRow
               key={song.id}
               song={song}
+              number={index + 1}
               favorite
               active={jbox.current?.id === song.id}
               playing={jbox.status?.playing}

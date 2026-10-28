@@ -254,10 +254,13 @@ export function SearchView({ jbox }: { jbox: Jukebox }) {
             <section>
               <h2 className="section-label">Songs</h2>
               <ul className="rows">
-                {results.songs.map((song) => (
+                {results.songs.map((song, index) => (
                   <SongRow
                     key={song.id}
                     song={song}
+                    // the same columns as every other track list, and the number tells
+                    // you where you are when you play a few to hear what they are
+                    number={index + 1}
                     favorite={jbox.favoriteIds.has(song.id)}
                     active={jbox.current?.id === song.id}
                     playing={jbox.status?.playing}
