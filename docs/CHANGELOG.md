@@ -7,6 +7,13 @@ Newest first. Tags: **Feature**, **Fix**, **Break**.
 `package.json` and the `v*` tag move together: a fix bumps the patch, a feature the
 minor, and the tag is what CI builds the published image from.
 
+## Unreleased
+
+- **Fix** — The README's FAQ is the landing page's FAQ now, word for word and in the
+  same order; the README-only questions (HTTPS, where settings live, running without
+  Docker, the API) moved to a short "Good to know" list under Quick start. "How it
+  works" is plain sentences, and the "Built with AI" section is gone.
+
 ## v0.9.5 — 2026-10-25
 
 - **Feature** — repeat works with the app closed. It was a client-side trick (Subsonic has no repeat mode), so a queue that ran out while the phone was in a pocket stayed silent until the app came back. The server keeps the mode now and loops the queue itself: back to the top, or the same track for repeat-one, within a few seconds of the end.

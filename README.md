@@ -78,51 +78,54 @@ unless you set `ND_JUKEBOX_ADMINONLY=false` on the Navidrome side. That trade, a
 rest of the threat model, is [SECURITY.md](SECURITY.md) — this is a remote for the
 room, not a website.
 
+### Good to know
+
+- **HTTPS is only needed for the home-screen install.** Everything else works over
+  plain HTTP; a tailnet with `tailscale serve` is the easy way to get it — see
+  [docs/SETUP.md](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).
+- **Your settings stay on your box:** three small JSON files in the data directory
+  (preferences, the recent log, the last volume). Nothing leaves the network.
+- **No Docker?** `npm install && npm run build && npm start` works too.
+- **The UI talks to one small JSON API**, documented in [docs/API.md](docs/API.md).
+
 ## How it works
 
-```
-phone / laptop        juuku (Node)              navidrome              the room
-   browser  ──HTTP──▶  server + built UI  ──Subsonic──▶  jukeboxControl ──▶  mpv ──▶ speakers
-```
-
-- **Credentials stay on the server.** The browser only ever sees Juuku's own JSON; the
-  Subsonic call signs in with a salted token (`t=md5(password + salt)`).
-- **One poll target.** `/api/state` returns queue and status together, once a second,
-  cached for a moment on the server so three devices do not mean three upstream calls.
-- **One queue, one room.** Navidrome's jukebox has a single global queue and a single
-  set of speakers. That is the point.
-- **It heals players.** Navidrome cannot always reap a dead `mpv`; Settings → *Restart
-  playback* quits the leftovers over their own IPC sockets, then rebuilds the queue.
-  Needs `JUUKU_MPV_SOCKETS` and matching uids, never root.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the decisions and
-[docs/API.md](docs/API.md) for the exposed surface.
+Your phone (or any browser on the network) talks to Juuku, Juuku talks to Navidrome,
+and Navidrome plays the music through `mpv` on the machine with the speakers. The
+Navidrome password stays on Juuku's server; the browser never sees it. There's one
+queue for the room, because that's how Navidrome's jukebox works — and if a player
+ever gets stuck, Settings → *Restart playback* cleans it up and rebuilds the queue.
+The details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## FAQ
 
-**Do I need a Navidrome admin account?** By default yes, because Navidrome only lets
-admins drive the jukebox. Set `ND_JUKEBOX_ADMINONLY=false` and a plain account works.
+### Do I have to run another server?
 
-**Does the phone play the music?** No. `mpv` runs on the Navidrome host, next to the
-speakers. The phone is only the remote, which is why it works from the sofa.
+A small container next to your Navidrome, on the same machine or the same network. No database, no cloud, no account.
 
-**Is it really free?** MIT, no accounts, no telemetry, no license server, no paid tier.
+### Why not just use Navidrome's own UI?
 
-**Why no AI?** There is no model in the runtime: no API key, no tokens, no per-request
-cost. (AI did help build it — see [Built with AI](#built-with-ai).)
+Jukebox control lives behind the Subsonic `jukeboxControl` endpoint, and Navidrome's player never calls it. Juuku does — and keeps the Navidrome password on the server, where the browser cannot see it.
 
-**Where do my settings go?** Three small JSON files in the data directory on your own
-box: preferences, the recent log and the last volume. Nothing leaves the network.
+### Who can queue songs?
 
-**Does it need HTTPS?** Only for the home-screen install; over plain HTTP it works. A
-tailnet and `tailscale serve` is the easy way — see
-[docs/SETUP.md](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it).
+Whoever can reach the port. Leave `JUUKU_PASSWORD` unset and that is your LAN; set it and everyone needs the password once, for 30 days. Either way the port stays private — no router forwarding.
 
-**Can I run it without Docker?** Yes: `npm install && npm run build && npm start`. The
-dev setup is below.
+### Does it need its own Navidrome account?
 
-**Is there an API?** The UI talks to one small JSON API, documented in
-[docs/API.md](docs/API.md).
+No — any account works, yours included. One catch: Navidrome refuses jukebox control from non-admins unless you set `ND_JUKEBOX_ADMINONLY=false` on the server. So either hand it an admin account, or flip that setting and use a normal one. A second account is tidier if you would rather not put your own password in a container, but it is optional.
+
+### Why not a native app?
+
+Building and shipping phone apps is more work: slower to iterate, two more codebases to keep alive, and the stores charge for it — Apple wants $99 a year before you ship anything. So no, not planned. If enough people chip in that developer fee though, it probably happens — and until then the web app does the job, especially installed as a PWA.
+
+### Does it work on a phone?
+
+It was built for the phone — that is the intended use — but it works flawlessly on anything with a browser; wide screens get a sidebar instead of the tab bar. It installs to a home screen as a PWA as well, which needs HTTPS: [that part of the setup docs](docs/SETUP.md#installing-it-as-a-pwa-and-why-https-is-worth-it) covers it.
+
+### Why is it free?
+
+Because we built it for ourselves. The remotes that existed were stale — the iOS ones especially — and the gap was annoying enough to fix. It came out fun, fun enough that someone else might get some use out of it. No account, no upsell, nothing to buy.
 
 ## Development
 
@@ -172,17 +175,11 @@ Grotesque, Instrument Serif and Geist Mono are SIL OFL (licenses in `public/font
 the geek icons are [Pixelarticons](https://github.com/halfmage/pixelarticons) by Gerrit
 Halfmann (MIT) and the modern icons are [Phosphor](https://phosphoricons.com) (MIT).
 
-## Built with AI
-
-Hand-written and AI-enhanced. The specification, the decisions and the review are mine;
-the implementation was drafted with DeepSeek V4.1 Flash in DeepSeek Harness. The commit
-history and [docs/CHANGELOG.md](docs/CHANGELOG.md) show what landed when.
-
 ## Support
 
-Free, MIT, no telemetry, no accounts. If Juuku earns a place in your setup:
-[buymeacoffee.com/nomorenames](https://buymeacoffee.com/nomorenames).
+Free, MIT, no telemetry, no accounts. If Juuku earns a place in your setup, you can
+[buy us a coffee](https://www.buymeacoffee.com/nomorenames).
 
 [![GitHub stars](https://img.shields.io/github/stars/nomorenamesstudio/juuku?style=for-the-badge&color=b45309)](https://github.com/nomorenamesstudio/juuku/stargazers)
 
-Built by [K](https://github.com/nomorenamesstudio) | [nomorenames.studio](https://nomorenames.studio)
+Made with ♥ by [No More Names Studio](https://nomorenames.studio)
